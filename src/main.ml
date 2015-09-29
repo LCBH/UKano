@@ -50,6 +50,9 @@ let out_file = ref ""
 
 let out_n = ref 0
 
+(* This is only for debugging purpose. TODO: remove this *)
+let log s = Display.Text.print_string s;Display.Text.newline()
+
 let up_out = function
     "spass" -> Spass
   | "solve" -> Solve
@@ -369,6 +372,9 @@ let anal_file s =
 	Param.typed_frontend := true;
 	(* Param.ignore_types := false; *)
 
+	(* Lucca: val parse_file : string -> process * process option 
+           Cette fonction parse le fichier en renvoie un/deux processe MAIS ATTENTION
+           ELLE A MASSE d'EFFETS de BORD. Elle va créerune théorie équationnelle absolue. *)
 	let p0, second_p0 = Pitsyntax.parse_file s in
 	
 	let p0 =
@@ -376,6 +382,7 @@ let anal_file s =
 	    Pitransl.move_new p0
 	  else p0 in
 	  
+	(* Effet de bord: orient les égalités --> réductions *)
 	TermsEq.record_eqs_with_destr();
 	
 	(* Check if destructors are deterministic *)
