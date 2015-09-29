@@ -212,3 +212,5 @@ val session1 : Types.funsymb
 val red_rules : (Types.fact list * Types.fact * Types.constraints list list * Types.label) list ref
 val elim_true : Types.fact list ref
 
+(* ukano translator *)
+val trad_ukano : bool ref

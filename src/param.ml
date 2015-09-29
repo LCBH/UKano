@@ -394,3 +394,7 @@ let session1 = { f_name = "session1";
 	         f_initial_cat = Eq [] }
 let red_rules = ref []
 let elim_true = ref []
+
+
+(* ukano translator *)
+let trad_ukano = ref false

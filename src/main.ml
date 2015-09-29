@@ -509,9 +509,14 @@ let anal_file s =
 	    with Is_equivalent -> ()
 	    end
 	  end
-	  else 
-	  begin
-	    if !Param.html_output then
+	  else if !Param.trad_ukano
+	  then begin
+	      log "Bonjour UKANO, à toi de jouer!";
+              Display.Text.display_process "" p;
+              Display.Text.newline();
+	    end else begin
+	      
+	      if !Param.html_output then
 	      Display.Html.print_string "<UL>\n";
 	
             (* Secrecy and authenticity *)
@@ -794,7 +799,12 @@ let _ =
 	Param.html_dir := s;
 	if !Param.tulafale == 0 then
           Param.verbose_explain_clauses := Param.ExplainedClauses), 
-        "\t\t\tHTML display"
+      "\t\t\tHTML display";
+      "-ukano",
+      Arg.Unit (fun () -> 
+		Param.trad_ukano := true),
+      "\t\t\tUse Proverif to check UnlinKability and ANOnymity as explained in [1].";
+    (* todo ref/hyperref *)
     ]
     anal_file "Proverif. Cryptographic protocol verifier, by Bruno Blanchet and Vincent Cheval";
   if !gc then Gc.print_stat stdout
