@@ -28,13 +28,18 @@
 (* This module provides functions from the UnlinKability and ANOnymity
    verifier built on top of ProVerif as described in [1]. (todo-lucca:ref) *)
 
-open Types
+
+(** If the inputted process is not in the "2-agents protocol class" (see [1]). *)
+exception NotInClass of string
 
 (** Check Condition 1 (outptuis are relation-free). *)
-val checkC1 : process -> bool
+val checkC1 : Types.process -> bool
 
 (** Check Condition 2 (tests do not leak information about agents). *)
-val checkC2 : process -> bool
+val checkC2 : Types.process -> bool
 
 (** TODO *)
-val transC1 : process -> process
+val transC1 : Types.process ->  Types.process
+
+(** Display a representation of the 2-agents protocol associated to a given process. *)
+val displayProto : Types.process -> unit

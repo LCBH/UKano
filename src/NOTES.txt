@@ -12,3 +12,19 @@ Les tdecl list sont ajoutés à la théorie
     - tous les noms sont ajoutés; (Terms.record_id nom parsing_info)
     - toute la théorie équationnelle est instanciée (avec le iter check_one x (c'est moche!!))
     - tout est global dans des ref/Hashtbl etc. définis dans pitsyntax.ml (erf)
+
+
+
+
+## QUERY & EVENTS:
+dans pitsyntax.ml: let query_list = ref ([] : (envdecl * tquery list) list)
+                   let event_fun_table = Hashtbl.create 7
+
+Exemple de création du symbole de l'event dans pitsyntax.ml l.1510:
+  let r = { f_name = name;
+	    f_type = tyarg, Param.event_type;
+	    f_cat = Eq[];
+	    f_initial_cat = Eq[];
+	    f_private = true;
+	    f_options = 0 }
+
