@@ -1,3 +1,12 @@
+TODO:
+C2:
+	- imprimer des déclarations d'events
+        - imprimer des requests
+        - trouver une bonne représentation (si besoin) des proto pour générer la version C2
+
+C1:     - trouver comment récupérer/générer les versions nonces (avec choice?)
+        - écrire la transfo...
+
 Parsing dans pitsyntax.ml (compressé)
 
 [ let parse filename = 
@@ -9,7 +18,7 @@ Type de retour: Pitptree.tdecl list * Pitptree.tprocess * Pitptree.tprocess opti
 
 Quand on fait: [let p0, second_p0 = Pitsyntax.parse_file s in]
 Les tdecl list sont ajoutés à la théorie 
-    - tous les noms sont ajoutés; (Terms.record_id nom parsing_info)
+    - tous les noms sont ajoutés; (Terms.re9cord_id nom parsing_info)
     - toute la théorie équationnelle est instanciée (avec le iter check_one x (c'est moche!!))
     - tout est global dans des ref/Hashtbl etc. définis dans pitsyntax.ml (erf)
 
