@@ -270,7 +270,7 @@ let anal_file s =
 	      log "Bonjour UKANO, à toi de jouer, transforme moi le process:";
               (* Display.Text.display_process "" p; *)
               (* Display.Text.newline(); *)
-	      Display.Text.display_process "" (Ukano.transC1 p);
+	      Ukano.transC1 p;
 	      Printf.printf "############## 2-agents protocol ###############\n";
 	      Ukano.displayProto p;
 	    end else begin

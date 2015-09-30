@@ -32,14 +32,18 @@
 (** If the inputted process is not in the "2-agents protocol class" (see [1]). *)
 exception NotInClass of string
 
-(** Check Condition 1 (outptuis are relation-free). *)
+(** Display a whole ProVerif file checking the first condition except for the theory (to be appended). *)
+val transC1 : Types.process -> unit
+
+(** Display a whole ProVerif file checking the first condition except for the theory (to be appended). *)
+val transC2 : Types.process -> unit
+
+(** Display a representation of the 2-agents protocol associated to a given process. *)
+val displayProto : Types.process -> unit
+
+(* To implement later on: *)
+(** Check Condition 1 (outptuts are relation-free). *)
 val checkC1 : Types.process -> bool
 
 (** Check Condition 2 (tests do not leak information about agents). *)
 val checkC2 : Types.process -> bool
-
-(** TODO *)
-val transC1 : Types.process ->  Types.process
-
-(** Display a representation of the 2-agents protocol associated to a given process. *)
-val displayProto : Types.process -> unit

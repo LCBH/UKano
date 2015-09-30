@@ -53,11 +53,40 @@ let extractProto process =
   let rec getNames acc = function
     | Restr (idName,_,p',_) -> getNames (idName::acc) p'
     | _ as p -> acc, p in
+  (* Check that a given role is of the expected form: optional arguments are used to make sure
+     the role meets the alternation in/test*/out with same else branches in test*. *)
+  let rec checkRole ?lastInp:(laI=false) ?lastOut:(laO=false)
+		    ?lastCondi:(laC=false) ?lastElse:(laE=Nil)= function
+    | Nil -> ()
+    | Input (_,_,p,_) ->
+       if laI then raise (NotInClass "Roles cannot perform two inputs in a row.");
+       checkRole ~lastInp:true ~lastOut:false ~lastCondi:false p
+    | Output (_,_,p,_) ->
+       if laO then raise (NotInClass "Roles cannot perform two outputs in a row.");
+       checkRole ~lastInp:false ~lastOut:true ~lastCondi:false p
+    | Let (_,_,p1,p2,_) | Test (_,p1,p2,_) ->
+       begin
+	 (match p2 with
+	  | Nil -> ()
+	  | Output (_,_,Nil,_) -> ()
+	  | _ -> raise (NotInClass "Else branches must be either Nil or Output.Nil."));
+	 if laC
+	 then (match p1,p2 with
+		   | Nil, Nil | Output(_,_,Nil,_), Output(_,_,Nil,_) -> checkRole p1
+		   | _ -> raise (NotInClass "Two else branches from adjacent tests are not syntactical equal."))
+	 else checkRole ~lastCondi:true ~lastElse:p2 p1;
+       end
+    | _ -> raise (NotInClass "Only Nul,Input,Output,Test and Let are allowed in roles.") in
   (* Check that the two given processes are dual roles of the correct form and
      return (initiator, responder). *)
-  let rec checkRoles p1 p2 =
-    (p1,p2) in			(* todo *)
-  
+  let checkRoles p1 p2 =
+    checkRole p1;
+    checkRole p2;
+    match p1,p2 with
+    | Output(_,_,_,_), Input(_,_,_,_) -> p1,p2
+    | Input(_,_,_,_), Output(_,_,_,_) -> p2,p1
+    | _ -> raise (NotInClass "The two roles are not dual.")in
+  (* We now match the whole system against its expected form *)
   match process with
   | Repl (idProc,_) ->
      let idNames, idProc' = getNames [] idProc in
@@ -94,9 +123,13 @@ let transC1 p =
     } in
   let termEvent = FunApp (funSymbEvent, [FunApp (fstSessName, [])]) in
   let p' = Event (termEvent,p,Terms.new_occurrence ()) in
-  p'
+  Display.Text.display_process "" p'
 
 
+let transC2 p = ()
+
+
+(** Display a representation of the 2-agents protocol associated to a given process. *)
 let displayProto p =
   let proto = extractProto p in
   let pp s= Printf.printf "%s" s in
@@ -112,6 +145,9 @@ let displayProto p =
     pp  "}\n";
   end
 
+
+
+(* To implement later on: *)
 (** Check Condition 1 (outptuis are relation-free). *)
 let checkC1 p = failwith "Not Implemented"
 
