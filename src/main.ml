@@ -70,79 +70,8 @@ let up_in = function
 exception Is_equivalent
 
 let interference_analysis rulelist queries =
-  if (TermsEq.hasEquations()) && (not (!Param.weaksecret_mode)) then
-    Parsing_helper.input_warning "using \"noninterf\" in the presence of equations may yield many\nfalse attacks. If you observe false attacks, try to code the desired\nproperty using \"choice\" instead." Parsing_helper.dummy_ext;
-  let result = Rules.bad_derivable rulelist in
-  if result = [] then
-    begin
-      Display.Text.print_string "RESULT ";
-      Display.Text.display_eq_query queries;
-      Display.Text.print_line " is true (bad not derivable).";
-      if !Param.html_output then
-	begin
-	  Display.Html.print_string "<span class=\"result\">RESULT ";
-	  Display.Html.display_eq_query queries;
-	  Display.Html.print_line " is <span class=\"trueresult\">true (bad not derivable)</span>.</span>"
-	end;
-      raise Is_equivalent
-	
-    end
-  else
-    begin
-      let l = List.map (fun rule ->
-        Display.Text.print_string "goal reachable: ";
-        Display.Text.display_rule rule;
-	if !Param.html_output then
-	  begin
-	    Display.Html.print_string "goal reachable: ";
-            Display.Html.display_rule rule
-	  end;
-        let new_tree = History.build_history rule in
-	let r = 
-	  (* For weak secrets, the reconstructed attack really falsifies the
-	     equivalence; for other equivalences, it just reaches the program
-	     point at which we find the first difference of execution, which
-	     does not guarantee that the equivalence is false *)
-	  if (!Param.reconstruct_trace) && (!Param.reconstruct_derivation) then
-	    if (!Param.weaksecret != None) then
-	      Reduction.do_reduction None None new_tree
-	    else if (!Param.non_interference) then
-	      begin
-		ignore (Reduction.do_reduction None None new_tree);
-		false
-	      end
-            else if (!Param.has_choice) then
-	      begin
-		ignore (Reduction_bipro.do_reduction new_tree);
-		false
-	      end
-	    else
-	      false
-	  else
-	    false
-	in
-	Terms.cleanup();
-	r
-	  ) result
-      in
-      Display.Text.print_string "RESULT ";
-      Display.Text.display_eq_query queries;
-      if List.exists (fun x -> x) l then
-	Display.Text.print_line " is false."
-      else
-	Display.Text.print_line " cannot be proved (bad derivable).";
-      if !Param.html_output then
-	begin
-	  Display.Html.print_string "<span class=\"result\">RESULT ";
-	  Display.Html.display_eq_query queries;
-	  if List.exists (fun x -> x) l then
-	    Display.Html.print_line " is <span class=\"falseresult\">false</span>.</span>"
-	  else
-	    Display.Html.print_line " <span class=\"unknownresult\">cannot be proved (bad derivable)</span>.</span>"
-	end
-    end
-
-
+  failwith "WIP in UKANO, I deleteded useless parts for better readability. You need to revert THIS COMMIT (do a git blame)."
+	   
 let out solve query_to_facts clauses queries =
   match !out_kind with
     Solve ->
@@ -228,92 +157,10 @@ let simplify_and_solve_process p =
     Printf.printf "No simplified process found\n"
   
 let rec interface_general_merg list_simpl_p =
-  let nb_biprocess = List.length list_simpl_p in
-  let conjug = 
-    if nb_biprocess = 1
-    then ""
-    else "es" 
-  in
-  Printf.printf "\n----------------------------\n";
-  Printf.printf "ProVerif has found %d simplified process%s equivalent to the initial process.\n" nb_biprocess conjug;
-  Printf.printf "Possible actions:\n";
-  Printf.printf "1- View them all\n";
-  Printf.printf "2- Try solving equivalence for all of them\n";
-  Printf.printf "   Note that this option stops when ProVerif finds an observationally equivalent biprocess\n";
-  Printf.printf "3- Try solving equivalence for one specific process (enter 3-x wih x the number of the process)\n";
-  Printf.printf "4- Exit ProVerif\n";
-      
-  let result = read_line () in
-  match result with
-    | "1" -> 
-      let acc = ref 1 in
-      List.iter (fun p ->
-        Printf.printf "\n---------------------------\n";
-        Printf.printf "-- Simplified process %d --\n" !acc;
-        Printf.printf "---------------------------\n";
-        
-	Display.Text.display_process_occ "" p;
-	Display.Text.newline();
-	acc := !acc + 1
-      ) list_simpl_p;
-      interface_general_merg list_simpl_p
-    (*| r when (String.length result > 2) && (String.sub r 0 2 = "2-") -> 
-      let size = List.length list_simpl_p in
-      let n = 
-        try
-          int_of_string (String.sub r 2 ((String.length r) - 2))
-        with _ -> 0 in
-      
-      if n > 0 && n <= size
-      then 
-        begin
-	  Printf.printf "\n---------------------------\n";
-	  Printf.printf "-- Simplified process %d --\n" n;
-	  Printf.printf "---------------------------\n";
-	  
-	  Display.Text.display_process_occ "" (List.nth list_simpl_p (n-1));
-	  Display.Text.newline();
-	  
-          interface_general_merg list_simpl_p
-        end
-      else interface_general_merg list_simpl_p*)
-    |"2" -> 
-       begin try
-         List.iter solve_simplified_process list_simpl_p;
-       with Is_equivalent -> ()
-       end
-    | r when (String.length result > 2) && (String.sub r 0 2 = "3-") -> 
-       let size = List.length list_simpl_p in
-       let n = 
-         try
-           int_of_string (String.sub r 2 ((String.length r) - 2))
-         with _ -> 0 in
-      
-       if n > 0 && n <= size
-       then
-         begin 
-           try
-             solve_simplified_process (List.nth list_simpl_p (n-1))
-           with Is_equivalent -> ()
-         end;
-         
-       interface_general_merg list_simpl_p  
-       
-    |"4" -> exit 0
-    |_ -> interface_general_merg list_simpl_p
+  failwith "WIP in UKANO, I deleteded useless parts for better readability. You need to revert THIS COMMIT (do a git blame)."
 
 let interface_for_merging_process p = 
-  Printf.printf "Check the process...\n";
-  Simplify.verify_process [] p;
-  Printf.printf "Calculate the simplified processes...\n";
-  
-  let simpl_process_list = ref [] in
-  
-  Simplify.simplify_process p (fun p' -> simpl_process_list := p'::!simpl_process_list);
-  
-  if !simpl_process_list <> []
-  then interface_general_merg !simpl_process_list
-  else Printf.printf "No simplified process found\n"  
+  failwith "WIP in UKANO, I deleteded useless parts for better readability. You need to revert THIS COMMIT (do a git blame)."
 
 (*********************************************
                Analyser
@@ -394,63 +241,7 @@ let anal_file s =
 	
 	if !Param.equivalence
 	then 
-	begin
-	  if !Param.has_choice
-	  then Parsing_helper.user_error "When showing equivalence of two processes, the processes cannot contain choice\n";
-	  
-	  if (!Pitsyntax.query_list != [])
-	    || (Pitsyntax.get_noninterf_queries() != [])
-	    || (Pitsyntax.get_weaksecret_queries() != [])
-	  then Parsing_helper.user_error "Queries are incompatible with equivalence\n";
-	    
-	  if (!Param.key_compromise != 0) then
-	    Parsing_helper.user_error "Key compromise is incompatible with equivalence\n";
-	  
-	  let second_p0 = match second_p0 with
-	    | None -> internal_error "[main.ml] Second process should exist"
-	    | Some p2 -> 
-	        if !Param.move_new then
-	          Pitransl.move_new p2
-	        else p2 in 
-	
-	  if (!Param.html_output) then
-	    Display.Html.print_string "<span class=\"query\">Observational equivalence between two processes</span><br>\n"
-	  else if (!Param.verbose_explain_clauses = Param.ExplainedClauses) || (!Param.explain_derivation) then
-	    Display.Text.print_string "Observational equivalence between two processes\n";
-	   
-	  display_process (Simplify.prepare_process p0) false;
-	  display_process (Simplify.prepare_process second_p0) false;
-
-	  begin try
-	    let biprocess_found = ref false in
-	    Simplify.obtain_biprocess_from_processes p0 second_p0 (fun bi_proc ->
-	      biprocess_found := true;
-	      let bi_proc = Simplify.prepare_process bi_proc in
-	      Pitsyntax.reset_need_vars_in_names();
-	      if !Param.html_output then
-	        Display.Html.print_string "<span class=\"query\">Observational equivalence</span><br>\n";
-	        
-	      display_process bi_proc true;
-	      
-	      Param.weaksecret_mode := true;
-	      Selfun.inst_constraints := true;
-	   
-	      let rules = Pitranslweak.transl bi_proc in
-	    
-	      solve_only interference_analysis (fun q -> q) rules Pitypes.ChoiceQuery;
-	      Param.weaksecret_mode := false;
-	      Selfun.inst_constraints := false;
-	      incr Param.current_query_number
-	    );
-	    if not (!biprocess_found) then
-	      begin
-		Display.Text.print_string "RESULT no biprocess can be computed\n";
-		if !Param.html_output
-		then Display.Html.print_string "<span class=\"result\">RESULT no biprocess can be computed</span><br>"
-	      end  
-	  with Is_equivalent -> ()
-	  end  
-	end    
+	  failwith "WIP in UKANO, I deleteded useless parts for better readability. You need to revert THIS COMMIT (do a git blame)."
 	else 
 	begin
 	  let p = Simplify.prepare_process p0 in
@@ -460,12 +251,7 @@ let anal_file s =
 	  
 	  if (!Param.html_output) then
 	    begin
-	      Display.LangHtml.openfile ((!Param.html_dir) ^ "/process_1.html") "ProVerif: process";
-	      Display.Html.print_string "<H1>Process</H1>\n";
-	      Display.Html.display_process_occ "" p;
-	      Display.Html.newline();
-	      Display.LangHtml.close();
-	      Display.Html.print_string "<A HREF=\"process_1.html\" TARGET=\"process\">Process</A><br>\n"
+	      failwith "WIP in UKANO, I deleteded useless parts for better readability. You need to revert THIS COMMIT (do a git blame).";
 	    end 
 	  else if not !Param.trad_ukano && ((!Param.verbose_explain_clauses = Param.ExplainedClauses) || (!Param.explain_derivation)) then
 	    begin
@@ -475,40 +261,9 @@ let anal_file s =
 	    end;
 	  
 	  if !Param.has_choice 
-	  then 
+	  then   
 	  begin
-	    if (!Pitsyntax.query_list != [])
-	      || (Pitsyntax.get_noninterf_queries() != [])
-	      || (Pitsyntax.get_weaksecret_queries() != [])
-	      then Parsing_helper.user_error "Queries are incompatible with choice\n";
-	    
-	    if (!Param.key_compromise != 0) then
-	      Parsing_helper.user_error "Key compromise is incompatible with choice\n";
-
-	    Display.Text.print_string "-- Observational equivalence";
-	    Display.Text.newline();
-	    
-	    if !Param.html_output then
-	      Display.Html.print_string "<span class=\"query\">Observational equivalence</span><br>\n";
-	      
-	    Param.weaksecret_mode := true;
-	    Selfun.inst_constraints := true;
-	   
-	    let rules = Pitranslweak.transl p in
-	    
-	    begin try
-	      solve_only interference_analysis (fun q -> q) rules Pitypes.ChoiceQuery;
-	      Param.weaksecret_mode := false;
-	      Selfun.inst_constraints := false;
-	      incr Param.current_query_number;
-	      
-	      if !Param.simplify_process = 2
-	      then interface_for_merging_process p0
-	      else if !Param.simplify_process = 1
-	      then simplify_and_solve_process p0
-	      
-	    with Is_equivalent -> ()
-	    end
+	    failwith "WIP in UKANO, I deleteded useless parts for better readability. You need to revert THIS COMMIT (do a git blame).";
 	  end
 	  else if !Param.trad_ukano
 	  then begin
@@ -553,29 +308,7 @@ let anal_file s =
 
 	    List.iter (fun noninterf_queries ->
 	      begin
-	        let noninterf_queries_names = List.map fst noninterf_queries in
-	        Param.secret_vars := noninterf_queries_names;
-	        Param.secret_vars_with_sets := noninterf_queries;
-	        Param.non_interference := true;
-	        let _ = Pitsyntax.transl_query ([],[]) in (* Ignore all events *)
-	        let rules = Pitransl.transl p in
-	        print_string "-- ";
-	        Display.Text.display_eq_query (Pitypes.NonInterfQuery noninterf_queries);
-	        Display.Text.newline();
-	        if !Param.html_output then
-	          begin
-		    Display.Html.print_string "<LI><span class=\"query\">";
-		    Display.Html.display_eq_query (Pitypes.NonInterfQuery noninterf_queries);
-		    Display.Html.print_string "</span><br>\n"
-	          end;
-	        
-	        begin try
-	          solve_only interference_analysis (fun q -> q) rules (Pitypes.NonInterfQuery noninterf_queries);
-	        with Is_equivalent -> ()
-	        end;
-	    
-	        Param.non_interference := false;
-	        incr Param.current_query_number
+		failwith "WIP in UKANO, I deleteded useless parts for better readability. You need to revert THIS COMMIT (do a git blame).";
 	      end
 	    ) (Pitsyntax.get_noninterf_queries());
 
@@ -583,22 +316,7 @@ let anal_file s =
 
 	    List.iter (fun weaksecret ->
 	      begin
-	        Param.weaksecret := Some weaksecret;
-	        Param.weaksecret_mode := true;
-	        Selfun.inst_constraints := true;
-	        print_string ("-- Weak secret " ^ weaksecret.f_name ^ "\n");
-	        if !Param.html_output then
-	          Display.Html.print_string ("<LI><span class=\"query\">Weak secret " ^ weaksecret.f_name ^ "</span><br>\n");
-	        let _ = Pitsyntax.transl_query ([],[]) in (* Ignore all events *)
-	        let rules = Pitransl.transl p in
-	        begin try
-	          solve_only interference_analysis (fun q -> q) rules (Pitypes.WeakSecret weaksecret);
-	        with Is_equivalent -> ()
-	        end;
-	        Param.weaksecret := None;
-	        Param.weaksecret_mode := false;
-	        Selfun.inst_constraints := false;
-	        incr Param.current_query_number
+		failwith "WIP in UKANO, I deleteded useless parts for better readability. You need to revert THIS COMMIT (do a git blame).";
 	      end
 	    ) (Pitsyntax.get_weaksecret_queries());
 
@@ -611,156 +329,8 @@ let anal_file s =
 	  Display.LangHtml.close()
 
     | Pi ->
-	let p0 = Pisyntax.parse_file s in
-	
-	let p = 
-	  if !Param.move_new then
-	    Pitransl.move_new p0
-	  else
-	    p0
-	in
-	TermsEq.record_eqs_with_destr();
-	
-	(* Check if destructors are deterministic *)
-	
-	Destructor.check_deterministic !Pisyntax.destructors_check_deterministic;
-	
-	(* Display the original processes *)
-	
-	incr Param.process_number;
-	  
-	if (!Param.html_output) then
-	  begin
-	    Display.LangHtml.openfile ((!Param.html_dir) ^ "/process_1.html") "ProVerif: process";
-	    Display.Html.print_string "<H1>Process</H1>\n";
-	    Display.Html.display_process_occ "" p;
-	    Display.Html.newline();
-	    Display.LangHtml.close();
-	    Display.Html.print_string "<A HREF=\"process_1.html\" TARGET=\"process\">Process</A><br>\n"
-	  end 
-	else if (!Param.verbose_explain_clauses = Param.ExplainedClauses) || (!Param.explain_derivation) then
-	  begin
-	    print_string "Process:\n";
-	    Display.Text.display_process_occ "" p;
-	    Display.Text.newline()
-	  end;
-
-	if !Param.has_choice then
-	  begin
-	    if (!Pisyntax.query_list != [])
-	    || (Pisyntax.get_noninterf_queries() != [])
-	    || (Pisyntax.get_weaksecret_queries() != [])
-	    then Parsing_helper.user_error "Queries are incompatible with choice\n";
-	    if (!Param.key_compromise != 0) then
-	      Parsing_helper.user_error "Key compromise is incompatible with choice\n";
-
-	    print_string "-- Observational equivalence"; print_newline();
-	    if !Param.html_output then
-	      Display.Html.print_string "<span class=\"query\">Observational equivalence</span><br>\n";
-	    Param.weaksecret_mode := true;
-	    Selfun.inst_constraints := true;
-	    let rules = Pitranslweak.transl p in
-	    begin try
-	      solve_only interference_analysis (fun q -> q) rules Pitypes.ChoiceQuery;
-	    with Is_equivalent -> ()
-	    end;
-	    Param.weaksecret_mode := false;
-	    Selfun.inst_constraints := false
-	  end
-	else
-	  begin
-	    if !Param.html_output then
-	      Display.Html.print_string "<UL>\n";
-
-        (* Secrecy and authenticity *)
-
-	List.iter (fun q ->
-	  begin
-	    let queries = Pisyntax.transl_query q in
-	    let rules = Pitransl.transl p in
-	    let queries = List.map Reduction_helper.check_delayed_names queries in
-	    if !Param.tulafale != 1 then 
-	      begin
-                (* Note: pisyntax translates bindings let x = ... into PutBegin(false,[])
-		   since these bindings are useless once they have been interpreted 
-		   Such dummy PutBegin(false,[]) should not be displayed. *)
-		let queries = List.filter (function Pitypes.PutBegin(_,[]) -> false | _ -> true) queries in
-		print_string ("-- Query ");
-		Display.Text.display_list Display.Text.display_corresp_putbegin_query "; " queries;
-		print_newline();
-		if !Param.html_output then
-		  begin
-		    Display.Html.print_string "<LI><span class=\"query\">Query ";
-		    Display.Html.display_list Display.Html.display_corresp_putbegin_query "; " queries;
-		    Display.Html.print_string "</span><br>\n"
-		  end
-	      end
-	    else
-	      print_string "-- Secrecy & events.\n";
-	    out Piauth.solve_auth Pisyntax.query_to_facts rules queries;
-	    incr Param.current_query_number
-	  end) (!Pisyntax.query_list);
-
-        (* Key compromise is now compatible with authenticity
-           or non-interference: Param.key_compromise := 0; *)
-
-        (* Non-interference *)
-
-	List.iter (fun noninterf_queries ->
-	  begin
-	    let noninterf_queries_names = List.map fst noninterf_queries in
-	    Param.secret_vars := noninterf_queries_names;
-	    Param.secret_vars_with_sets := noninterf_queries;
-	    Param.non_interference := true;
-	    let _ = Pisyntax.transl_query [] in (* Ignore all events *)
-	    let rules = Pitransl.transl p in
-	    print_string "-- ";
-	    Display.Text.display_eq_query (Pitypes.NonInterfQuery noninterf_queries);
-	    Display.Text.newline();
-	    if !Param.html_output then
-	      begin
-		Display.Html.print_string "<LI><span class=\"query\">";
-		Display.Html.display_eq_query (Pitypes.NonInterfQuery noninterf_queries);
-		Display.Html.print_string "</span><br>\n"
-	      end;
-	    begin try
-	      solve_only interference_analysis (fun q -> q) rules (Pitypes.NonInterfQuery noninterf_queries);
-	    with Is_equivalent -> ()
-	    end;
-	    Param.non_interference := false;
-	    incr Param.current_query_number
-	  end) (Pisyntax.get_noninterf_queries());
-
-	(* Weak secrets *)
-
-	List.iter (fun weaksecret ->
-	  begin
-	    Param.weaksecret := Some weaksecret;
-	    Param.weaksecret_mode := true;
-	    Selfun.inst_constraints := true;
-	    print_string ("-- Weak secret " ^ weaksecret.f_name ^ "\n");
-	    if !Param.html_output then
-	      Display.Html.print_string ("<LI><span class=\"query\">Weak secret " ^ weaksecret.f_name ^ "</span><br>\n");
-	    let _ = Pisyntax.transl_query [] in (* Ignore all events *)
-	    let rules = Pitransl.transl p in
-	    begin try
-	      solve_only interference_analysis (fun q -> q) rules (Pitypes.WeakSecret weaksecret);
-	    with Is_equivalent -> ()
-	    end;
-	    
-	    Param.weaksecret := None;
-	    Param.weaksecret_mode := false;
-	    Selfun.inst_constraints := false;
-	    incr Param.current_query_number
-	  end) (Pisyntax.get_weaksecret_queries());
-
-	    if (!Param.html_output) then
-	      Display.Html.print_string "</UL>\n"
-	  end;
-
-	if (!Param.html_output) then
-	  Display.LangHtml.close()
-
+       failwith "WIP in UKANO, I deleteded useless parts for better readability. You need to revert THIS COMMIT (do a git blame)."
+		
   with e ->
     Parsing_helper.internal_error (Printexc.to_string e)
 
