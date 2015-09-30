@@ -1,0 +1,14 @@
+Parsing dans pitsyntax.ml (compressé)
+
+[ let parse filename = 
+    lexbuf.Lexing.lex_curr_p <- { lexbuf.Lexing.lex_curr_p with 
+    let ptree =   Pitparser.all Pitlexer.token lexbuf  in
+    ptree ]
+
+Type de retour: Pitptree.tdecl list * Pitptree.tprocess * Pitptree.tprocess option
+
+Quand on fait: [let p0, second_p0 = Pitsyntax.parse_file s in]
+Les tdecl list sont ajoutés à la théorie 
+    - tous les noms sont ajoutés; (Terms.record_id nom parsing_info)
+    - toute la théorie équationnelle est instanciée (avec le iter check_one x (c'est moche!!))
+    - tout est global dans des ref/Hashtbl etc. définis dans pitsyntax.ml (erf)

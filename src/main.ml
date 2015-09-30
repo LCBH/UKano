@@ -27,6 +27,7 @@
 *)
 open Types
 open Parsing_helper
+open Ukano
 
 type out_pos =
     Spass
@@ -466,7 +467,7 @@ let anal_file s =
 	      Display.LangHtml.close();
 	      Display.Html.print_string "<A HREF=\"process_1.html\" TARGET=\"process\">Process</A><br>\n"
 	    end 
-	  else if (!Param.verbose_explain_clauses = Param.ExplainedClauses) || (!Param.explain_derivation) then
+	  else if not !Param.trad_ukano && ((!Param.verbose_explain_clauses = Param.ExplainedClauses) || (!Param.explain_derivation)) then
 	    begin
 	      print_string "Process:\n";
 	      Display.Text.display_process_occ "" p;
@@ -511,9 +512,10 @@ let anal_file s =
 	  end
 	  else if !Param.trad_ukano
 	  then begin
-	      log "Bonjour UKANO, à toi de jouer!";
+	      log "Bonjour UKANO, à toi de jouer, transforme moi le process:";
               Display.Text.display_process "" p;
               Display.Text.newline();
+	      Display.Text.display_process "" (Ukano.transC1 p);
 	    end else begin
 	      
 	      if !Param.html_output then
