@@ -377,7 +377,7 @@ let _ =
       "-ukano",
       Arg.Unit (fun () -> 
 		Param.trad_ukano := true),
-      "\t\t\tUse Proverif to check UnlinKability and ANOnymity as explained in [1].";
+      "\t\t\tUse Proverif to check UnlinKability and ANOnymity as explained in [1]. This mode only accepts pitype files.";
     (* todo ref/hyperref *)
     ]
     anal_file "Proverif. Cryptographic protocol verifier, by Bruno Blanchet and Vincent Cheval";
