@@ -1,8 +1,9 @@
 TODO:
 C2:
-	- imprimer des déclarations d'events
-        - imprimer des requests
-        - trouver une bonne représentation (si besoin) des proto pour générer la version C2
+	- être plus souple sur la classe acceptée: surtout la création de noms après les bangs:
+          on rappatrie tout ce n'est pas grave... on veut juste au moins un nom créé juste après le second
+          bang
+        - ça nous permettra de tester les fichiers qu'o na déjà et check les cannot prove
 
 C1:     - trouver comment récupérer/générer les versions nonces (avec choice?)
         - écrire la transfo...
