@@ -242,19 +242,31 @@ let transC2 p inNameFile nameOutFile =
 	 let newProc = Output(tc,tm,subProc,occ) in
 	 (addEvent nameEv argsEv newProc, lTest, nbOut)
       | Let (pat,t,pt,pe,occ) ->
-	 let newListTest = (List.length listTest+1, List.length listIn) :: listTest in
-	 let subProc,lTest,nbOut = goThrough newListTest listIn listOut pt in
-	 let argsEv = makeArgs listIn listOut
-	 and nameEv = nameEvent prefixName (List.length newListTest) "test" in
-	 let subProcEv = addEvent nameEv argsEv subProc in
-	 (Let(pat,t,subProcEv,pe,occ), lTest, nbOut)
+	 (match pt with
+	  | Test(_,_,_,_)
+	  | Let(_,_,_,_,_) -> 	(* in that case we won't create query *)
+	     let subProc,lTest,nbOut = goThrough listTest listIn listOut pt in
+	     (Let(pat,t,subProc,pe,occ),lTest,nbOut)
+	  | _ ->                (* last conditional: we do create query *)
+	     let newListTest = (List.length listTest+1, List.length listIn) :: listTest in
+	     let subProc,lTest,nbOut = goThrough newListTest listIn listOut pt in
+	     let argsEv = makeArgs listIn listOut
+	     and nameEv = nameEvent prefixName (List.length newListTest) "test" in
+	     let subProcEv = addEvent nameEv argsEv subProc in
+	     (Let(pat,t,subProcEv,pe,occ), lTest, nbOut))
       | Test (t,pt,pe,occ) -> 
-	 let newListTest = (List.length listTest+1,List.length listIn) :: listTest in
-	 let subProc,lTest,nbOut = goThrough newListTest listIn listOut pt in
-	 let argsEv = makeArgs listIn listOut
-	 and nameEv = nameEvent prefixName (List.length newListTest) "test" in
-	 let subProcEv = addEvent nameEv argsEv subProc in
-	 (Test(t,subProcEv,pe,occ), lTest, nbOut)
+	 (match pt with
+	  | Test(_,_,_,_)
+	  | Let(_,_,_,_,_) ->  	(* in that case we won't create query *)
+	     let subProc,lTest,nbOut = goThrough listTest listIn listOut pt in
+	     (Test(t,subProc,pe,occ),lTest,nbOut)
+	  | _ -> 		(* last conditional: we do create query *)
+	     let newListTest = (List.length listTest+1,List.length listIn) :: listTest in
+	     let subProc,lTest,nbOut = goThrough newListTest listIn listOut pt in
+	     let argsEv = makeArgs listIn listOut
+	     and nameEv = nameEvent prefixName (List.length newListTest) "test" in
+	     let subProcEv = addEvent nameEv argsEv subProc in
+	     (Test(t,subProcEv,pe,occ), lTest, nbOut))
       | Nil -> (Nil, List.rev listTest, List.length listOut)
       | _ -> failwith "Critical error: transC2 is applied on a protocol that does not satisfy the syntactical restrictions. Should never happen." in
     goThrough [] [] [] proc in
@@ -341,7 +353,7 @@ let transC2 p inNameFile nameOutFile =
   let newstdout = open_out nameOutFile in
   Unix.dup2 (Unix.descr_of_out_channel newstdout) Unix.stdout;
   (* Print (=write in the file) the complete ProVerif file *)
-  pp "\n\n(* == THEORY == *)\n";
+(*  pp "\n\n(* == THEORY == *)\n"; *)
   pp theoryStr;
   pp " *)\n";
   pp "\n\n(* == DECLARATIONS OF EVENTS == *)\n";

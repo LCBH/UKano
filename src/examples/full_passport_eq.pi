@@ -28,7 +28,7 @@ reduc forall m: bitstring , k:bitstring ;
 reduc forall m: bitstring , k:bitstring ;
   checksign(sign(m, k), spk(k)) = m.
 
-(* Over-approximation of (kt XOR kr): xorBitstring has strictly more equations
+(* Over-approximation of (kt XOR kr): xorKey has strictly more equations
 -> Valid ? *)
 fun xorKey(bitstring, bitstring) : bitstring.
 fun projKey1(bitstring) : bitstring
@@ -59,21 +59,20 @@ let TPA(k2:bitstring, skP:bitstring, dgi:bitstring) =
     then out(ct, enc((dgi, sign(dgi, skP)), k2)).
 
 (* Active Authentication *)
-let RAA (k2:bitstring, skP:bitstring, randR:bitstring) =
-  out(cr, enc((init, randR), k2));
+let RAA (k2:bitstring, skP:bitstring,randR:bitstring) =
   in(cr, y3:bitstring);
   let m:bitstring = dec(y3, k2) in
   if checksign(m, spk(skP)) = getmess(m)
   then RPA(k2, skP).
 
-let TAA (k2:bitstring, skP:bitstring, dgi:bitstring, randT:bitstring) =
+let TAA (k2:bitstring, skP:bitstring, dgi:bitstring,randT:bitstring) =
   in(ct, x2:bitstring);
   let (=init, xrandR:bitstring) = dec(x2,k2) in
   out(ct, enc(sign((randT,xrandR), skP), k2));
   TPA(k2, skP, dgi).
 
 (* BAC Protocol *)
-let TB (k:bitstring, skP:bitstring, dgi:bitstring, nt:bitstring, kt:bitstring, randT:bitstring) =
+let TB (k:bitstring, skP:bitstring, dgi:bitstring,nt:bitstring,kt:bitstring,randT:bitstring) =
 (* T ----[n_t]---> R *)
     out(ct,nt);
 (* T <----[{nt,nr,kr}_k]--- R *)
@@ -84,12 +83,12 @@ let TB (k:bitstring, skP:bitstring, dgi:bitstring, nt:bitstring, kt:bitstring, r
          let (=nt,xnr:bitstring,xkr:bitstring) = dec(x1, k) in (
          out(ct, enc((nt,xnr,kt), k));
 (* HOLE *)
-         TAA(xorKey(kt,xkr), skP, dgi, randT))
-          else
+         TAA(xorKey(kt,xkr), skP, dgi,randT)
+         ) else
          out(ct, error_mac)	(* error bitstring in FR *)
     else out(ct, error_mac).    (* error mac in FR *)
       
-let RB (k:bitstring, skP:bitstring, nr:bitstring, kr:bitstring, randR:bitstring) =
+let RB (k:bitstring, skP:bitstring,nr:bitstring,kr:bitstring,randR:bitstring) =
 (* R <----[n_t]--- T *)
     in(cr, y1:bitstring);
 (* R ----[{nt,nr,kr}_k]---> T *)
@@ -97,9 +96,9 @@ let RB (k:bitstring, skP:bitstring, nr:bitstring, kr:bitstring, randR:bitstring)
 (* R <----[{nt,nr,kt}_k]--- T *)
     in(cr, y2:bitstring);
     let (ynt:bitstring, =nr, ykt:bitstring) = dec(y2, k) in (
-      let k2:bitstring = xorKey(ykt, kr) in
 (* HOLE *)
-      RAA(k, skP, randR)
+     out(cr, enc((init, randR), xorKey(ykt, kr)));
+      RAA(xorKey(ykt, kr), skP,randR)
     ).
 
 (* WHOLE SYSTEM *)
@@ -107,12 +106,12 @@ let BAC =
   new skP : bitstring ;
   ! new k:bitstring;
     ! new dgi:bitstring;	(* information stored in passports *)
-    new nr:bitstring;
-    new kr:bitstring;
     new nt:bitstring;
     new kt:bitstring;
-    new randT:bitstring;
+    new randT:bitstring;	
     new randR:bitstring;
-    (TB(k, skP,dgi,nt,kt,randT) | RB(k, skP, nr, kr, randR)).
+    new nr:bitstring;
+    new kr:bitstring;
+        (TB(k, skP, dgi,nt,kt,randT) | RB(k, skP,nr,kr,randR)).
 
 process BAC
