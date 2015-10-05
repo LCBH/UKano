@@ -207,15 +207,17 @@ let transC2 p inNameFile nameOutFile =
     with _ -> failwith "The protocol shoulv have at least one identity name and one session name." in
   let (sessTerm,idTerm) = FunApp (sessName, []), FunApp (idName, []) in
   let listEvents = ref [] in
+  let iniPrefix, resPrefix = "I", "R" in
+  let nameEvent prefixName nb actionName = Printf.sprintf "%s%s_%d" prefixName actionName nb in
   (* add an event on top of a process with args + in addition [idTerm,sessTerm] *)
   let addEvent name args p = 	
     let newArgs = idTerm :: sessTerm :: args in
     let event = makeEvent name newArgs in
     listEvents := (name, List.length newArgs) :: !listEvents;
     Event (event, p, makeOcc())in
+
   (* add all events to a role *)
   let addEventsRole proc prefixName isIni =
-    let nameEvent prefixName nb actionName = Printf.sprintf "%s%s_%d" prefixName actionName nb in
     let makeArgs listIn listOut =	(* create the list of arguments of events : terms list *)
       let rec merge = function
 	| [], l -> l
@@ -240,14 +242,14 @@ let transC2 p inNameFile nameOutFile =
 	 let newProc = Output(tc,tm,subProc,occ) in
 	 (addEvent nameEv argsEv newProc, lTest, nbOut)
       | Let (pat,t,pt,pe,occ) ->
-	 let newListTest = (List.length listIn) :: listTest in
+	 let newListTest = (List.length listTest+1, List.length listIn) :: listTest in
 	 let subProc,lTest,nbOut = goThrough newListTest listIn listOut pt in
 	 let argsEv = makeArgs listIn listOut
 	 and nameEv = nameEvent prefixName (List.length newListTest) "test" in
 	 let subProcEv = addEvent nameEv argsEv subProc in
 	 (Let(pat,t,subProcEv,pe,occ), lTest, nbOut)
       | Test (t,pt,pe,occ) -> 
-	 let newListTest = (List.length listIn) :: listTest in
+	 let newListTest = (List.length listTest+1,List.length listIn) :: listTest in
 	 let subProc,lTest,nbOut = goThrough newListTest listIn listOut pt in
 	 let argsEv = makeArgs listIn listOut
 	 and nameEv = nameEvent prefixName (List.length newListTest) "test" in
@@ -257,21 +259,60 @@ let transC2 p inNameFile nameOutFile =
       | _ -> failwith "Critical error: transC2 is applied on a protocol that does not satisfy the syntactical restrictions. Should never happen." in
     goThrough [] [] [] proc in
 
-  let generateQueries listTest nbOut =
-    (* TODO *)
-    [] 
+  (* Generate a string for a query *)
+  let generateQuery nb nbIn isInitiator =
+    let prefix = "query k:bitstring, n1:bitstring, n2:bitstring,\n" in
+    let nbArgs = if isInitiator	(* number of arguments to declare for this query *)
+		 then 2*nbIn
+		 else 2*nbIn-1 in
+    let rec range = function | 0 -> [] | n -> n :: range (n-1) in
+    let listArgs nb = 		(* generate a list of messages to give as arguments to events *)
+      List.map (fun n -> Printf.sprintf "m%d" n) (List.rev (range nb)) in      
+    let allListArgs nb role = 
+      "k" :: (if role==iniPrefix then "n1" else "n2") :: (listArgs nb) in
+    let listArgsDec = listArgs nbArgs in      
+    let prefixArgs = "      "^
+		       (String.concat ", "
+				      (List.map (fun s -> Printf.sprintf "%s:bitstring" s) listArgsDec))
+		       ^";\n" in
+    let dual (p1,p2) = p2,p1 in
+    let roles = iniPrefix,resPrefix in
+    let dualRoles = dual roles in
+    let rec produceEvents = function
+      |	0 -> []
+      | n  -> 
+	 let outRole, inRole = if (n mod 2) = 0 then dualRoles else roles in
+	 let n' = if (n mod 2) = 0 then n/2 else n/2+1 in
+	   (* if (n mod 2) = 0 then n-1 else n in *)
+	 (Printf.sprintf "event(%s(%s))" (nameEvent inRole n' "in") (String.concat "," (allListArgs n inRole)))
+	 ::
+	   (Printf.sprintf "event(%s(%s))" (nameEvent outRole n' "out") (String.concat "," (allListArgs n outRole)))
+	 ::
+	   produceEvents (n-1) in
+    let listEvents = produceEvents (if isInitiator then nbIn+1 else nbIn) in
+    let thisRole = if isInitiator then fst roles else snd roles in
+    let lastEvent = Printf.sprintf "event(%s(%s))" 
+				   (nameEvent thisRole nb "test")
+				   (String.concat "," (allListArgs nbArgs thisRole)) in
+    let strImplications = String.concat "  ==>\n" 
+					(List.map (fun ev -> Printf.sprintf "   (%s" ev)
+						  (lastEvent :: listEvents)) in
+    let rec repeat s = function | 0 -> "" | n -> s^(repeat s (n-1)) in
+    prefix^prefixArgs^strImplications^
+      (repeat ")" (List.length listEvents+1))^"."
   in
   
-  let iniPrefix, resPrefix = "I", "R" in
+  (* 1. COMPUTING EVENTS VERSION AND QUERIES *)
   let iniEvents,iniTests,iniNbOut = addEventsRole proto.ini iniPrefix true in
   let resEvents,resTests,resNbOut = addEventsRole proto.res resPrefix false in
   let protoEvents = { proto with
 		      ini = iniEvents;
 		      res = resEvents;
 		    } in
-  let allQueries = (generateQueries iniTests iniNbOut) @ (generateQueries resTests resNbOut) in
+  let allQueries = (List.map (fun (nb,nbIn) -> generateQuery nb nbIn true) iniTests) @ 
+		     (List.map (fun (nb,nbIn) -> generateQuery nb nbIn false) resTests) in
 
-  (* WRITE in outNameFile *)
+  (* 2. WRITE in outNameFile *)
   let displayEventsDec listEvents =
     let rec nBit = function
       | 0 -> []
@@ -281,7 +322,7 @@ let transC2 p inNameFile nameOutFile =
        Printf.printf "event %s(%s).\n" name (String.concat "," (nBit arity))
       ) listEvents in
 
-  (* GET the theory part of inNameFile *)
+  (* 3. GET the theory part of inNameFile *)
   let inFile = open_in inNameFile in
   let sizeInFile = in_channel_length inFile in
   let inStr = String.create sizeInFile in
@@ -296,7 +337,7 @@ let transC2 p inNameFile nameOutFile =
 	failwith "Inputted file not compliant with our rules.";
       end in
 
-  (*  HACK TO REDIRECT STDOUT *)
+  (* 4. Print evrything using a HACK TO REDIRECT STDOUT *)
   let newstdout = open_out nameOutFile in
   Unix.dup2 (Unix.descr_of_out_channel newstdout) Unix.stdout;
   (* Print (=write in the file) the complete ProVerif file *)
@@ -310,8 +351,7 @@ let transC2 p inNameFile nameOutFile =
   pp "\n\n(* == PROTOCOL WITH EVENTS == *)\n";
   pp "let SYSTEM =\n";
   displayProtocolProcess protoEvents;
-  pp ".";
-  pp "process SYSTEM\n"
+  pp ".\nprocess SYSTEM\n"
 (* END OF REDIRECTION *)
 
 
