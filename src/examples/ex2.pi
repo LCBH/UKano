@@ -1,0 +1,32 @@
+(* Exemple de fichier d'input d'UKANO *)
+type bitstring.
+
+(* Public communication channel *)
+free i : channel.
+free r : channel.
+(* Public constants *)
+free ok : bitstring.
+(* functions *)
+fun h(bitstring) : bitstring.
+
+event A(bitstring).
+
+(* ==PROTOCOL== *)
+
+let I (k:bitstring, ni:bitstring) =
+   out(i, ni);
+   in(i, x:bitstring);
+   event A(x);
+   out(i, h((x,ni))).
+
+let R (k:bitstring, nr:bitstring) =
+   in(r, y:bitstring);
+   out(i, h((y,nr,k))).
+
+let HL = 
+  ! new k:bitstring;
+    ! new nr:bitstring;    
+      new ni:bitstring;
+      (I(k,ni) | R(k,nr)).
+
+process HL

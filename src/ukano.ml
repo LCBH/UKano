@@ -35,6 +35,16 @@ let pp s= Printf.printf "%s" s
 (* For debugging purpose *)
 let log s = Printf.printf "> %s\n" s
 
+(* Helping message *)
+let helpMess = 
+  (  "Only typed ProVerif files are accepted (use the option '-in pitype'). The file should not define types and only use\n"^
+     "the type 'bitstring'. After the definition of the equational theory (without any declaration of events), the inputted\n"^
+     "file should contain a commentary:\n"^
+     "       (* ==PROTOCOL== *)\n"^
+     "and then define only one process corresponding of the whole multiple sessions system. This process should satisfy the\n"^
+     "syntactical restrictions described in [1]. Moreover, only one test (conditional or evaluation) can be performed between\n"^
+     "an input and an output. You may use nested evaluations instead.\n")
+
 (* Raised when the inputted process is not a 2-agents protocol as defined
    in [1], the associated string is the reason/explanation. *)
 exception NotInClass of string
@@ -55,7 +65,12 @@ type proto = {
     ini : process;		(* (open) process of the initiator *)
     res : process;		(* (open) process of the responder *)
   }
-	       
+
+
+(************************************************************)
+(* Display functions                                        *)
+(************************************************************)
+
 (** Extract the protocol structure from a process and rise NotInClass if
     not of the expected form. *)
 let extractProto process = 
@@ -120,8 +135,7 @@ let extractProto process =
 	  | p -> errorClass ("After session names, we expect a parallel composition of two roles.") p)
       | p -> errorClass ("After the first replication and identity names, we expect a replication (for sessions).") p)
   | (_,p) -> errorClass ("A replication (possibly after some creation of names) is expected at the begging of the process.") p
-			
-			
+
 let displayProtocol proto =
   pp "{\n   Common Names: ";
   List.iter (fun s -> Display.Text.display_function_name s; pp ", ") proto.comNames;
@@ -160,6 +174,11 @@ let displayProtocolProcess proto =
   pp (indent^indent^indent^"|\n");
     Display.Text.display_process (indent^indent^indent^indent) proto.res;
   pp (indent^indent^indent^")\n")
+
+
+(************************************************************)
+(* Handling events & checking second condition 2            *)
+(************************************************************)
 
 (* [string -> term list -> term] (of the rigth form to put it under Event constructor) *)
 let makeEvent name args =
@@ -215,6 +234,13 @@ let transC2 p =
 		    } in
   displayProtocolProcess protoEvents
 
+
+
+(* TODO: *)
+
+(************************************************************)
+(* Handling nonce versions & checking second condition 1    *)
+(************************************************************)
 
 let transC1 p = ()
 
