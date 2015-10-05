@@ -39,7 +39,7 @@ val transC1 : Types.process -> unit
 val transC2 : Types.process -> unit
 
 (** Display a representation of the 2-agents protocol associated to a given process. *)
-val displayProto : Types.process -> unit
+val displayProcessProtocol : Types.process -> unit
 
 (* To implement later on: *)
 (** Check Condition 1 (outptuts are relation-free). *)
