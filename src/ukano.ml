@@ -203,31 +203,57 @@ let transC2 p =
     try (List.hd proto.sessNames, List.hd proto.idNames) (* 2 funSymb *)
     with _ -> failwith "The protocol shoulv have at least one identity name and one session name." in
   let (sessTerm,idTerm) = FunApp (sessName, []), FunApp (idName, []) in
-  (* add an event on top of a process with in addition [idTerm,sessTerm] *)
+  (* add an event on top of a process with args + in addition [idTerm,sessTerm] *)
   let addEvent name args p = 	
     let newArgs = idTerm :: sessTerm :: args in
     Event (makeEvent name newArgs, p, makeOcc())in
-  let addEventsRole proc prefixName =
-    let countIn = ref 0 in
-    let countOut = ref 0 in
-    let rec goThrough = function
+  (* add all events to a role *)
+  let addEventsRole proc prefixName isIni =
+    let nameEvent prefixName nb actionName = Printf.sprintf "%s[%s_%d]" prefixName actionName nb in
+    let makeArgs listIn listOut =	(* create the list of arguments of events : terms list *)
+      let rec merge = function
+	| [], l -> l
+	| l, [] -> l
+	| a1 :: l1, a2 :: l2 -> a1 :: a2 :: (merge (l1,l2)) in
+      if isIni
+      then merge (List.rev listOut, List.rev listIn)
+      else merge (List.rev listIn, List.rev listOut) in
+    let rec goThrough listTest listIn listOut = function
       | Input (tc,((PatVar bx) as patx),p,occ) -> (* bx: binder in types.mli *)
-	 Input(tc,patx, goThrough p, occ)
+	 let newListIn = (Var bx) :: listIn in
+	 let subProc,lTest,nbOut = goThrough listTest newListIn listOut p in
+	 let argsEv = makeArgs newListIn listOut
+	 and nameEv = nameEvent prefixName (List.length newListIn) "in" in
+	 let subProcEv = addEvent nameEv argsEv subProc in
+	 (Input(tc,patx, subProcEv, occ), lTest, nbOut)
       | Output (tc,tm,p,occ) ->
-	 incr(countOut);
-	 let nameEvent = (prefixName^"-out-"^(string_of_int !countOut)) in
-	 let p' = addEvent nameEvent [tm] (goThrough p) in
-	 Output(tc,tm,p',occ)
-      | Let (pat,t,pt,pe,_) as p ->
-	 p
-      | Test (t,pt,pe,_)  as p-> 
-	 p
-      | Nil -> Nil
+	 let newListOut = tm :: listOut in
+	 let subProc,lTest,nbOut = goThrough listTest listIn newListOut p in
+	 let argsEv = makeArgs listIn newListOut
+	 and nameEv = nameEvent prefixName (List.length newListOut) "out" in
+	 let newProc = Output(tc,tm,subProc,occ) in
+	 (addEvent nameEv argsEv newProc, lTest, nbOut)
+      | Let (pat,t,pt,pe,occ) ->
+	 let newListTest = (List.length listIn) :: listTest in
+	 let subProc,lTest,nbOut = goThrough newListTest listIn listOut pt in
+	 let argsEv = makeArgs listIn listOut
+	 and nameEv = nameEvent prefixName (List.length newListTest) "test" in
+	 let subProcEv = addEvent nameEv argsEv subProc in
+	 (Let(pat,t,subProcEv,pe,occ), lTest, nbOut)
+      | Test (t,pt,pe,occ) -> 
+	 let newListTest = (List.length listIn) :: listTest in
+	 let subProc,lTest,nbOut = goThrough newListTest listIn listOut pt in
+	 let argsEv = makeArgs listIn listOut
+	 and nameEv = nameEvent prefixName (List.length newListTest) "test" in
+	 let subProcEv = addEvent nameEv argsEv subProc in
+	 (Test(t,subProcEv,pe,occ), lTest, nbOut)
+      | Nil -> (Nil, List.rev listTest, List.length listOut)
       | _ -> failwith "Critical error: transC2 is applied on a protocol that does not satisfy the syntactical restrictions. Should never happen." in
-    goThrough proc
+    goThrough [] [] [] proc
   in
-  let iniEvents = addEventsRole proto.ini "INI" in
-  let resEvents = addEventsRole proto.res "RES" in
+  let iniPrefix, resPrefix = "I", "R" in
+  let iniEvents,iniTests,iniNbOut = addEventsRole proto.ini iniPrefix true in
+  let resEvents,resTests,resNbOut = addEventsRole proto.res resPrefix false in
   let protoEvents = { proto with
 		      ini = iniEvents;
 		      res = resEvents;
