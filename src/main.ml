@@ -371,7 +371,8 @@ let _ =
       "\t\t\tHTML display";
       "-ukano",
       Arg.Unit (fun () -> 
-		Param.trad_ukano := true),
+		Param.trad_ukano := true;
+		in_kind :=PiType),
       "\t\t\tUse Proverif to check UnlinKability and ANOnymity as explained in [1]. This mode only accepts pitype files.";
     (* todo ref/hyperref *)
     ]

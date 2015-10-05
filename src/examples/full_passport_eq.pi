@@ -31,6 +31,7 @@ reduc forall m: bitstring , k:bitstring ;
 (* Over-approximation of (kt XOR kr): xorKey has strictly more equations
 -> Valid ? *)
 fun xorKey(bitstring, bitstring) : bitstring.
+(*
 fun projKey1(bitstring) : bitstring
 reduc forall k1:bitstring, k2:bitstring;
         projKey1(xorKey(k1, k2)) = k1.
@@ -41,7 +42,7 @@ reduc forall k1:bitstring, k2:bitstring;
 fun trydec (bitstring, bitstring) : bitstring
 reduc forall m : bitstring, k:bitstring ; trydec ( enc(m,k) , k) = m
 otherwise forall x : bitstring , k : bitstring ; trydec ( x , k) = x .
-			       
+*)			       
 
 (* ==PROTOCOL== *)
 

@@ -301,7 +301,7 @@ let transC2 p inNameFile nameOutFile =
 	   (Printf.sprintf "event(%s(%s))" (nameEvent outRole n' "out") (String.concat "," (allListArgs n outRole)))
 	 ::
 	   produceEvents (n-1) in
-    let listEvents = produceEvents (if isInitiator then nbIn+1 else nbIn) in
+    let listEvents = produceEvents (if isInitiator then 2*nbIn else 2*nbIn-1) in
     let thisRole = if isInitiator then fst roles else snd roles in
     let lastEvent = Printf.sprintf "event(%s(%s))" 
 				   (nameEvent thisRole nb "test")
