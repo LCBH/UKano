@@ -49,7 +49,7 @@ EXEC = proverif
 # (graphics, arbitrary precision numbers, regular expression on strings, ...),
 # you must set the variable LIBS to the proper set of libraries. For
 # instance, to use the graphics library set LIBS to $(WITHGRAPHICS):
-# LIBS=$(WITHGRAPHICS)
+# LIBS = $(WITHGRAPHICS)
 
 # You may use any of the following predefined variable
 # WITHGRAPHICS : provides the graphics library
@@ -92,7 +92,7 @@ CAMLYACC = ocamlyacc
 # LIBS=$(WITHGRAPHICS) $(WITHUNIX) $(WITHSTR) $(WITHNUMS) $(WITHTHREADS)\
 # $(WITHDBM)
 
-LIBS=
+LIBS=str.cma unix.cma
 
 # Should be set to -custom if you use any of the libraries above
 # or if any C code have to be linked with your program

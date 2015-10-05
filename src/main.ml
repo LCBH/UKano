@@ -267,13 +267,7 @@ let anal_file s =
 	  end
 	  else if !Param.trad_ukano
 	  then begin
-	      log "Bonjour UKANO, à toi de jouer, transforme moi le process:";
-              (* Display.Text.display_process "" p; *)
-              (* Display.Text.newline(); *)
-	      Printf.printf "############## 2-agents protocol ###############\n";
-	      Ukano.displayProcessProtocol p;
-	      log "\n\n";
-	      Ukano.transC2 p;
+	      Ukano.transC2 p s "OUTPUT_C2.pi";
 	    end else begin
 	      
 	      if !Param.html_output then

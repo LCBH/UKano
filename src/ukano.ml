@@ -29,18 +29,21 @@
    verifier built on top of ProVerif as described in [1]. (todo-lucca:ref) *)
 
 open Types
+open Pervasives
 
 let pp s= Printf.printf "%s" s
 
 (* For debugging purpose *)
 let log s = Printf.printf "> %s\n" s
 
+let splitTheoryString = "==PROTOCOL=="
+
 (* Helping message *)
 let helpMess = 
   (  "Only typed ProVerif files are accepted (use the option '-in pitype'). The file should not define types and only use\n"^
      "the type 'bitstring'. After the definition of the equational theory (without any declaration of events), the inputted\n"^
      "file should contain a commentary:\n"^
-     "       (* ==PROTOCOL== *)\n"^
+     "       (* "^splitTheoryString^" *)\n"^
      "and then define only one process corresponding of the whole multiple sessions system. This process should satisfy the\n"^
      "syntactical restrictions described in [1]. Moreover, only one test (conditional or evaluation) can be performed between\n"^
      "an input and an output. You may use nested evaluations instead.\n")
@@ -169,11 +172,11 @@ let displayProtocolProcess proto =
   List.iter 
     (fun q -> Printf.printf "%snew %s : bitstring;\n" (indent^indent^indent) q.f_name)
     proto.sessNames;
-  pp (indent^indent^indent^"(\n");
+  pp (indent^indent^indent^"((\n");
   Display.Text.display_process (indent^indent^indent^indent) proto.ini;
-  pp (indent^indent^indent^"|\n");
+  pp (indent^indent^indent^")|(\n");
     Display.Text.display_process (indent^indent^indent^indent) proto.res;
-  pp (indent^indent^indent^")\n")
+  pp (indent^indent^indent^"))\n")
 
 
 (************************************************************)
@@ -197,19 +200,22 @@ let makeEvent name args =
 let makeOcc () = Terms.new_occurrence ()
 				      
 (** Display a whole ProVerif file checking the first condition except for the theory (to be appended). *)      
-let transC2 p = 
+let transC2 p inNameFile nameOutFile = 
   let proto = extractProto p in
   let (sessName,idName) =
     try (List.hd proto.sessNames, List.hd proto.idNames) (* 2 funSymb *)
     with _ -> failwith "The protocol shoulv have at least one identity name and one session name." in
   let (sessTerm,idTerm) = FunApp (sessName, []), FunApp (idName, []) in
+  let listEvents = ref [] in
   (* add an event on top of a process with args + in addition [idTerm,sessTerm] *)
   let addEvent name args p = 	
     let newArgs = idTerm :: sessTerm :: args in
-    Event (makeEvent name newArgs, p, makeOcc())in
+    let event = makeEvent name newArgs in
+    listEvents := (name, List.length newArgs) :: !listEvents;
+    Event (event, p, makeOcc())in
   (* add all events to a role *)
   let addEventsRole proc prefixName isIni =
-    let nameEvent prefixName nb actionName = Printf.sprintf "%s[%s_%d]" prefixName actionName nb in
+    let nameEvent prefixName nb actionName = Printf.sprintf "%s%s_%d" prefixName actionName nb in
     let makeArgs listIn listOut =	(* create the list of arguments of events : terms list *)
       let rec merge = function
 	| [], l -> l
@@ -249,8 +255,13 @@ let transC2 p =
 	 (Test(t,subProcEv,pe,occ), lTest, nbOut)
       | Nil -> (Nil, List.rev listTest, List.length listOut)
       | _ -> failwith "Critical error: transC2 is applied on a protocol that does not satisfy the syntactical restrictions. Should never happen." in
-    goThrough [] [] [] proc
+    goThrough [] [] [] proc in
+
+  let generateQueries listTest nbOut =
+    (* TODO *)
+    [] 
   in
+  
   let iniPrefix, resPrefix = "I", "R" in
   let iniEvents,iniTests,iniNbOut = addEventsRole proto.ini iniPrefix true in
   let resEvents,resTests,resNbOut = addEventsRole proto.res resPrefix false in
@@ -258,8 +269,50 @@ let transC2 p =
 		      ini = iniEvents;
 		      res = resEvents;
 		    } in
-  displayProtocolProcess protoEvents
+  let allQueries = (generateQueries iniTests iniNbOut) @ (generateQueries resTests resNbOut) in
 
+  (* WRITE in outNameFile *)
+  let displayEventsDec listEvents =
+    let rec nBit = function
+      | 0 -> []
+      | n -> "bitstring" :: nBit (n-1) in
+    List.iter 
+      (fun (name, arity) ->
+       Printf.printf "event %s(%s).\n" name (String.concat "," (nBit arity))
+      ) listEvents in
+
+  (* GET the theory part of inNameFile *)
+  let inFile = open_in inNameFile in
+  let sizeInFile = in_channel_length inFile in
+  let inStr = String.create sizeInFile in
+  really_input inFile inStr 0 sizeInFile;
+  let theoryStr =
+    try List.hd (Str.split (Str.regexp_string splitTheoryString) inStr)
+    with _ -> begin
+	pp ("Your inputted file should contain the delimiter: '"^
+	      splitTheoryString^
+		"' between the theory and the protocol.\n");
+	pp ("Rules: "^helpMess);
+	failwith "Inputted file not compliant with our rules.";
+      end in
+
+  (*  HACK TO REDIRECT STDOUT *)
+  let newstdout = open_out nameOutFile in
+  Unix.dup2 (Unix.descr_of_out_channel newstdout) Unix.stdout;
+  (* Print (=write in the file) the complete ProVerif file *)
+  pp "\n\n(* == THEORY == *)\n";
+  pp theoryStr;
+  pp " *)\n";
+  pp "\n\n(* == DECLARATIONS OF EVENTS == *)\n";
+  displayEventsDec !listEvents;
+  pp "\n\n(* == DECLARATIONS OF QUERIES == *)\n";
+  List.iter (fun s -> Printf.printf "%s\n" s) allQueries;
+  pp "\n\n(* == PROTOCOL WITH EVENTS == *)\n";
+  pp "let SYSTEM =\n";
+  displayProtocolProcess protoEvents;
+  pp ".";
+  pp "process SYSTEM\n"
+(* END OF REDIRECTION *)
 
 
 (* TODO: *)
