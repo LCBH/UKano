@@ -360,7 +360,16 @@ let transC2 p inNameFile nameOutFile =
   let inStr = String.create sizeInFile in
   really_input inFile inStr 0 sizeInFile;
   let theoryStr =
-    try List.hd (Str.split (Str.regexp_string splitTheoryString) inStr)
+    try let listSplit = (Str.split (Str.regexp_string splitTheoryString) inStr) in
+	if List.length listSplit <= 1
+	then begin
+	    (* for back-compatibility: *)
+	    let listSplit2 = (Str.split (Str.regexp_string "PROTOCOLS") inStr) in
+	    if List.length listSplit2 <= 1
+	    then failwith ""
+	    else List.hd listSplit2;
+	  end
+	else List.hd listSplit
     with _ -> begin
 	pp ("Your inputted file should contain the delimiter: '"^
 	      splitTheoryString^
@@ -368,9 +377,13 @@ let transC2 p inNameFile nameOutFile =
 	pp ("Rules: "^helpMess);
 	failwith "Inputted file not compliant with our rules.";
       end in
-
+  (* for back-compatibility: *)
+  let theoryStr = Str.global_replace (Str.regexp_string "key") "bitstring" theoryStr in
+  let theoryStr = Str.global_replace (Str.regexp_string "nonce") "bitstring" theoryStr in
+  let theoryStr = Str.global_replace (Str.regexp_string "type bitstring.") "" theoryStr in
   (* 4. Print evrything using a HACK TO REDIRECT STDOUT *)
   let newstdout = open_out nameOutFile in
+  print_newline ();		(* for flushing stdout *)
   Unix.dup2 (Unix.descr_of_out_channel newstdout) Unix.stdout;
   (* Print (=write in the file) the complete ProVerif file *)
 (*  pp "\n\n(* == THEORY == *)\n"; *)
