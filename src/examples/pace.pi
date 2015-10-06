@@ -1,0 +1,102 @@
+(* Lucca Hirschi: test on transformations of protocols *)
+
+(**********)
+(* THEORY *)
+(**********)
+
+type key.
+type nonce.
+(* public communication channel *)
+free c : channel.
+free ct : channel.
+free cr : channel.
+
+(* constant values *)
+free error_mac : bitstring.
+free init : bitstring.
+free read : bitstring.
+free ok : bitstring.
+const g : bitstring [data].
+
+
+(* Diffie-Hellman exponentiation *)
+fun exp (bitstring, bitstring) : bitstring.
+equation forall x : bitstring, y : bitstring;
+  exp(exp(g,x),y) = exp(exp(g,y),x).
+(* we do not consider all equations of DH expo. but follows Proverif's manual
+  (at least it should work) *)
+
+(* Generation of a new paramater *)
+fun gen(bitstring,bitstring) : bitstring.
+
+ (* Symmetric Encryption *)
+fun enc(bitstring, key) : bitstring.
+  reduc forall xm:bitstring, xk:key;
+        dec(enc(xm, xk), xk) = xm.
+
+ (* Mac (of pairs) *)
+fun mac(bitstring, bitstring) : bitstring.
+			       
+(*************)
+(* PROTOCOLS *)
+(*************)
+
+(* PACE Protocol *)
+let T (k:key) =
+    new s:bitstring;
+    new b1:bitstring;
+    new b2:bitstring;
+(* T ----[{s}_k]---> R *)
+    out(ct,enc(s,k));
+(* T <---[exp(g,a1)]--- R *)
+    in(ct, x1:bitstring);
+(* T ----[exp(g,b1)]---> R *)
+    out(ct, exp(g,b1));
+(* T <---[exp(gen(g^s,g^(a1.b1)),a2)]--- R *)  
+    in(ct, x2:bitstring);
+    let newG = gen(exp(g,s),exp(x2,b1)) in
+(* T ----[exp(gen(g^s,g^(a1.b1)),b2)]---> R *)  
+    out(ct, exp(newG,b2));
+(* T <---[mac(exp(gen(g^s,g^(a1.b1)),b2),newKey]--- R *)  
+    in(ct, x3:bitstring);
+    (* newKey = exp(gen(g^s,g^(a1.b1)),a2.b2) *)
+    let newKey:bitstring = exp(x2,b2) in
+    if mac(exp(newG,b2), newKey) = x3
+    then 
+(* T ----[mac(exp(gen(g^s,g^(a1.b1)),a2),newKey]---> R *)  
+    out(cr, mac(x2,newKey)).
+   
+let R (k:key) =
+    new a1:bitstring;
+    new a2:bitstring;
+(* R <---[enc(s,k)]--- T *)
+    in(cr, y1:bitstring);
+(* R ----[exp(g,a1)]---> T *)
+    out(cr, exp(g,a1));
+(* R <---[exp(g,b1)]--- T *)
+    in(cr, y2:bitstring);
+    let newG = gen(exp(g,dec(y1,k)),exp(y2,a1)) in
+(* R ----[exp(gen(g^s,g^(a1.b1)),a2)]---> T *)  
+    out(cr, exp(newG,a2));
+(* R <---[exp(gen(g^s,g^(a1.b1)),b2)]--- T *)  
+    in(cr, y3:bitstring);
+    (* newKey = exp(gen(g^s,g^(a1.b1)),a2.b2) *)
+
+(*     if mT3<>mR2 then *)  (* AJOUTEE CAR COMME CA DANS LA SPEC LOW LEVEL *)
+
+    let newKey:bitstring = exp(y3,a2) in
+(* R ----[mac(exp(gen(g^s,g^(a1.b1)),b2),newKey]---> T *)  
+    out(cr, mac(y3,newKey));
+(* R <---[mac(exp(gen(g^s,g^(a1.b1)),a2),newKey]--- T *)  
+    in(cr, y4:bitstring);
+    if mac(exp(newG,a2), newKey) = y4
+    then 
+(* R ----[ok]---> T *)  
+    out(cr, ok).
+
+(* WHOLE SYSTEM *)
+let PACE =
+  ! new k:key;
+    ! (T(k) | R(k)).
+
+process PACE

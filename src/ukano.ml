@@ -105,22 +105,32 @@ let extractProto process =
 	   then (match laE,pe with
 		 | Nil, Nil -> checkRole accN pt
 		 | (Output(t1,t2,Nil,_), Output(t1',t2',Nil,_)) when (t1=t1' && t2=t2') -> checkRole accN pt
-		 | _ -> errorClass ("Two else branches from adjacent tests are not syntactical equal.") laE)
+		 (* START: this should be removed (for back-compatibility) *)
+		 | Nil,_ -> checkRole accN pt
+		 (* END *)
+		 | _ -> errorClass ("Two else branches from adjacent tests are not syntactical equal.") pe)
 	   else checkRole ~lastCondi:true ~lastElse:pe accN pt;
 	 end
     | Restr (nameSymb, _, p, _) ->
        accN := nameSymb :: !accN;
        checkRole ~lastInp:laI ~lastOut:laO ~lastCondi:laC ~lastElse:laE accN p
     | p -> errorClass ("Only Nul,Input,Output,Test, Let and creation of names are allowed in roles.") p in
+  (* true if fst observable action is an output *)
+  let rec fstIsOut = function
+    | Output(_,_,_,_) -> true
+    | Let(_,_,pt,_,_) -> fstIsOut pt
+    | Test(_,pt,_,_) -> fstIsOut pt
+    | Restr(_,_,p,_) -> fstIsOut p
+    | _ -> false in
   (* Check that the two given processes are dual roles of the correct form and
      return (initiator, responder). *)
   let checkRoles p1 p2 =
     let namesP1, namesP2 = ref [], ref [] in
     checkRole namesP1 p1;
     checkRole namesP2 p2;
-    match (getNames [] p1, getNames [] p2) with
-    | (_,Output(_,_,_,_)), (_,Input(_,_,_,_)) -> (p1,!namesP1),(p2,!namesP2)
-    | (_,Input(_,_,_,_)), (_,Output(_,_,_,_)) -> (p2,!namesP2),(p1,!namesP1)
+    match (fstIsOut p1, fstIsOut p2) with
+    | true,false -> (p1,!namesP1),(p2,!namesP2)
+    | false,true -> (p2,!namesP2),(p1,!namesP1)
     | _ -> errorClass ("The two roles are not dual.") p1 in
   (* remove all restriction of names in roles *)
   let rec removeRestr = function
@@ -222,6 +232,7 @@ let makeOcc () = Terms.new_occurrence ()
 (** Display a whole ProVerif file checking the first condition except for the theory (to be appended). *)      
 let transC2 p inNameFile nameOutFile = 
   let proto = extractProto p in
+  displayProtocol proto;
   let (sessName,idName) =
     try (List.hd proto.sessNames, List.hd proto.idNames) (* 2 funSymb *)
     with _ -> failwith "The protocol shoulv have at least one identity name and one session name." in
@@ -330,8 +341,9 @@ let transC2 p inNameFile nameOutFile =
 					(List.map (fun ev -> Printf.sprintf "   (%s" ev)
 						  (lastEvent :: listEvents)) in
     let rec repeat s = function | 0 -> "" | n -> s^(repeat s (n-1)) in
-    prefix^prefixArgs^strImplications^
-      (repeat ")" (List.length listEvents+1))^"."
+    if List.length listEvents = 0 then ""
+    else prefix^prefixArgs^strImplications^
+	   (repeat ")" (List.length listEvents+1))^"."
   in
   
   (* 1. COMPUTING EVENTS VERSION AND QUERIES *)
