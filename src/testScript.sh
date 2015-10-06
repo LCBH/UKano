@@ -1,2 +1,4 @@
 #!/bin/bash
- make && ./proverif -in pitype -ukano ./examples/pace.pi && ./proverif -in pitype OUTPUT_C2.pi
+ make && 
+ echo "TESTING PACE (grep 'cannot):";
+ ./proverif -in pitype -ukano ./examples/pace.pi && ./proverif -in pitype OUTPUT_C2.pi | grep cannot

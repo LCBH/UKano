@@ -232,7 +232,6 @@ let makeOcc () = Terms.new_occurrence ()
 (** Display a whole ProVerif file checking the first condition except for the theory (to be appended). *)      
 let transC2 p inNameFile nameOutFile = 
   let proto = extractProto p in
-  displayProtocol proto;
   let (sessName,idName) =
     try (List.hd proto.sessNames, List.hd proto.idNames) (* 2 funSymb *)
     with _ -> failwith "The protocol shoulv have at least one identity name and one session name." in
