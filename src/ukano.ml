@@ -71,7 +71,7 @@ type proto = {
 
 
 (************************************************************)
-(* Display functions                                        *)
+(* Parsing Protocols                                        *)
 (************************************************************)
 
 (** Extract the protocol structure from a process and rise NotInClass if
@@ -85,14 +85,14 @@ let extractProto process =
   (* Check that a given role is of the expected form: optional arguments are used to make sure
      the role meets the alternation in/test*/out with same else branches in test*. *)
   let rec checkRole ?lastInp:(laI=false) ?lastOut:(laO=false)
-		    ?lastCondi:(laC=false) ?lastElse:(laE=Nil)= function
+		    ?lastCondi:(laC=false) ?lastElse:(laE=Nil) accN = function
     | Nil -> ()
     | Input (_,_,p,_) as proc ->
        if laI then errorClass ("Roles cannot perform two inputs in a row.") proc;
-       checkRole ~lastInp:true ~lastOut:false ~lastCondi:false p
+       checkRole ~lastInp:true ~lastOut:false ~lastCondi:false accN p
     | Output (_,_,p,_) as proc ->
        if laO then errorClass ("Roles cannot perform two outputs in a row.") proc;
-       checkRole ~lastInp:false ~lastOut:true ~lastCondi:false p
+       checkRole ~lastInp:false ~lastOut:true ~lastCondi:false accN p
     | Let (_,_,pt,pe,_)
     | Test (_,pt,pe,_) as proc ->
        if laO then errorClass "Roles cannot perform tests just after outputs." proc
@@ -103,21 +103,34 @@ let extractProto process =
 	    | _ -> errorClass ("Else branches must be either Nil or Output.Nil.") pe);
 	   if laC
 	   then (match laE,pe with
-		 | Nil, Nil -> checkRole pt
-		 | (Output(t1,t2,Nil,_), Output(t1',t2',Nil,_)) when (t1=t1' && t2=t2') -> checkRole pt
+		 | Nil, Nil -> checkRole accN pt
+		 | (Output(t1,t2,Nil,_), Output(t1',t2',Nil,_)) when (t1=t1' && t2=t2') -> checkRole accN pt
 		 | _ -> errorClass ("Two else branches from adjacent tests are not syntactical equal.") laE)
-	   else checkRole ~lastCondi:true ~lastElse:pe pt;
+	   else checkRole ~lastCondi:true ~lastElse:pe accN pt;
 	 end
-    | p -> errorClass ("Only Nul,Input,Output,Test and Let are allowed in roles.") p in
+    | Restr (nameSymb, _, p, _) ->
+       accN := nameSymb :: !accN;
+       checkRole ~lastInp:laI ~lastOut:laO ~lastCondi:laC ~lastElse:laE accN p
+    | p -> errorClass ("Only Nul,Input,Output,Test, Let and creation of names are allowed in roles.") p in
   (* Check that the two given processes are dual roles of the correct form and
      return (initiator, responder). *)
   let checkRoles p1 p2 =
-    checkRole p1;
-    checkRole p2;
-    match p1,p2 with
-    | Output(_,_,_,_), Input(_,_,_,_) -> p1,p2
-    | Input(_,_,_,_), Output(_,_,_,_) -> p2,p1
+    let namesP1, namesP2 = ref [], ref [] in
+    checkRole namesP1 p1;
+    checkRole namesP2 p2;
+    match (getNames [] p1, getNames [] p2) with
+    | (_,Output(_,_,_,_)), (_,Input(_,_,_,_)) -> (p1,!namesP1),(p2,!namesP2)
+    | (_,Input(_,_,_,_)), (_,Output(_,_,_,_)) -> (p2,!namesP2),(p1,!namesP1)
     | _ -> errorClass ("The two roles are not dual.") p1 in
+  (* remove all restriction of names in roles *)
+  let rec removeRestr = function
+    | Nil -> Nil
+    | Input (t1,patx,p,occ) -> Input(t1,patx,removeRestr p, occ)
+    | Output (tc,tm,p,occ) -> Output(tc,tm,removeRestr p, occ)
+    | Let (patx,t,pt,pe,occ) -> Let (patx,t,removeRestr pt, removeRestr pe, occ)
+    | Test (t,pt,pe,occ)-> Test(t,removeRestr pt, removeRestr pe,occ)
+    | Restr (_,_,p,_) -> removeRestr p
+    | p -> errorClass ("Critical error, should never happen.") p in
   (* We now match the whole system against its expected form *)
   match (getNames [] process) with
   | (comNames, Repl (idProc,_)) ->
@@ -127,17 +140,24 @@ let extractProto process =
 	 let sessNames, sessProc' = getNames [] sessProc in
 	 (match sessProc' with
 	  | Par (p1,p2) ->
-	     let ini,res = checkRoles p1 p2 in
+	     let ((iniP,iniN),(resP,resN)) = checkRoles p1 p2 in
+	     let iniPclean,resPclean = (removeRestr iniP, removeRestr resP) in
 	     {
 	       comNames = comNames;
 	       idNames = idNames;
-	       sessNames = sessNames;
-	       ini = ini;
-	       res = res;
+	       sessNames = iniN @ resN @ sessNames;
+	       ini = iniPclean;
+	       res = resPclean;
 	     }
 	  | p -> errorClass ("After session names, we expect a parallel composition of two roles.") p)
       | p -> errorClass ("After the first replication and identity names, we expect a replication (for sessions).") p)
   | (_,p) -> errorClass ("A replication (possibly after some creation of names) is expected at the begging of the process.") p
+
+
+
+(************************************************************)
+(* Display functions                                        *)
+(************************************************************)
 
 let displayProtocol proto =
   pp "{\n   Common Names: ";
@@ -180,7 +200,7 @@ let displayProtocolProcess proto =
 
 
 (************************************************************)
-(* Handling events & checking second condition 2            *)
+(* Handling events & checking Condition 2                   *)
 (************************************************************)
 
 (* [string -> term list -> term] (of the rigth form to put it under Event constructor) *)
@@ -370,7 +390,7 @@ let transC2 p inNameFile nameOutFile =
 (* TODO: *)
 
 (************************************************************)
-(* Handling nonce versions & checking second condition 1    *)
+(* Handling nonce versions & checking condition 1           *)
 (************************************************************)
 
 let transC1 p = ()
