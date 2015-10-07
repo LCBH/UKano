@@ -38,3 +38,15 @@ Exemple de création du symbole de l'event dans pitsyntax.ml l.1510:
 	    f_private = true;
 	    f_options = 0 }
 
+
+
+
+######### RESULTATS EXP
+## PACE:
+Alors j'obtiens autant de queries true que celles dans ./transfo.
+- à voir les cannot mais je vois déjà qu'il y en a une à cause du dec/enc en réduction
+  ("attaque" que j'avais découverte)
+
+
+## Passport
+-> full_passport_eq: tout est OK, les 6 queries sont prouvées automatiquement :)

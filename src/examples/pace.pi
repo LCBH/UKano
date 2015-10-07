@@ -4,8 +4,6 @@
 (* THEORY *)
 (**********)
 
-type key.
-type nonce.
 (* public communication channel *)
 free c : channel.
 free ct : channel.
@@ -30,8 +28,8 @@ equation forall x : bitstring, y : bitstring;
 fun gen(bitstring,bitstring) : bitstring.
 
  (* Symmetric Encryption *)
-fun enc(bitstring, key) : bitstring.
-  reduc forall xm:bitstring, xk:key;
+fun enc(bitstring, bitstring) : bitstring.
+  reduc forall xm:bitstring, xk:bitstring;
         dec(enc(xm, xk), xk) = xm.
 
  (* Mac (of pairs) *)
@@ -42,7 +40,7 @@ fun mac(bitstring, bitstring) : bitstring.
 (*************)
 
 (* PACE Protocol *)
-let T (k:key) =
+let T (k:bitstring) =
     new s:bitstring;
     new b1:bitstring;
     new b2:bitstring;
@@ -57,16 +55,16 @@ let T (k:key) =
     let newG = gen(exp(g,s),exp(x2,b1)) in
 (* T ----[exp(gen(g^s,g^(a1.b1)),b2)]---> R *)  
     out(ct, exp(newG,b2));
-(* T <---[mac(exp(gen(g^s,g^(a1.b1)),b2),newKey]--- R *)  
+(* T <---[mac(exp(gen(g^s,g^(a1.b1)),b2),newBitstring]--- R *)  
     in(ct, x3:bitstring);
-    (* newKey = exp(gen(g^s,g^(a1.b1)),a2.b2) *)
-    let newKey:bitstring = exp(x2,b2) in
-    if mac(exp(newG,b2), newKey) = x3
+    (* newBitstring = exp(gen(g^s,g^(a1.b1)),a2.b2) *)
+    let newBitstring:bitstring = exp(x2,b2) in
+    if mac(exp(newG,b2), newBitstring) = x3
     then 
-(* T ----[mac(exp(gen(g^s,g^(a1.b1)),a2),newKey]---> R *)  
-    out(cr, mac(x2,newKey)).
+(* T ----[mac(exp(gen(g^s,g^(a1.b1)),a2),newBitstring]---> R *)  
+    out(cr, mac(x2,newBitstring)).
    
-let R (k:key) =
+let R (k:bitstring) =
     new a1:bitstring;
     new a2:bitstring;
 (* R <---[enc(s,k)]--- T *)
@@ -80,23 +78,23 @@ let R (k:key) =
     out(cr, exp(newG,a2));
 (* R <---[exp(gen(g^s,g^(a1.b1)),b2)]--- T *)  
     in(cr, y3:bitstring);
-    (* newKey = exp(gen(g^s,g^(a1.b1)),a2.b2) *)
+    (* newBitstring = exp(gen(g^s,g^(a1.b1)),a2.b2) *)
 
-(*     if mT3<>mR2 then *)  (* AJOUTEE CAR COMME CA DANS LA SPEC LOW LEVEL *)
+    if y3<>exp(newG,a2) then (* AJOUTEE CAR COMME CA DANS LA SPEC LOW LEVEL *)
 
-    let newKey:bitstring = exp(y3,a2) in
-(* R ----[mac(exp(gen(g^s,g^(a1.b1)),b2),newKey]---> T *)  
-    out(cr, mac(y3,newKey));
-(* R <---[mac(exp(gen(g^s,g^(a1.b1)),a2),newKey]--- T *)  
+    let newBitstring:bitstring = exp(y3,a2) in
+(* R ----[mac(exp(gen(g^s,g^(a1.b1)),b2),newBitstring]---> T *)  
+    out(cr, mac(y3,newBitstring));
+(* R <---[mac(exp(gen(g^s,g^(a1.b1)),a2),newBitstring]--- T *)  
     in(cr, y4:bitstring);
-    if mac(exp(newG,a2), newKey) = y4
+    if mac(exp(newG,a2), newBitstring) = y4
     then 
 (* R ----[ok]---> T *)  
     out(cr, ok).
 
 (* WHOLE SYSTEM *)
 let PACE =
-  ! new k:key;
+  ! new k:bitstring;
     ! (T(k) | R(k)).
 
 process PACE

@@ -13,10 +13,13 @@ free init : bitstring.
 free read : bitstring.
 free ok : bitstring.
 
+
  (* Encryption (with mac inside) *)
 fun enc(bitstring, bitstring) : bitstring.
-  reduc forall xm:bitstring, xk:bitstring;
+fun dec(bitstring, bitstring) : bitstring.
+equation forall xm:bitstring, xk:bitstring;
         dec(enc(xm, xk), xk) = xm.
+
 		       (* we check mac using idTest*)
 letfun idEnc(m:bitstring, k:bitstring) = enc(dec(m, k), k).
 
@@ -31,46 +34,16 @@ reduc forall m: bitstring , k:bitstring ;
 (* Over-approximation of (kt XOR kr): xorKey has strictly more equations
 -> Valid ? *)
 fun xorKey(bitstring, bitstring) : bitstring.
-(*
-fun projKey1(bitstring) : bitstring
+(*  TEST sans les équations, todo ici  *)
+fun projBitstring1(bitstring) : bitstring
 reduc forall k1:bitstring, k2:bitstring;
-        projKey1(xorKey(k1, k2)) = k1.
-fun projKey2(bitstring) : bitstring
+        projBitstring1(xorKey(k1, k2)) = k1.
+fun projBitstring2(bitstring) : bitstring
 reduc forall k1:bitstring, k2:bitstring;
-        projKey2(xorKey(k1, k2)) = k2.
-
-fun trydec (bitstring, bitstring) : bitstring
-reduc forall m : bitstring, k:bitstring ; trydec ( enc(m,k) , k) = m
-otherwise forall x : bitstring , k : bitstring ; trydec ( x , k) = x .
-*)			       
+        projBitstring2(xorKey(k1, k2)) = k2.
+(*</ici>*)
 
 (* ==PROTOCOL== *)
-
-(* Passive Authentication *)
-let RPA(k2:bitstring, skP:bitstring) =
-  out(cr, enc(read, k2));
-  in(cr, y4:bitstring);
-  let (ydgi:bitstring, ysign:bitstring) = dec(y4, k2) in
-  if checksign(ysign, spk(skP)) = ydgi
-  then out(cr, ok).
-
-let TPA(k2:bitstring, skP:bitstring, dgi:bitstring) =
-    in(ct, x3:bitstring);
-    if dec(x3, k2) = read
-    then out(ct, enc((dgi, sign(dgi, skP)), k2)).
-
-(* Active Authentication *)
-let RAA (k2:bitstring, skP:bitstring,randR:bitstring) =
-  in(cr, y3:bitstring);
-  let m:bitstring = dec(y3, k2) in
-  if checksign(m, spk(skP)) = getmess(m)
-  then RPA(k2, skP).
-
-let TAA (k2:bitstring, skP:bitstring, dgi:bitstring,randT:bitstring) =
-  in(ct, x2:bitstring);
-  let (=init, xrandR:bitstring) = dec(x2,k2) in
-  out(ct, enc(sign((randT,xrandR), skP), k2));
-  TPA(k2, skP, dgi).
 
 (* BAC Protocol *)
 let TB (k:bitstring, skP:bitstring, dgi:bitstring,nt:bitstring,kt:bitstring,randT:bitstring) =
@@ -82,9 +55,8 @@ let TB (k:bitstring, skP:bitstring, dgi:bitstring,nt:bitstring,kt:bitstring,rand
     then 
 (* T ----[{nt,nr,kt}_k]---> R *)         
          let (xnr:bitstring,=nt,xkr:bitstring) = dec(x1, k) in (
-         out(ct, enc((nt,xnr,kt), k));
+         out(ct, enc((nt,xnr,kt), k))
 (* HOLE *)
-         TAA(xorKey(kt,xkr), skP, dgi,randT)
          ) else
          out(ct, error_mac)	(* error bitstring in FR *)
     else out(ct, error_mac).    (* error mac in FR *)
@@ -98,9 +70,7 @@ let RB (k:bitstring, skP:bitstring,nr:bitstring,kr:bitstring,randR:bitstring) =
     in(cr, y2:bitstring);
     let (=y1, =nr, ykt:bitstring) = dec(y2, k) in (
 (* HOLE *)
-     out(cr, enc((init, randR), xorKey(ykt, kr)));
-      RAA(xorKey(ykt, kr), skP,randR)
-    ).
+     out(cr, enc((init, randR), xorKey(ykt, kr)))    ).
 
 (* WHOLE SYSTEM *)
 let BAC =
