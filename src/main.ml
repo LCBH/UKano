@@ -239,7 +239,7 @@ let anal_file s =
 	
 	(* Display the original processes *)
 	
-	if !Param.equivalence
+	if !Param.equivalence && not (!Param.trad_ukano)
 	then 
 	  failwith "WIP in UKANO, I deleteded useless parts for better readability. You need to revert THIS COMMIT (do a git blame)."
 	else 
@@ -260,7 +260,7 @@ let anal_file s =
 	      Display.Text.newline()
 	    end;
 	  
-	  if !Param.has_choice 
+	  if !Param.has_choice  && not(!Param.trad_ukano)
 	  then   
 	  begin
 	    failwith "WIP in UKANO, I deleteded useless parts for better readability. You need to revert THIS COMMIT (do a git blame).";

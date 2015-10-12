@@ -40,13 +40,17 @@ let splitTheoryString = "==PROTOCOL=="
 
 (* Helping message *)
 let helpMess = 
-  (  "Only typed ProVerif files are accepted (use the option '-in pitype'). The file should not define types and only use\n"^
-     "the type 'bitstring'. After the definition of the equational theory (without any declaration of events), the inputted\n"^
-     "file should contain a commentary:\n"^
+  (  "Only typed ProVerif files are accepted (the option '-in pitype' is enabled by default). The file should not define new types and only use\n"^
+     "the type 'bitstring'. The equational theory must declare a constant 'hole' by adding this line: 'free hole:bitstring;'.\n"^
+     "After the definition of the equational theory (without any declaration of events), the inputted file should contain a commentary:\n"^
      "       (* "^splitTheoryString^" *)\n"^
-     "and then define only one process corresponding of the whole multiple sessions system. This process should satisfy the\n"^
-     "syntactical restrictions described in [1]. Moreover, only one test (conditional or evaluation) can be performed between\n"^
-     "an input and an output. You may use nested evaluations instead.\n")
+     "and then define only one process corresponding to the whole multiple sessions system. This process should satisfy the\n"^
+     "syntactical restrictions described in [1]. However, multiple tests (conditional or evaluation) can be performed in a row between\n"^
+     "an input and an output if the corresponding 'else' branches are the same. Each output message should be of the form:\n"^
+     "'choice[u,uh]' where 'u' is the real message outputted by the protocol and 'uh' is the idealization of any concrete message\n"^
+     "outputted here (by using the constant 'hole' instead of holes). Finally, to check anonymity as well, identity names to be revelead\n"^
+     " (and only them) must have 'id-' as prefix (e.g., id-name).\n")
+(* TODO [1]  *)
 
 (* Raised when the inputted process is not a 2-agents protocol as defined
    in [1], the associated string is the reason/explanation. *)
@@ -212,7 +216,26 @@ let displayProtocolProcess proto =
 (************************************************************)
 (* Handling events & checking Condition 2                   *)
 (************************************************************)
-
+(* erase idealized version of outputs from protocols *)
+let cleanChoice proto = 
+  let rec rmProc = function
+    | Nil -> Nil
+    | Input (t1,patx,p,occ) -> Input(t1,patx,rmProc p, occ)
+    | Output (tc,tm,p,occ) ->
+       let tmClean =
+	 match tm with
+	 | FunApp (funSymb, tm1 :: tl) when funSymb.f_cat = Choice -> tm1
+	 | _ -> tm in
+       Output(tc,tmClean,rmProc p, occ)
+    | Let (patx,t,pt,pe,occ) -> Let (patx,t,rmProc pt, rmProc pe, occ)
+    | Test (t,pt,pe,occ)-> Test(t,rmProc pt, rmProc pe,occ)
+    | Restr (_,_,p,_) -> rmProc p
+    | p -> errorClass ("Critical error, should never happen.") p in
+  { proto with
+    ini = rmProc proto.ini;
+    res = rmProc proto.res;
+  }
+	 
 (* [string -> term list -> term] (of the rigth form to put it under Event constructor) *)
 let makeEvent name args =
   let typeEvent = [{tname = "bitstring"}] in
@@ -231,7 +254,8 @@ let makeOcc () = Terms.new_occurrence ()
 				      
 (** Display a whole ProVerif file checking the first condition except for the theory (to be appended). *)      
 let transC2 p inNameFile nameOutFile = 
-  let proto = extractProto p in
+  let proto = cleanChoice (extractProto p) in
+  displayProtocol proto;
   let (sessName,idName) =
     try (List.hd proto.sessNames, List.hd proto.idNames) (* 2 funSymb *)
     with _ -> failwith "The protocol shoulv have at least one identity name and one session name." in

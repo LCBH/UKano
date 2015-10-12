@@ -8,6 +8,7 @@ free i : channel.
 free r : channel.
 free pbN : bitstring.
 (* Public constants *)
+free hole : bitstring.
 free Fail : bitstring.
 free reject : bitstring.
 free Sqn : bitstring.
@@ -57,10 +58,10 @@ let R (k:bitstring, imsi:bitstring, otmsi : bitstring, osqn:bitstring,pbN:bitstr
     (
     let checkEq = eq((mac, osqn), (xmac, xsqn))
     in (
-      out(r, res);
+      out(r, choice[res, hole]);
       in(r, xmsg:bitstring)
     ) else (
-      out(r, aenc(pbN, r_ms, (Fail, imsi, rand, senc(f0(k, rand), rand2, (Sqn, osqn))))))).
+      out(r, choice[aenc(pbN, r_ms, (Fail, imsi, rand, senc(f0(k, rand), rand2, (Sqn, osqn)))), hole]))).
 
 
 let I (k:bitstring, imsi:bitstring, otmsi : bitstring, osqn:bitstring,pbN:bitstring) = (* SN *)
@@ -78,12 +79,12 @@ let I (k:bitstring, imsi:bitstring, otmsi : bitstring, osqn:bitstring,pbN:bitstr
       let (m1:bitstring, m2:bitstring, Mres:bitstring) = 
       	  ((rand, autn), senc(ik, rand2, s), res)
     in
-      out(i, m1);
+      out(i, choice[m1, (hole,(hole,hole))]);
       in(i, xres:bitstring);
       if xres = Mres then
-         out(i, m2)
+         out(i, choice[m2, hole])
       else
-         out(i, reject).
+         out(i, choice[reject, reject]).
 
 let System =
 (*

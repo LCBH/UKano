@@ -8,6 +8,7 @@ free ct : channel.
 free cr : channel.
 
 (* constant values *)
+free hole : bitstring.
 free error_mac : bitstring.
 free init : bitstring.
 free read : bitstring.
@@ -47,20 +48,20 @@ otherwise forall x : bitstring , k : bitstring ; trydec ( x , k) = x .
 
 (* Passive Authentication *)
 let RPA(k2:bitstring, skP:bitstring) =
-  out(cr, enc(read, k2));
+  out(cr, choice{enc(read, k2), hole]);
   in(cr, y4:bitstring);
   let (ydgi:bitstring, ysign:bitstring) = dec(y4, k2) in
   if checksign(ysign, spk(skP)) = ydgi
-  then out(cr, ok).
+  then out(cr, choice[ok, ok]).
 
 let TPA(k2:bitstring, skP:bitstring, dgi:bitstring) =
     in(ct, x3:bitstring);
     if dec(x3, k2) = read
-    then out(ct, enc((dgi, sign(dgi, skP)), k2)).
+    then out(ct, choice[enc((dgi, sign(dgi, skP)), k2), hole]).
 
 (* Active Authentication *)
 let RAA (k2:bitstring, skP:bitstring, randR:bitstring) =
-  out(cr, enc((init, randR), k2));
+  out(cr, choice[enc((init, randR), k2), hole]);
   in(cr, y3:bitstring);
   let m:bitstring = dec(y3, k2) in
   if checksign(m, spk(skP)) = getmess(m)
@@ -69,31 +70,31 @@ let RAA (k2:bitstring, skP:bitstring, randR:bitstring) =
 let TAA (k2:bitstring, skP:bitstring, dgi:bitstring, randT:bitstring) =
   in(ct, x2:bitstring);
   let (=init, xrandR:bitstring) = dec(x2,k2) in
-  out(ct, enc(sign((randT,xrandR), skP), k2));
+  out(ct, choice[enc(sign((randT,xrandR), skP), k2), hole]);
   TPA(k2, skP, dgi).
 
 (* BAC Protocol *)
 let TB (k:bitstring, skP:bitstring, dgi:bitstring, nt:bitstring, kt:bitstring, randT:bitstring) =
 (* T ----[n_t]---> R *)
-    out(ct,nt);
+    out(ct, choice[nt, ok]);
 (* T <----[{nt,nr,kr}_k]--- R *)
     in(ct,x1:bitstring);
     if idEnc(x1,k) = x1
     then 
 (* T ----[{nt,nr,kt}_k]---> R *)         
          let (=nt,xnr:bitstring,xkr:bitstring) = dec(x1, k) in (
-         out(ct, enc((nt,xnr,kt), k));
+         out(ct, choice[enc((nt,xnr,kt), k), hole]);
 (* HOLE *)
          TAA(xorKey(kt,xkr), skP, dgi, randT))
           else
-         out(ct, error_mac)	(* error bitstring in FR *)
-    else out(ct, error_mac).    (* error mac in FR *)
+         out(ct, choice[error_mac, error_mac])	(* error bitstring in FR *)
+    else out(ct, choice[error_mac, error_mac]).    (* error mac in FR *)
       
 let RB (k:bitstring, skP:bitstring, nr:bitstring, kr:bitstring, randR:bitstring) =
 (* R <----[n_t]--- T *)
     in(cr, y1:bitstring);
 (* R ----[{nt,nr,kr}_k]---> T *)
-    out(cr, enc((y1,nr,kr), k));
+    out(cr, choice[enc((y1,nr,kr), k), hole]);
 (* R <----[{nt,nr,kt}_k]--- T *)
     in(cr, y2:bitstring);
     let (ynt:bitstring, =nr, ykt:bitstring) = dec(y2, k) in (

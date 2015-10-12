@@ -8,6 +8,7 @@ free ct : channel.
 free cr : channel.
 
 (* constant values *)
+free hole : bitstring.
 free error_mac : bitstring.
 free init : bitstring.
 free read : bitstring.
@@ -48,29 +49,29 @@ reduc forall k1:bitstring, k2:bitstring;
 (* BAC Protocol *)
 let TB (k:bitstring, skP:bitstring, dgi:bitstring,nt:bitstring,kt:bitstring,randT:bitstring) =
 (* T ----[n_t]---> R *)
-    out(ct,nt);
+    out(ct, choice[nt, hole]);
 (* T <----[{nt,nr,kr}_k]--- R *)
     in(ct,x1:bitstring);
     if idEnc(x1,k) = x1
     then 
 (* T ----[{nt,nr,kt}_k]---> R *)         
          let (xnr:bitstring,=nt,xkr:bitstring) = dec(x1, k) in (
-         out(ct, enc((nt,xnr,kt), k))
+         out(ct, choice[enc((nt,xnr,kt), k), hole])
 (* HOLE *)
          ) else
-         out(ct, error_mac)	(* error bitstring in FR *)
-    else out(ct, error_mac).    (* error mac in FR *)
+         out(ct, choice[error_mac, error_mac])	(* error bitstring in FR *)
+    else out(ct, choice[error_mac, error_mac]).    (* error mac in FR *)
       
 let RB (k:bitstring, skP:bitstring,nr:bitstring,kr:bitstring,randR:bitstring) =
 (* R <----[n_t]--- T *)
     in(cr, y1:bitstring);
 (* R ----[{nt,nr,kr}_k]---> T *)
-    out(cr, enc((nr,y1,kr), k));
+    out(cr, choice[enc((nr,y1,kr), k), hole]);
 (* R <----[{nt,nr,kt}_k]--- T *)
     in(cr, y2:bitstring);
     let (=y1, =nr, ykt:bitstring) = dec(y2, k) in (
 (* HOLE *)
-     out(cr, enc((init, randR), xorKey(ykt, kr)))    ).
+     out(cr, choice[enc((init, randR), xorKey(ykt, kr)), hole])).
 
 (* WHOLE SYSTEM *)
 let BAC =

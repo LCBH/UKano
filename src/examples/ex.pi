@@ -1,7 +1,7 @@
 (* Exemple de fichier d'input d'UKANO *)
-type bitstring.
 
 (* Public communication channel *)
+free hole : bitstring.
 free i : channel.
 free r : channel.
 (* Public constants *)
@@ -14,11 +14,11 @@ fun h(bitstring) : bitstring.
 let I (k:bitstring, ni:bitstring) =
    out(i, ni);
    in(i, x:bitstring);
-   out(i, h((x,ni))).
+   out(i, choice[h((x,ni)), hole]).
 
 let R (k:bitstring, nr:bitstring) =
    in(r, y:bitstring);
-   out(i, h((y,nr,k))).
+   out(i, choice[h((y,nr,k)), hole]).
 
 let HL = 
   ! new k:bitstring;

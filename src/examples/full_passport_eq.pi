@@ -8,6 +8,7 @@ free ct : channel.
 free cr : channel.
 
 (* constant values *)
+free hole : bitstring.
 free error_mac : bitstring.
 free init : bitstring.
 free read : bitstring.
@@ -48,16 +49,16 @@ otherwise forall x : bitstring , k : bitstring ; trydec ( x , k) = x .
 
 (* Passive Authentication *)
 let RPA(k2:bitstring, skP:bitstring) =
-  out(cr, enc(read, k2));
+  out(cr, choice[enc(read, k2), ok]);
   in(cr, y4:bitstring);
   let (ydgi:bitstring, ysign:bitstring) = dec(y4, k2) in
   if checksign(ysign, spk(skP)) = ydgi
-  then out(cr, ok).
+  then out(cr, choice[ok, ok]).
 
 let TPA(k2:bitstring, skP:bitstring, dgi:bitstring) =
     in(ct, x3:bitstring);
     if dec(x3, k2) = read
-    then out(ct, enc((dgi, sign(dgi, skP)), k2)).
+    then out(ct, choice[enc((dgi, sign(dgi, skP)), k2), hole]).
 
 (* Active Authentication *)
 let RAA (k2:bitstring, skP:bitstring,randR:bitstring) =
