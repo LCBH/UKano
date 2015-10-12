@@ -140,7 +140,7 @@ let extractProto process =
   (* remove all restriction of names in roles *)
   let rec removeRestr = function
     | Nil -> Nil
-    | Input (t1,patx,p,occ) -> Input(t1,patx,removeRestr p, occ)
+    | Input (tc,patx,p,occ) -> Input(tc,patx,removeRestr p, occ)
     | Output (tc,tm,p,occ) -> Output(tc,tm,removeRestr p, occ)
     | Let (patx,t,pt,pe,occ) -> Let (patx,t,removeRestr pt, removeRestr pe, occ)
     | Test (t,pt,pe,occ)-> Test(t,removeRestr pt, removeRestr pe,occ)
@@ -255,7 +255,7 @@ let theoryStr inNameFile =
 let cleanChoice proto = 
   let rec rmProc = function
     | Nil -> Nil
-    | Input (t1,patx,p,occ) -> Input(t1,patx,rmProc p, occ)
+    | Input (tc,patx,p,occ) -> Input(tc,patx,rmProc p, occ)
     | Output (tc,tm,p,occ) ->
        let tmClean =
 	 match tm with
@@ -472,6 +472,7 @@ let hole =
 (** Display a whole ProVerif file checking the first condition except for the theory (to be appended). *)      
 let transC1 p inNameFile nameOutFile = 
   let proto = extractProto p in
+
   (* -- 1. -- Build nonce versions on the right *)
   let isName funSymb = match funSymb.f_cat with Name _ -> true | _ -> false in
   let isConstant funSymb = match funSymb.f_cat with Tuple -> true | _ -> false in
@@ -518,7 +519,7 @@ let transC1 p inNameFile nameOutFile =
   (* idealized process (some idealized output may miss) -> nonce process *)
   let rec noncesProc = function
     | Nil -> Nil
-    | Input (t1,patx,p,occ) -> Input(t1,patx, noncesProc p, occ)
+    | Input (tc,patx,p,occ) -> Input(tc,patx, noncesProc p, occ)
     | Output (tc,tm,p,occ) ->
        let (tmReal, tmIdeal) =
 	 match tm with
@@ -532,14 +533,40 @@ let transC1 p inNameFile nameOutFile =
     | p -> errorClass ("Critical error, should never happen.") p in
   let noncesProto = 
     { proto with
-      sessNames = proto.sessNames @ (List.rev !listNames);
       ini = noncesProc proto.ini;
       res = noncesProc proto.res;
+      sessNames = proto.sessNames @ (List.rev !listNames);
     } in
-		  
-  (* -- 2. -- Deal with tests (should not create false attacks for diff-equivalent) *)
-  (* TODO *)
   
+  
+  (* -- 2. -- Deal with tests (should not create false attacks for diff-equivalent) *)
+  (* HACK: produce a term using factice funsymb equal to
+       'let [patt] = let m = [calc] in m else (ifFail]' *)
+  let makeLet patt calc ifFaill = 
+    let strLet =
+      Printf.sprintf "let m = %s in m else %s" in
+    FunApp (choiceSymb, []) in 	(* todo *)
+  let rec cleanTest = function
+    | Nil -> Nil
+    | Input (tc,patx,p,occ) -> Input(tc,patx, cleanTest p, occ)
+    | Output (tc,tm,p,occ) ->  Output(tc,tm, cleanTest p, occ)
+    | Let (patx,t,pt,pe,occ) ->
+       let nonceIfFail = createNonce() in
+       let termNoFail =
+       (* todo: Let m = t in m else nonceIfFail *)
+	 (* ARGHH c'est mEGA DUR!!!!!! TROP CHIANT!!!! *)
+	 makeLet patx t nonceIfFail in
+       Par(Let (patx,t, cleanTest pt, Nil, occ),
+	   cleanTest pe)
+    | Test (t,pt,pe,occ)-> Par(cleanTest pt, cleanTest pe)
+    | p -> errorClass ("Critical error, should never happen.") p in
+  let cond1Proto = 
+    { noncesProto with
+      sessNames = proto.sessNames @ (List.rev !listNames);
+      ini = cleanTest noncesProto.ini;
+      res = cleanTest noncesProto.res;
+    } in
+
   (* -- 3. -- GET the theory part of inNameFile *)
   let theoryStr = theoryStr inNameFile in
 
@@ -553,7 +580,7 @@ let transC1 p inNameFile nameOutFile =
   pp " *)\n";
   pp "\n\n(* == PROTOCOL WITH NONCE VERSIONS == *)\n";
   pp "let SYSTEM =\n";
-  displayProtocolProcess noncesProto;
+  displayProtocolProcess cond1Proto;
   pp ".\nprocess SYSTEM\n"
 (* END OF REDIRECTION *)
 
