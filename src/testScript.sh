@@ -4,6 +4,7 @@
  ./proverif -in pitype -ukano ./examples/full_passport_eq.pi
  echo "########## FIRST CONDITION:"
  ./proverif -in pitype ./examples/full_passport_eq_C1.pi
+ echo ""
  echo "########## SECOND CONDITION:"
  echo "Cannot prove:";
  ./proverif -in pitype ./examples/full_passport_eq_C2.pi | grep cannot

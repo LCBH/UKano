@@ -63,7 +63,7 @@ let T (k:bitstring) =
     if mac(exp(newG,b2), newBitstring) = x3
     then 
 (* T ----[mac(exp(gen(g^s,g^(a1.b1)),a2),newBitstring]---> R *)  
-    out(cr, mac(x2, choice[newBitstring, hole])).
+    out(cr, choice[mac(x2, newBitstring), hole]).
    
 let R (k:bitstring) =
     new a1:bitstring;

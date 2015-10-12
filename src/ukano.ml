@@ -471,7 +471,7 @@ let hole =
 
 (** Display a whole ProVerif file checking the first condition except for the theory (to be appended). *)      
 let transC1 p inNameFile nameOutFile = 
-  let proto = cleanChoice (extractProto p) in
+  let proto = extractProto p in
   (* -- 1. -- Build nonce versions on the right *)
   let isName funSymb = match funSymb.f_cat with Name _ -> true | _ -> false in
   let isConstant funSymb = match funSymb.f_cat with Tuple -> true | _ -> false in
@@ -488,8 +488,10 @@ let transC1 p inNameFile nameOutFile =
       -> FunApp (f, List.map guessIdeal listT) (* tuple *)
     | term -> begin
 	log "Warning: some idealized messages are missing and it is unclear how to guess them. The idealization of : ";
+	Printf.printf "     ";
 	Display.Text.display_term term;
-	log " will be a hole.\n";
+	Printf.printf "\n";
+	log "will be a hole.\n";
 	hole;
       end in
   let countNonces = ref 0 in
