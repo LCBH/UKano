@@ -267,7 +267,17 @@ let anal_file s =
 	  end
 	  else if !Param.trad_ukano
 	  then begin
-	      Ukano.transC2 p s "OUTPUT_C2.pi";
+	      let fileNameC1, fileNameC2 =
+		try let splitDot = (Str.split (Str.regexp_string ".") s) in
+		    let prefix =
+		      if List.length splitDot = 1
+		      then List.hd splitDot
+		      else  String.concat "." (List.rev (List.tl (List.rev splitDot))) in
+		    let prefixRel = if prefix.[0] = '/' then "."^prefix else prefix in
+		    (prefixRel^"_C1.pi", prefixRel^"_C2.pi")
+		with _ -> ("OUTPUT_C1.pi","OUTPUT_C2.pi") in
+	      Ukano.transC1 p s fileNameC1;
+	      Ukano.transC2 p s fileNameC2;
 	    end else begin
 	      
 	      if !Param.html_output then

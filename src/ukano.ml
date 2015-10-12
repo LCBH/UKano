@@ -441,7 +441,10 @@ let transC2 p inNameFile nameOutFile =
 (* Handling nonce versions & checking condition 1           *)
 (************************************************************)
 
-let transC1 p = ()
+(** Display a whole ProVerif file checking the first condition except for the theory (to be appended). *)      
+let transC1 p inNameFile nameOutFile = 
+  let proto = cleanChoice (extractProto p) in
+  ()
 
 
 (* To implement later on: *)
