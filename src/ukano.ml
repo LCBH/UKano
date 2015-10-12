@@ -73,6 +73,7 @@ type proto = {
     res : process;		(* (open) process of the responder *)
   }
 
+let typeBit = {tname = "bitstring"}
 
 (************************************************************)
 (* Parsing Protocols                                        *)
@@ -103,7 +104,7 @@ let extractProto process =
        else begin
 	   (match pe with
 	    | Nil -> ()
-	    | Output (_,_,Nil,_) as proc -> ()
+	    | Output (_,_,Nil,_) -> ()
 	    | _ -> errorClass ("Else branches must be either Nil or Output.Nil.") pe);
 	   if laC
 	   then (match laE,pe with
@@ -238,7 +239,7 @@ let cleanChoice proto =
 	 
 (* [string -> term list -> term] (of the rigth form to put it under Event constructor) *)
 let makeEvent name args =
-  let typeEvent = [{tname = "bitstring"}] in
+  let typeEvent = [typeBit] in
   let funSymbEvent = {
       f_name = name;
       f_type = (typeEvent, Param.event_type);
@@ -441,11 +442,92 @@ let transC2 p inNameFile nameOutFile =
 (* Handling nonce versions & checking condition 1           *)
 (************************************************************)
 
+let choiceSymb = {
+    f_name = "choice";
+    f_type = ([typeBit;typeBit], typeBit);
+    f_cat = Choice;
+    f_initial_cat = Choice;
+    f_private = false;		(* TODO *)
+    f_options = 0;		(* TODO *)
+  }
+let hole =
+  FunApp
+    ( {
+	f_name = "hole";
+	f_type = ([], typeBit);
+	f_cat = Tuple;
+	f_initial_cat = Tuple;
+	f_private = true;
+	f_options = 0;		(* TODO *)
+      }
+    , [])
+
 (** Display a whole ProVerif file checking the first condition except for the theory (to be appended). *)      
 let transC1 p inNameFile nameOutFile = 
   let proto = cleanChoice (extractProto p) in
-  ()
-
+  (* -- 1. -- Build nonce versions on the right *)
+  let isName funSymb = match funSymb.f_cat with Name _ -> true | _ -> false in
+  let isConstant funSymb = match funSymb.f_cat with Tuple -> true | _ -> false in
+  let isTuple funSymb = match funSymb.f_cat with Tuple -> true | _ -> false in
+  let rec guessIdeal = function
+    | FunApp (f, []) as t
+	 when isConstant f -> t	             (* constants *)
+    | FunApp (f, []) when isName f -> hole   (* names *)
+    | FunApp (f, _)
+	 when (f.f_name = "enc" || f.f_name = "h" || f.f_name = "aenc")
+      -> hole	                             (* should be non-transparent *)
+    | FunApp (f, listT)
+	 when isTuple f
+      -> FunApp (f, List.map guessIdeal listT) (* tuple *)
+    | term -> begin
+	log "Warning: some idealized messages are missing and it is unclear how to guess them. The idealization of : ";
+	Display.Text.display_term term;
+	log " will be a hole.\n";
+	hole;
+      end in
+  let countNonces = ref 0 in
+  let listNames = ref [] in
+  let createNonce () = 
+    incr(countNonces);
+    let nameName = Printf.sprintf "n%d" !countNonces in
+    let funSymb =
+      {
+	f_name = nameName;
+	f_type = ([],typeBit);
+	f_cat =  Name { prev_inputs = None; prev_inputs_meaning = []};
+	f_initial_cat = Name { prev_inputs = None; prev_inputs_meaning = []};
+	f_private = true;
+	f_options = 0
+      } in
+    listNames := funSymb :: !listNames;
+    FunApp (funSymb, []) in
+  (* idealized term -> nonce term *)
+  let rec noncesTerm = function
+    | FunApp (f, tList) when f.f_name = "hole" -> createNonce()
+    | FunApp (f, tList) -> FunApp (f, List.map noncesTerm tList)
+    | Var _ -> errorClass ("Critical error, shiuld never happen.") p in
+  (* idealized process (some idealized output may miss) -> nonce process *)
+  let rec noncesProc = function
+    | Nil -> Nil
+    | Input (t1,patx,p,occ) -> Input(t1,patx, noncesProc p, occ)
+    | Output (tc,tm,p,occ) ->
+       let (tmReal, tmIdeal) =
+	 match tm with
+	 | FunApp (funSymb, tm1 :: tm2 :: tl) when funSymb.f_cat = Choice -> (tm1, tm2)
+	 | _ -> (tm, guessIdeal tm) in
+       let tmNonce = noncesTerm tmIdeal in
+       let tmChoice = FunApp (choiceSymb, [tmReal; tmNonce]) in
+       Output(tc, tmChoice , noncesProc p, occ)
+    | Let (patx,t,pt,pe,occ) -> Let (patx,t, noncesProc pt, noncesProc pe, occ)
+    | Test (t,pt,pe,occ)-> Test(t, noncesProc pt, noncesProc pe,occ)
+    | p -> errorClass ("Critical error, should never happen.") p in
+  let noncesProto = 
+    { proto with
+      sessNames = proto.sessNames @ (!listNames);
+      ini = noncesProc proto.ini;
+      res = noncesProc proto.res;
+    } in
+  displayProtocol noncesProto
 
 (* To implement later on: *)
 (** Check Condition 1 (outptuis are relation-free). *)
