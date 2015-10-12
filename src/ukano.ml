@@ -215,6 +215,40 @@ let displayProtocolProcess proto =
 
 
 (************************************************************)
+(* Deal with IO                                             *)
+(************************************************************)
+(** Given an input file name, returns the string of all its theory definitions. *)
+let theoryStr inNameFile =
+  let inFile = open_in inNameFile in
+  let sizeInFile = in_channel_length inFile in
+  let inStr = String.create sizeInFile in
+  really_input inFile inStr 0 sizeInFile;
+  let theoStr =
+    try let listSplit = (Str.split (Str.regexp_string splitTheoryString) inStr) in
+	if List.length listSplit <= 1
+	then begin
+	    (* for back-compatibility: *)
+	    let listSplit2 = (Str.split (Str.regexp_string "PROTOCOLS") inStr) in
+	    if List.length listSplit2 <= 1
+	    then failwith ""
+	    else List.hd listSplit2;
+	  end
+	else List.hd listSplit
+    with _ -> begin
+	pp ("Your inputted file should contain the delimiter: '"^
+	      splitTheoryString^
+		"' between the theory and the protocol.\n");
+	pp ("Rules: "^helpMess);
+	failwith "Inputted file not compliant with our rules.";
+      end in
+  (* for back-compatibility: *)
+  let theoStr = Str.global_replace (Str.regexp_string "key") "bitstring" theoStr in
+  let theoStr = Str.global_replace (Str.regexp_string "nonce") "bitstring" theoStr in
+  let theoStr = Str.global_replace (Str.regexp_string "type bitstring.") "" theoStr in
+  theoStr
+
+
+(************************************************************)
 (* Handling events & checking Condition 2                   *)
 (************************************************************)
 (* erase idealized version of outputs from protocols *)
@@ -370,7 +404,7 @@ let transC2 p inNameFile nameOutFile =
 	   (repeat ")" (List.length listEvents+1))^"."
   in
   
-  (* 1. COMPUTING EVENTS VERSION AND QUERIES *)
+  (* -- 1. -- COMPUTING EVENTS VERSION AND QUERIES *)
   let iniEvents,iniTests,iniNbOut = addEventsRole proto.ini iniPrefix true in
   let resEvents,resTests,resNbOut = addEventsRole proto.res resPrefix false in
   let protoEvents = { proto with
@@ -380,7 +414,6 @@ let transC2 p inNameFile nameOutFile =
   let allQueries = (List.map (fun (nb,nbIn) -> generateQuery nb nbIn true) iniTests) @ 
 		     (List.map (fun (nb,nbIn) -> generateQuery nb nbIn false) resTests) in
 
-  (* 2. WRITE in outNameFile *)
   let displayEventsDec listEvents =
     let rec nBit = function
       | 0 -> []
@@ -390,34 +423,10 @@ let transC2 p inNameFile nameOutFile =
        Printf.printf "event %s(%s).\n" name (String.concat "," (nBit arity))
       ) listEvents in
 
-  (* 3. GET the theory part of inNameFile *)
-  let inFile = open_in inNameFile in
-  let sizeInFile = in_channel_length inFile in
-  let inStr = String.create sizeInFile in
-  really_input inFile inStr 0 sizeInFile;
-  let theoryStr =
-    try let listSplit = (Str.split (Str.regexp_string splitTheoryString) inStr) in
-	if List.length listSplit <= 1
-	then begin
-	    (* for back-compatibility: *)
-	    let listSplit2 = (Str.split (Str.regexp_string "PROTOCOLS") inStr) in
-	    if List.length listSplit2 <= 1
-	    then failwith ""
-	    else List.hd listSplit2;
-	  end
-	else List.hd listSplit
-    with _ -> begin
-	pp ("Your inputted file should contain the delimiter: '"^
-	      splitTheoryString^
-		"' between the theory and the protocol.\n");
-	pp ("Rules: "^helpMess);
-	failwith "Inputted file not compliant with our rules.";
-      end in
-  (* for back-compatibility: *)
-  let theoryStr = Str.global_replace (Str.regexp_string "key") "bitstring" theoryStr in
-  let theoryStr = Str.global_replace (Str.regexp_string "nonce") "bitstring" theoryStr in
-  let theoryStr = Str.global_replace (Str.regexp_string "type bitstring.") "" theoryStr in
-  (* 4. Print evrything using a HACK TO REDIRECT STDOUT *)
+  (* -- 2. -- GET the theory part of inNameFile *)
+  let theoryStr = theoryStr inNameFile in
+  
+  (* -- 3. -- Print evrything using a HACK TO REDIRECT STDOUT *)
   let newstdout = open_out nameOutFile in
   print_newline ();		(* for flushing stdout *)
   Unix.dup2 (Unix.descr_of_out_channel newstdout) Unix.stdout;
@@ -435,8 +444,6 @@ let transC2 p inNameFile nameOutFile =
   pp ".\nprocess SYSTEM\n"
 (* END OF REDIRECTION *)
 
-
-(* TODO: *)
 
 (************************************************************)
 (* Handling nonce versions & checking condition 1           *)
@@ -523,11 +530,32 @@ let transC1 p inNameFile nameOutFile =
     | p -> errorClass ("Critical error, should never happen.") p in
   let noncesProto = 
     { proto with
-      sessNames = proto.sessNames @ (!listNames);
+      sessNames = proto.sessNames @ (List.rev !listNames);
       ini = noncesProc proto.ini;
       res = noncesProc proto.res;
     } in
-  displayProtocol noncesProto
+		  
+  (* -- 2. -- Deal with tests (should not create false attacks for diff-equivalent) *)
+  (* TODO *)
+  
+  (* -- 3. -- GET the theory part of inNameFile *)
+  let theoryStr = theoryStr inNameFile in
+
+  (* -- 4. -- Print evrything using a HACK TO REDIRECT STDOUT *)
+  let newstdout = open_out nameOutFile in
+  print_newline ();		(* for flushing stdout *)
+  Unix.dup2 (Unix.descr_of_out_channel newstdout) Unix.stdout;
+  (* Print (=write in the file) the complete ProVerif file *)
+(*  pp "\n\n(* == THEORY == *)\n"; *)
+  pp theoryStr;
+  pp " *)\n";
+  pp "\n\n(* == PROTOCOL WITH NONCE VERSIONS == *)\n";
+  pp "let SYSTEM =\n";
+  displayProtocolProcess noncesProto;
+  pp ".\nprocess SYSTEM\n"
+(* END OF REDIRECTION *)
+
+
 
 (* To implement later on: *)
 (** Check Condition 1 (outptuis are relation-free). *)
