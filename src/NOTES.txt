@@ -1,12 +1,26 @@
 TODO:
-C2:
-	- être plus souple sur la classe acceptée: surtout la création de noms après les bangs:
-          on rappatrie tout ce n'est pas grave... on veut juste au moins un nom créé juste après le second
-          bang
-        - ça nous permettra de tester les fichiers qu'o na déjà et check les cannot prove
 
-C1:     - trouver comment récupérer/générer les versions nonces (avec choice?)
-        - écrire la transfo...
+## C2:
+  - OK, tester sur d'autres exemples quand même
+
+## C1:
+  - régler les problèmes suivant:
+ [A] problème des let qui failent
+
+ [B] alignement des nonces:
+ CA ne suffit pas de push au max les nonces (avec l'option monenew). Il faut faire ça:
+
+   1. on pousse les nonces droite au max mais quand même au dessus des let qui renvoient un nonce en cas de fail
+   2. on regarde quel est le message associé à gauche et on prend S la liste des variables qui s'y retrouvent
+      En général S=tous les précédent inputs et dans ce cas il n'y a rien à faire mais sinon alors:
+   3. on fait dépendre le nonce droit des variables S
+
+
+OPTIONS (mais pas utile finalement):
+set movenew = true.
+set rejectChoiceTrueFalse = true.
+set rejectNoSimplif = true.
+
 
 Parsing dans pitsyntax.ml (compressé)
 
