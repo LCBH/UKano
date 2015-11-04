@@ -1,115 +1,52 @@
-Protocol verifier, copyright INRIA-CNRS, by Bruno Blanchet 
-and Vincent Cheval, 2000-2015.
+#####################################################################
+#                                                                   #
+#  UKANO: UnlinKability and ANOnymity verifier                      #
+#  Lucca Hirschi                                                    #
+#  Copyright (C) 2015                                               #
+#                                                                   #
+#####################################################################
 
-This software can be used to prove secrecy and authenticity properties
-of cryptographic protocols.
+This is a modified version of the ProVerif tool including automatic
+verification of anonymity and unlinkability of 2-agents protocols.
+See http://www.lsv.ens-cachan.fr/tools/ukano.php for more details.
+The file README_PV contains the README file of ProVerif.
+
 
 INSTALL
 
-To run this software, you need Objective Caml version 3.00 or
-higher. Objective Caml can be downloaded from
-	http://caml.inria.fr
-Furthermore, on Mac OS X, you need to install XCode if you do not
-already have it. It can be downloaded from
-	https://developer.apple.com/xcode/
+See the file README_PV.
 
-* under Unix / Mac
-
-Uncompress the source and documentation archives using tar:
-
-	gunzip proverif1.91.tar.gz
-	tar -xf proverif1.91.tar
-	gunzip proverifdoc1.91.tar.gz
-	tar -xf proverifdoc1.91.tar
-
-or if you have GNU tar:
-
-	tar -xzf proverif1.91.tar.gz
-	tar -xzf proverifdoc1.91.tar.gz
-
-This will create a directory named proverif1.91 in the current directory.
-Go into this directory, and build the programs:
-
-	cd proverif1.91
-	./build
-
-* under Windows 
-
-Uncompress the archives proverif1.91.tar.gz and proverifdoc1.91.tar.gz
-using Winzip, in the directory of your choice. This will create a
-subdirectory named proverif1.91. Open a DOS window, cd into the
-proverif1.91 directory and run the build .BAT file:
-
-	build
-
-The system can run under Windows, but it is not very Windows-friendly:
-you have to use the command line to run the programs. Improving the interface
-is on the to-do list...
 
 USAGE
 
-This software contains two executable programs, proverif and proveriftotex. 
+You must use the executable program proverif.
+To run UKANO on a ProVerif file <filename> (see next for the expected
+format of this file), use 
+        ./proverif -ukano <filename>
 
-The program proverif takes as input a description of a cryptographic
-protocol, and checks whether it satisfies secrecy, authenticity, or
-equivalence properties. The description of the protocol can have
-several different formats.  The recommended format is the typed pi
-calculus format, which is a dialect of the applied pi calculus (Abadi
-and Fournet, POPL'01).  The description of the protocol is first
-translated into Horn clauses, then the core of the verifier is called.
-This input format is documented in the file docs/manual.pdf
-(found in proverifdoc1.91.tar.gz). Examples of protocol descriptions 
-can be found in the examples/pitype subdirectory. 
-To run these examples, use 
-        ./proverif <filename>.pv
-or if your filename does not end in .pv,
-        ./proverif -in pitype <filename>
-For example:
-	./proverif examples/pitype/secr-auth/NeedhamSchroederPK.pv
+The folder './examples/' contain some ProVerif files in the expected
+format. It can be used as a starting point to write your own
+protocols.
 
-Other input formats are documented in the file docs/manual-untyped.pv
-Research papers can be downloaded at
-	http://prosecco.inria.fr/personal/bblanche/publications/index.html
-They are not included in the distribution because of copyright differences.
-(You cannot redistribute these papers.)
+Only typed ProVerif files are accepted (the option '-in pitype' is
+enabled by default). The file should not define new types and only use
+the type 'bitstring'. The equational theory must declare a constant
+'hole' by adding this line: 'free hole:bitstring;'. After the
+definition of the equational theory (without any declaration of
+events), the inputted file should contain a commentary:
+       (* ==PROTOCOL== *)
+and then define only one process corresponding to the whole multiple
+sessions system. This process should satisfy the syntactical
+restrictions described in [1]. However, multiple tests (conditional or
+evaluation) can be performed in a row between an input and an output
+if the corresponding 'else' branches are the same. Each output message
+should be of the form: 'choice[u,uh]' where 'u' is the real message
+outputted by the protocol and 'uh' is the idealization of any concrete
+message outputted here (by using the constant 'hole' incstead of
+holes). This will be used to check the first condition (outputs are
+without relation). Finally, to check anonymity as well, identity names
+to be revealed (and only them) must have 'id-' as prefix (e.g., 
+id-name). See the folder 'examples/' for see some examples of such
+files.
 
-The program proveriftotex takes as input a protocol description
-and converts it into a LaTeX file. This is useful for including
-protocols in research papers.
-
-The scripts "test" and "test-type" runs several tests (Unix or cygwin only):
-You can run them by
-         ./test all
-         ./test-type all
-The output of these scripts is written in the directory tests. The
-filename of the output contains the argument of "test" and the
-date/time of the run.
-
-COPYRIGHT
-
-This software is distributed under the GNU general public license.
-See the file LICENSE for more information.
-
-BUG REPORTS
-
-Bugs and comments should be reported by e-mail to
-	Bruno.Blanchet@inria.fr
-
-MAILING LIST
-
-A mailing list is available for discussions on ProVerif. New releases
-are announced on this mailing list.
-
-* If you wish to subscribe, send an email to sympa@inria.fr with subject
-"subscribe proverif <your name>" (without quotes) and an empty body.
-
-* To post a message on the list, send it to proverif@inria.fr. 
-To avoid spam, only people that have subscribed to the list can post.
-
-ACKNOWLEDGMENTS
-
-I would like to thank all users of ProVerif who contributed to the
-development of the software by their helpful remarks.
-From July 2008 to October 2010, the development of ProVerif was partly 
-supported by DGA.
-
+[1] TODO: link to the paper (arxiv?)
