@@ -522,7 +522,7 @@ let anal_file s =
 		    (prefixRel^"_C1.pi", prefixRel^"_C2.pi")
 		with _ -> ("OUTPUT_C1.pi","OUTPUT_C2.pi") in
 	      Ukano.transC1 p s fileNameC1;
-	      (* Ukano.transC2 p s fileNameC2; *)
+	      Ukano.transC2 p s fileNameC2;
 	    end else begin
 	      
 	      if !Param.html_output then

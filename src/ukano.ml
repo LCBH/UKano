@@ -92,9 +92,11 @@ let extractProto process =
   let rec checkRole ?lastInp:(laI=false) ?lastOut:(laO=false)
 		    ?lastCondi:(laC=false) ?lastElse:(laE=Nil) accN = function
     | Nil -> ()
-    | Input (_,_,p,_) as proc ->
+    | Input (_,(PatVar bx),p,_) as proc ->
        if laI then errorClass ("Roles cannot perform two inputs in a row.") proc;
        checkRole ~lastInp:true ~lastOut:false ~lastCondi:false accN p
+    | Input (_,_,_,_) as proc -> 
+       errorClass ("Roles cannot user patterns in input.") proc;
     | Output (_,_,p,_) as proc ->
        if laO then errorClass ("Roles cannot perform two outputs in a row.") proc;
        checkRole ~lastInp:false ~lastOut:true ~lastCondi:false accN p

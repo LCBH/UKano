@@ -1,5 +1,6 @@
 TODO:
 
+ATTEBTION: pattern input pat
 ## C2:
   - OK, tester sur d'autres exemples quand même
 
