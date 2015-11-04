@@ -40,7 +40,8 @@ let splitTheoryString = "==PROTOCOL=="
 
 (* Helping message *)
 let helpMess = 
-  (  "Only typed ProVerif files are accepted (the option '-in pitype' is enabled by default). The file should not define new types and only use\n"^
+  (  "Only typed ProVerif files are accepted (the option '-in pitype' is enabled by default). See the folder './examples/' for examples\n"^
+     "of files in the correct format. They can be used to bootsrap your own file. The file should not define new types and only use\n"^
      "the type 'bitstring'. The equational theory must declare a constant 'hole' by adding this line: 'free hole:bitstring;'.\n"^
      "After the definition of the equational theory (without any declaration of events), the inputted file should contain a commentary:\n"^
      "       (* "^splitTheoryString^" *)\n"^
@@ -286,7 +287,7 @@ let makeEvent name args =
     } in
   FunApp (funSymbEvent, args)
 
-(* create fresh occurence (to be associated to each news yntactical action) *)
+(* create fresh occurence (to be associated to each new syntactical action) *)
 let makeOcc () = Terms.new_occurrence ()
 				      
 (** Display a whole ProVerif file checking the first condition except for the theory (to be appended). *)      
