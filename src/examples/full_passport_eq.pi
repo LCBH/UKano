@@ -29,21 +29,9 @@ reduc forall m: bitstring , k:bitstring ;
 reduc forall m: bitstring , k:bitstring ;
   checksign(sign(m, k), spk(k)) = m.
 
-(* Over-approximation of (kt XOR kr): xorKey has strictly more equations
--> Valid ? *)
-fun xorKey(bitstring, bitstring) : bitstring.
-(*
-fun projKey1(bitstring) : bitstring
-reduc forall k1:bitstring, k2:bitstring;
-        projKey1(xorKey(k1, k2)) = k1.
-fun projKey2(bitstring) : bitstring
-reduc forall k1:bitstring, k2:bitstring;
-        projKey2(xorKey(k1, k2)) = k2.
+(* generate new key from seed from two keys *)
+fun hashKey(bitstring, bitstring) : bitstring.
 
-fun trydec (bitstring, bitstring) : bitstring
-reduc forall m : bitstring, k:bitstring ; trydec ( enc(m,k) , k) = m
-otherwise forall x : bitstring , k : bitstring ; trydec ( x , k) = x .
-*)			       
 
 (* ==PROTOCOL== *)
 
@@ -84,8 +72,7 @@ let TB (k:bitstring, skP:bitstring, dgi:bitstring,nt:bitstring,kt:bitstring,rand
 (* T ----[{nt,nr,kt}_k]---> R *)         
          let (xnr:bitstring,=nt,xkr:bitstring) = dec(x1, k) in (
          out(ct, enc((nt,xnr,kt), k));
-(* HOLE *)
-         TAA(xorKey(kt,xkr), skP, dgi,randT)
+         TAA(hashKey(kt,xkr), skP, dgi,randT)
          ) else
          out(ct, error_mac)	(* error bitstring in FR *)
     else out(ct, error_mac).    (* error mac in FR *)
@@ -98,9 +85,8 @@ let RB (k:bitstring, skP:bitstring,nr:bitstring,kr:bitstring,randR:bitstring) =
 (* R <----[{nt,nr,kt}_k]--- T *)
     in(cr, y2:bitstring);
     let (=y1, =nr, ykt:bitstring) = dec(y2, k) in (
-(* HOLE *)
-     out(cr, enc((init, randR), xorKey(ykt, kr)));
-      RAA(xorKey(ykt, kr), skP,randR)
+    out(cr, enc((init, randR), hashKey(ykt, kr)));
+    RAA(hashKey(ykt, kr), skP,randR)
     ).
 
 (* WHOLE SYSTEM *)

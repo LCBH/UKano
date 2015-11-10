@@ -1,21 +1,20 @@
-(* Lucca Hirschi: test on transformations of protocols *)
-
 (**********)
 (* THEORY *)
 (**********)
 
+type nonce.
 (* public communication channel *)
 free c : channel.
 free ct : channel.
 free cr : channel.
 
 (* constant values *)
-free hole : bitstring.
 free error_mac : bitstring.
 free init : bitstring.
 free read : bitstring.
 free ok : bitstring.
 const g : bitstring [data].
+free hole : bitstring.
 
 
 (* Diffie-Hellman exponentiation *)
@@ -29,9 +28,15 @@ equation forall x : bitstring, y : bitstring;
 fun gen(bitstring,bitstring) : bitstring.
 
  (* Symmetric Encryption *)
+(* If dec defined through a reduction rule -> ATTACK on UK
 fun enc(bitstring, bitstring) : bitstring.
   reduc forall xm:bitstring, xk:bitstring;
         dec(enc(xm, xk), xk) = xm.
+*)
+fun enc (bitstring, bitstring) : bitstring.
+fun dec (bitstring, bitstring) : bitstring.
+equation forall x : bitstring, y : bitstring;
+  dec(enc(x,y),y) = x.	       
 
  (* Mac (of pairs) *)
 fun mac(bitstring, bitstring) : bitstring.
@@ -53,14 +58,13 @@ let T (k:bitstring) =
     out(ct, choice[exp(g,b1), hole]);
 (* T <---[exp(gen(g^s,g^(a1.b1)),a2)]--- R *)  
     in(ct, x2:bitstring);
-    let newG = gen(exp(g,s),exp(x2,b1)) in
 (* T ----[exp(gen(g^s,g^(a1.b1)),b2)]---> R *)  
-    out(ct, choice[exp(newG,b2), hole]);
+    out(ct, choice[exp(gen(exp(g,s),exp(x2,b1)),b2), hole]);
 (* T <---[mac(exp(gen(g^s,g^(a1.b1)),b2),newBitstring]--- R *)  
     in(ct, x3:bitstring);
     (* newBitstring = exp(gen(g^s,g^(a1.b1)),a2.b2) *)
     let newBitstring:bitstring = exp(x2,b2) in
-    if mac(exp(newG,b2), newBitstring) = x3
+    if mac(exp(gen(exp(g,s),exp(x2,b1)),b2), newBitstring) = x3
     then 
 (* T ----[mac(exp(gen(g^s,g^(a1.b1)),a2),newBitstring]---> R *)  
     out(cr, choice[mac(x2, newBitstring), hole]).
@@ -74,21 +78,20 @@ let R (k:bitstring) =
     out(cr, choice[exp(g,a1), hole]);
 (* R <---[exp(g,b1)]--- T *)
     in(cr, y2:bitstring);
-    let newG = gen(exp(g,dec(y1,k)),exp(y2,a1)) in
 (* R ----[exp(gen(g^s,g^(a1.b1)),a2)]---> T *)  
-    out(cr, choice[exp(newG,a2), hole]);
+    out(cr, choice[exp(gen(exp(g,dec(y1,k)),exp(y2,a1)),a2), hole]);
 (* R <---[exp(gen(g^s,g^(a1.b1)),b2)]--- T *)  
     in(cr, y3:bitstring);
     (* newBitstring = exp(gen(g^s,g^(a1.b1)),a2.b2) *)
 
-    if y3<>exp(newG,a2) then (* AJOUTEE CAR COMME CA DANS LA SPEC LOW LEVEL *)
+    if y3<>exp(gen(exp(g,dec(y1,k)),exp(y2,a1)),a2) then (* AJOUTEE CAR COMME CA DANS LA SPEC LOW LEVEL *)
 
     let newBitstring:bitstring = exp(y3,a2) in
 (* R ----[mac(exp(gen(g^s,g^(a1.b1)),b2),newBitstring]---> T *)  
     out(cr, choice[mac(y3,newBitstring), hole]);
 (* R <---[mac(exp(gen(g^s,g^(a1.b1)),a2),newBitstring]--- T *)  
     in(cr, y4:bitstring);
-    if mac(exp(newG,a2), newBitstring) = y4
+    if mac(exp(gen(exp(g,dec(y1,k)),exp(y2,a1)),a2), newBitstring) = y4
     then 
 (* R ----[ok]---> T *)  
     out(cr, choice[ok, ok]).
