@@ -45,8 +45,8 @@ outputted by the protocol and 'uh' is the idealization of any concrete
 message outputted here (by using the constant 'hole' incstead of
 holes). This will be used to check the first condition (outputs are
 without relation). Finally, to check anonymity as well, identity names
-to be revealed (and only them) must have 'id-' as prefix (e.g., 
-id-name). See the folder 'examples/' for see some examples of such
+to be revealed (and only them) must have 'id' as prefix (e.g., 
+idAname). See the folder 'examples/' for see some examples of such
 files.
 
 [1] TODO: link to the paper (arxiv?)
