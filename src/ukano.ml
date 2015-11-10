@@ -296,14 +296,15 @@ let transC2 p inNameFile nameOutFile =
   displayProtocol proto;
   let (sessName,idName) =
     try (List.hd proto.sessNames, List.hd proto.idNames) (* 2 funSymb *)
-    with _ -> failwith "The protocol shoulv have at least one identity name and one session name." in
-  let (sessTerm,idTerm) = FunApp (sessName, []), FunApp (idName, []) in
+    with _ -> failwith "The protocol should have at least one identity name and one session name." in
+  let (sessTerms,idTerms) = (List.map (fun sessName ->  FunApp (sessName, [])) proto.sessNames,
+			     List.map (fun idName -> FunApp (idName, [])) proto.idNames) in
   let listEvents = ref [] in
   let iniPrefix, resPrefix = "I", "R" in
   let nameEvent prefixName nb actionName = Printf.sprintf "%s%s_%d" prefixName actionName nb in
   (* add an event on top of a process with args + in addition [idTerm,sessTerm] *)
   let addEvent name args p = 	
-    let newArgs = idTerm :: sessTerm :: args in
+    let newArgs = idTerms @ sessTerms @ args in
     let event = makeEvent name newArgs in
     listEvents := (name, List.length newArgs) :: !listEvents;
     Event (event, p, makeOcc())in
@@ -365,15 +366,22 @@ let transC2 p inNameFile nameOutFile =
 
   (* Generate a string for a query *)
   let generateQuery nb nbIn isInitiator =
-    let prefix = "query k:bitstring, n1:bitstring, n2:bitstring,\n" in
-    let nbArgs = if isInitiator	(* number of arguments to declare for this query *)
+    let prefix = "query " in
+    let idNames = (List.map (fun s -> Printf.sprintf "%s%s" s.f_name "S") proto.idNames) in
+    let sessNames1 = (List.map (fun s -> Printf.sprintf "%s%s" s.f_name "S1") proto.sessNames) in
+    let sessNames2 = (List.map (fun s -> Printf.sprintf "%s%s" s.f_name "S2") proto.sessNames) in
+    let prefix = (prefix^
+    		    (String.concat ", " (List.map (fun s -> s^":bitstring") idNames))^(", ")^
+    		      (String.concat ", " (List.map (fun s -> s^":bitstring") sessNames1))^(", ")^
+    			(String.concat ", " (List.map (fun s -> s^":bitstring") sessNames2)))^(", ") in
+     let nbArgs = if isInitiator	(* number of arguments to declare for this query *)
 		 then 2*nbIn
 		 else 2*nbIn-1 in
     let rec range = function | 0 -> [] | n -> n :: range (n-1) in
     let listArgs nb = 		(* generate a list of messages to give as arguments to events *)
       List.map (fun n -> Printf.sprintf "m%d" n) (List.rev (range nb)) in      
     let allListArgs nb role = 
-      "k" :: (if role==iniPrefix then "n1" else "n2") :: (listArgs nb) in
+      idNames @ (if role==iniPrefix then sessNames1 else sessNames2) @ (listArgs nb) in
     let listArgsDec = listArgs nbArgs in      
     let prefixArgs = "      "^
 		       (String.concat ", "
