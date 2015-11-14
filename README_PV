@@ -1,6 +1,5 @@
 This is a modified version of the ProVerif tool including automatic verification
 of anonymity and unlinkability of 2-agents protocols.
-See http://www.lsv.ens-cachan.fr/tools/ukano.php for more details.
 
 
 Origial: README of ProVerif.

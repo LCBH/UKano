@@ -179,7 +179,6 @@ and new_args = binder list option * envElement StringMap.t
 
 (* Processes *)
 
-(* lucca: c'est ici qu'est défini l'AST des process *)
 and process = 
     Nil
   | Par of process * process

@@ -1,14 +1,11 @@
 #####################################################################
 #                                                                   #
 #  UKANO: UnlinKability and ANOnymity verifier                      #
-#  Lucca Hirschi                                                    #
-#  Copyright (C) 2015                                               #
 #                                                                   #
 #####################################################################
 
 This is a modified version of the ProVerif tool including automatic
 verification of anonymity and unlinkability of 2-agents protocols.
-See http://www.lsv.ens-cachan.fr/tools/ukano.php for more details.
 The file README_PV contains the README file of ProVerif.
 
 
@@ -48,5 +45,3 @@ without relation). Finally, to check anonymity as well, identity names
 to be revealed (and only them) must have 'id-' as prefix (e.g., 
 id-name). See the folder 'examples/' for see some examples of such
 files.
-
-[1] TODO: link to the paper (arxiv?)

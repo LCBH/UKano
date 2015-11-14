@@ -2,9 +2,6 @@
  *                                                           *
  *  UKANO: UnlinKability and ANOnymity verifier              *
  *                                                           *
- *  Lucca Hirschi                                            *
- *                                                           *
- *  Copyright (C) 2015                                       *
  *                                                           *
  *************************************************************)
 
@@ -26,7 +23,7 @@
 
 *)
 (* This module provides functions from the UnlinKability and ANOnymity
-   verifier built on top of ProVerif as described in [1]. (todo-lucca:ref) *)
+   verifier built on top of ProVerif as described in [1]. *)
 
 
 (** If the inputted process is not in the "2-agents protocol class" (see [1]). *)
