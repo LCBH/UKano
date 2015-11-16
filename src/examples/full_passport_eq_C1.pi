@@ -42,33 +42,24 @@ let ePassport =
 new skP : bitstring;
  !
  new k_51 : bitstring;
+ new dgi : bitstring;
    !
-   new randR : bitstring;
-   new randT : bitstring;
-   new kt : bitstring;
-   new nt : bitstring;
-   new dgi : bitstring;
-   new n2 : bitstring;
-   new n3 : bitstring;
-   new n4 : bitstring;
-   new n5 : bitstring;
-   new n6 : bitstring;
-   new n7 : bitstring;
-   new n8 : bitstring;
-   new n9 : bitstring;
-   new n10 : bitstring;
-   new n11 : bitstring;
-   new n12 : bitstring;
    ((
+    new nt : bitstring;
+    new n3 : bitstring;
     out(ct, choice[nt,n3]);
     in(ct, x1: bitstring);
     (
+        new kt : bitstring;
+        new n6 : bitstring;
         let mergeOut = let (xnr: bitstring,=nt,xkr: bitstring) = dec(x1,k_51) in
                          choice[enc((nt,xnr,kt),k_51),n6]
                        else n6 in
         out(ct, mergeOut);
         in(ct, x2: bitstring);
         (
+            new randT : bitstring;
+            new n7 : bitstring;
             let mergeOut = let (xnr: bitstring,=nt,xkr: bitstring) = dec(x1,k_51) in
                              let (=init,xrandR: bitstring) = dec(x2,hashKey(kt,xkr)) in
                                choice[enc(sign((randT,xrandR),skP),hashKey(kt,xkr)),n7]
@@ -77,8 +68,11 @@ new skP : bitstring;
              out(ct, mergeOut);
             in(ct, x3: bitstring);
             (
-                let mergeOut = let (xnr: bitstring,=nt,xkr: bitstring) = dec(x1,k_51) in
-                                  choice[enc((dgi,sign(dgi,skP)),hashKey(kt,xkr)),n8]
+                 new n8[x1] : bitstring;
+                 let mergeOut = let (xnr: bitstring,=nt,xkr: bitstring) = dec(x1,k_51) in
+                                  let (=read) = dec(x3,k_51) in
+                                    choice[enc((dgi,sign(dgi,skP)),hashKey(kt,xkr)),n8]
+                                  else n8
                                else n8 in
                 out(ct, mergeOut)
             ) | (
@@ -100,6 +94,8 @@ new skP : bitstring;
     out(cr, choice[enc((nr,y1,kr),k_51), n1]);
     in(cr, y2: bitstring);
     (
+        new randR : bitstring;
+        new n2 : bitstring;
         let mergeOut = let (=y1,=nr,ykt: bitstring) = dec(y2,k_51) in
                           choice[enc((init,randR),hashKey(ykt,kr)),n2]
                        else n2 in
@@ -109,7 +105,11 @@ new skP : bitstring;
             new n13 : bitstring;
             let mergeOut = let (=y1,=nr,ykt: bitstring) = dec(y2,k_51) in
                              let m_52: bitstring = dec(y3,hashKey(ykt,kr)) in
-                               choice[enc(read,hashKey(ykt,kr)),n13]
+                                let (x:bitstring) = getmess(m_52) in
+                                   let (=x) = checksign(m_52, spk(skP)) in
+                                     choice[enc(read,hashKey(ykt,kr)),n13]
+                                   else n13
+                                else n13
                              else n13
                            else n13 in
             (

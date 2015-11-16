@@ -140,6 +140,7 @@ let SYSTEM =
 new skP : bitstring;
  !
  new k_51 : bitstring;
+ new dgi : bitstring;
    !
    new kr : bitstring;
    new nr : bitstring;
@@ -147,7 +148,6 @@ new skP : bitstring;
    new randT : bitstring;
    new kt : bitstring;
    new nt : bitstring;
-   new dgi : bitstring;
    ((
     event Iout_1(k_51,kr,nt);
     out(ct, nt);
