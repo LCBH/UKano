@@ -1,4 +1,8 @@
-(* Lucca Hirschi: test on transformations of protocols *)
+(******************************************************)
+(*                                                    *)
+(*               BAC+PA+AA                            *)
+(*                                                    *)
+(******************************************************)
 
 (* ==THEORY== *)
 
@@ -90,7 +94,7 @@ let RB (k:bitstring, skP:bitstring,nr:bitstring,kr:bitstring,randR:bitstring) =
     ).
 
 (* WHOLE SYSTEM *)
-let BAC =
+let ePassport =
   new skP : bitstring ;
   ! new k:bitstring;
     ! new dgi:bitstring;	(* information stored in passports *)
@@ -102,4 +106,4 @@ let BAC =
     new kr:bitstring;
         (TB(k, skP, dgi,nt,kt,randT) | RB(k, skP,nr,kr,randR)).
 
-process BAC
+process ePassport
