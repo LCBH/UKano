@@ -1,0 +1,10 @@
+FO:
+  - transfo des let comme dans le papier
+  - au moins pousser les new au max
+
+WA:
+  - pousser les new au max
+  - trouver un moyen pour ne pas créer de query pour les tests safes
+
+"Ajouter des textes d'explication (lancer ProVerif sur les deux fichiers, que faire
+en cas de fail de PV..."

@@ -516,8 +516,8 @@ let anal_file s =
 		      then List.hd splitDot
 		      else  String.concat "." (List.rev (List.tl (List.rev splitDot))) in
 		    let prefixRel = if prefix.[0] = '/' then "."^prefix else prefix in
-		    (prefixRel^"_C1.pi", prefixRel^"_C2.pi")
-		with _ -> ("OUTPUT_C1.pi","OUTPUT_C2.pi") in
+		    (prefixRel^"_FOpa.pi", prefixRel^"_WAuth.pi")
+		with _ -> ("OUTPUT_FOpa.pi","OUTPUT_WAuth.pi") in
 	      Ukano.transC1 p s fileNameC1;
 	      Ukano.transC2 p s fileNameC2;
 	    end else begin

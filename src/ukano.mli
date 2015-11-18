@@ -32,11 +32,11 @@
 (** If the inputted process is not in the "2-agents protocol class" (see [1]). *)
 exception NotInClass of string
 
-(** [transC1 p inNameFile outNameFile] writes in the file [outNameFile] a complete ProVerif file checking condition 1 for
+(** [transC1 p inNameFile outNameFile] writes in the file [outNameFile] a complete ProVerif file checking frame opacity for
     the process [p] and the theory contained in [inNameFile]. *)
 val transC1 : Types.process -> string -> string -> unit
 
-(** [transC2 p inNameFile outNameFile] writes in the file [outNameFile] a complete ProVerif file checking condition 2 for
+(** [transC2 p inNameFile outNameFile] writes in the file [outNameFile] a complete ProVerif file checking well-authentication for
     the process [p] and the theory contained in [inNameFile]. *)
 val transC2 : Types.process -> string -> string -> unit
 
@@ -44,8 +44,11 @@ val transC2 : Types.process -> string -> string -> unit
 val displayProcessProtocol : Types.process -> unit
 
 (* To implement later on: *)
-(** Check Condition 1 (outptuts are relation-free). *)
+(** Check frame opacity (outptuts are relation-free). *)
 val checkC1 : Types.process -> bool
 
-(** Check Condition 2 (tests do not leak information about agents). *)
+(** Check well-authentication (tests do not leak information about agents). *)
 val checkC2 : Types.process -> bool
+
+(** Check UK & ANO *)
+val check : Types.process -> bool

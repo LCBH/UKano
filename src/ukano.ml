@@ -252,7 +252,7 @@ let theoryStr inNameFile =
 
 
 (************************************************************)
-(* Handling events & checking Condition 2                   *)
+(* Handling events & checking well-authentication           *)
 (************************************************************)
 (* erase idealized version of outputs from protocols *)
 let cleanChoice proto = 
@@ -448,7 +448,7 @@ let transC2 p inNameFile nameOutFile =
 
 
 (************************************************************)
-(* Handling nonce versions & checking condition 1           *)
+(* Handling nonce versions & checking Frame Opacity         *)
 (************************************************************)
 
 let choiceSymb = {
@@ -471,20 +471,38 @@ let hole =
       }
     , [])
 
+let debugF_type (tl,t) = 
+  ""
+let displayCat = function
+  | Tuple -> "Tuple"
+  | Name _ -> "Name"
+  | _ -> "todo"
+
+let debugFunSymb f = 
+  Printf.printf 
+    "Funsym[ name:%s, f_type:%s, f_cat: %s f_private %b f_options:%d]"
+    f.f_name
+    (debugF_type f.f_type)
+    (displayCat f.f_cat)
+    f.f_private
+    f.f_options
+    
 (** Display a whole ProVerif file checking the first condition except for the theory (to be appended). *)      
 let transC1 p inNameFile nameOutFile = 
   let proto = extractProto p in
 
   (* -- 1. -- Build nonce versions on the right *)
+  let nonTransparentSymbList = ["enc"; "aenc"; "dec"; "adec"; "h"; "hash"; "xor"] in
   let isName funSymb = match funSymb.f_cat with Name _ -> true | _ -> false in
-  let isConstant funSymb = match funSymb.f_cat with Tuple -> true | _ -> false in
+  let isPrivate funSymb = funSymb.f_private in
+  let isConstant funSymb = isName funSymb && not(isPrivate funSymb) in
   let isTuple funSymb = match funSymb.f_cat with Tuple -> true | _ -> false in
   let rec guessIdeal = function
     | FunApp (f, []) as t
-	 when isConstant f -> t	             (* constants *)
-    | FunApp (f, []) when isName f -> hole   (* names *)
+	 when isConstant f -> t	             (* public constants *)
+    | FunApp (f, []) when isName f -> hole   (* (private) names *)
     | FunApp (f, _)
-	 when (f.f_name = "enc" || f.f_name = "h" || f.f_name = "aenc")
+	 when (List.mem f.f_name nonTransparentSymbList) 
       -> hole	                             (* should be non-transparent *)
     | FunApp (f, listT)
 	 when isTuple f
@@ -525,8 +543,12 @@ let transC1 p inNameFile nameOutFile =
     | Output (tc,tm,p,occ) ->
        let (tmReal, tmIdeal) =
 	 match tm with
-	 | FunApp (funSymb, tm1 :: tm2 :: tl) when funSymb.f_cat = Choice -> (tm1, tm2)
-	 | _ -> (tm, guessIdeal tm) in
+	 | FunApp (funSymb, tm1 :: tm2 :: tl) when funSymb.f_cat = Choice -> (tm1, tm2) (* user already built idealization *)
+	 | _ -> (* For debugging purpose: pp "\n"; 
+                   (match tm with | FunApp (f, li) -> debugFunSymb f);
+                   pp "\n"; Display.Text.display_term tm;
+        	   pp " -> "; Display.Text.display_term (guessIdeal tm);  pp "\n"; *)
+	    (tm, guessIdeal tm) in (* he did not, we need to guess it *)
        let tmNonce = noncesTerm tmIdeal in
        let tmChoice = FunApp (choiceSymb, [tmReal; tmNonce]) in
        Output(tc, tmChoice , noncesProc p, occ)
@@ -589,8 +611,11 @@ let transC1 p inNameFile nameOutFile =
 
 
 (* To implement later on: *)
-(** Check Condition 1 (outptuis are relation-free). *)
+(** Check Frame Opacity (outptuis are relation-free). *)
 let checkC1 p = failwith "Not Implemented"
 
-(** Check Condition 2 (tests do not leak information about agents). *)
+(** Check Well-Authentication (tests do not leak information about agents). *)
 let checkC2 p = failwith "Not Implemented"
+
+(** Check UK & ANO *)
+let check p = failwith "Not Implemented"
