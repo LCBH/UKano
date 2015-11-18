@@ -163,7 +163,7 @@ let extractProto process =
 	     {
 	       comNames = comNames;
 	       idNames = idNames;
-	       sessNames = iniN @ resN @ sessNames;
+	       sessNames = (List.rev sessNames) @ (List.rev iniN) @ (List.rev resN);
 	       ini = iniPclean;
 	       res = resPclean;
 	     }

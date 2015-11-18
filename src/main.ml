@@ -373,9 +373,6 @@ let anal_file s =
 	Param.typed_frontend := true;
 	(* Param.ignore_types := false; *)
 
-	(* Lucca: val parse_file : string -> process * process option 
-           Cette fonction parse le fichier en renvoie un/deux processe MAIS ATTENTION
-           ELLE A MASSE d'EFFETS de BORD. Elle va créerune théorie équationnelle absolue. *)
 	let p0, second_p0 = Pitsyntax.parse_file s in
 	
 	let p0 =

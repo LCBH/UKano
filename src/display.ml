@@ -1379,9 +1379,9 @@ let display_proc show_occ align proc =
 	print_string align;
 	display_occ occ;
 	display_idcl CKeyword "let";
-	print_string " ";
+	print_string " (";
 	display_pattern pat;
-	print_string " = ";
+	print_string ") = ";
 	display_term2 t;
 	print_string " ";
 	display_idcl CKeyword "in";
