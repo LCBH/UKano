@@ -459,6 +459,14 @@ let choiceSymb = {
     f_private = false;		(* TODO *)
     f_options = 0;		(* TODO *)
   }
+let letCatchSymb = {
+    f_name = "";
+    f_type = ([typeBit;typeBit;typeBit;typeBit], typeBit);
+    f_cat = LetCatch;
+    f_initial_cat = LetCatch;
+    f_private = true;		(* TODO *)
+    f_options = 0;		(* TODO *)
+  }
 let hole =
   FunApp
     ( {
@@ -470,7 +478,14 @@ let hole =
 	f_options = 0;		(* TODO *)
       }
     , [])
-
+let mergeOut = {
+    sname = "mergeOut";
+    vname = 0;
+    unfailing = true;
+    btype = typeBit;
+    link = NoLink;
+  }
+		 
 let debugF_type (tl,t) = 
   ""
 let displayCat = function
@@ -535,7 +550,7 @@ let transC1 p inNameFile nameOutFile =
   let rec noncesTerm = function
     | FunApp (f, tList) when f.f_name = "hole" -> createNonce()
     | FunApp (f, tList) -> FunApp (f, List.map noncesTerm tList)
-    | Var _ -> errorClass ("Critical error, shiuld never happen.") p in
+    | Var _ -> errorClass ("Critical error, should never happen.") p in
   (* idealized process (some idealized output may miss) -> nonce process *)
   let rec noncesProc = function
     | Nil -> Nil
@@ -565,30 +580,60 @@ let transC1 p inNameFile nameOutFile =
   
   (* -- 2. -- Deal with tests (should not create false attacks for diff-equivalent) *)
   (* HACK: produce a term using factice funsymb equal to
-       'let [patt] = let m = [calc] in m else (ifFail]' *)
-  let makeLet patt calc ifFaill = 
-    let strLet =
-      Printf.sprintf "let m = %s in m else %s" in
-    FunApp (choiceSymb, []) in 	(* todo *)
-  let rec cleanTest = function
+       'let [tm] = [calc] in [tm'] else [ifFail]' *)
+  let makeLet tm calc tm' ifFail = 
+    (* let strLet = *)
+    (*   Printf.sprintf "let m = %s in m else %s" in *)
+    FunApp (letCatchSymb, [tm;calc;tm';ifFail]) in 	(* todo *)
+  (* Check if the term tm contains variables from some patterns in accLet *)
+  let checkVar tm accLet = 
+    let inPattern name (patx,_) = 
+      let rec auxPatternTerm = function
+	| Var binder -> binder.sname = name
+	| FunApp (_,termList) -> List.exists auxPatternTerm termList in
+      let rec auxPattern = function
+	| PatVar binder -> name = binder.sname
+	| PatTuple (_,patList) -> List.exists auxPattern patList
+	| PatEqual t -> auxPatternTerm t in
+      auxPattern patx in
+    let rec auxTerm = function
+      | Var binder -> 
+	 List.exists (inPattern binder.sname) accLet
+      | FunApp (_,termList) -> List.exists auxTerm termList in
+    auxTerm tm in
+  (* clean conditional by pushing them before output (when they need them)
+     and using our special construction letCatch that cannot fail *)
+  let rec cleanTest accTest accLet = function
     | Nil -> Nil
-    | Input (tc,patx,p,occ) -> Input(tc,patx, cleanTest p, occ)
-    | Output (tc,tm,p,occ) ->  Output(tc,tm, cleanTest p, occ)
+    | Input (tc,patx,p,occ) -> Input(tc,patx, cleanTest accTest accLet p, occ)
+    | Output (tc,tm,p,occ) ->
+       (* check if tm use variables binded by patterns in accLet *)
+       if checkVar tm accLet
+       then begin
+	   let tml,tmr =
+	     (match tm with
+	      | FunApp (funSymb, tm1 :: tm2 :: tl)
+		   when funSymb.f_cat = Choice -> (tm1, tm2)
+	      | _ -> failwith "Cannot happen") in
+	   let letCatch = tm in
+	   (* TODO *)
+	   Let (PatVar mergeOut, letCatch,
+		Output(tc,Var mergeOut, cleanTest accTest accLet p, occ),
+		Nil, makeOcc());
+	 end else begin
+	   (* the output does need accLet  *)
+	   Output(tc,tm, cleanTest accTest accLet p, occ);
+	 end
     | Let (patx,t,pt,pe,occ) ->
-       let nonceIfFail = createNonce() in
-       let termNoFail =
-       (* todo: Let m = t in m else nonceIfFail *)
-	 (* ARGHH c'est mEGA DUR!!!!!! TROP CHIANT!!!! *)
-	 makeLet patx t nonceIfFail in
-       Par(Let (patx,t, cleanTest pt, Nil, occ),
-	   cleanTest pe)
-    | Test (t,pt,pe,occ)-> Par(cleanTest pt, cleanTest pe)
+       Par(cleanTest accTest ((patx,t)::accLet) pt,
+	   cleanTest accTest accLet pe)
+    | Test (t,pt,pe,occ)-> Par(cleanTest ((t,pt)::accTest) accLet pt, cleanTest accTest accLet pe)
     | p -> errorClass ("Critical error, should never happen.") p in
   let cond1Proto = 
     { noncesProto with
       sessNames = proto.sessNames @ (List.rev !listNames);
-      ini = cleanTest noncesProto.ini;
-      res = cleanTest noncesProto.res;
+      ini = cleanTest [] [] noncesProto.ini;
+      res = cleanTest [] [] noncesProto.res;
     } in
 
   (* -- 3. -- GET the theory part of inNameFile *)
