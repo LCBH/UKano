@@ -261,6 +261,71 @@ let theoryStr inNameFile =
 
 
 (************************************************************)
+(* Push session names as far as possible                    *)
+(************************************************************)
+(* We suppose here that session names are not shared between agents
+   (as defined in the paper. *)
+let pushNames proto = 
+  let sessNames = List.tl proto.sessNames in
+  let sessNameEvent = List.hd proto.sessNames in
+  let addNames names continuationProc = 
+    List.fold_right (fun name proc ->
+		     Restr(name, 
+			   (None, Stringmap.StringMap.empty),
+			   proc,makeOcc()))
+		    names
+		    continuationProc in
+  let rec pushN accNames = function
+    | Nil -> Nil
+    | Input (tc,patx,p,occ) -> Input(tc,patx,pushN accNames p, occ)
+    | Output (tc,tm,p,occ) -> 	(* is there a needed name in accNames ? *)
+       let needNames = List.filter (fun name -> Terms.occurs_f name tm) accNames in
+       if needNames <> []
+       then 
+	 let otherNames = List.filter (fun n -> not(List.mem n needNames)) accNames in
+	 addNames needNames (Output(tc,tm,pushN otherNames p, occ))
+       else Output(tc,tm,pushN accNames p, occ)
+    | Let (patx,t,pt,pe,occ) -> (* is there a needed name in accNames ? *)
+       let needNames = List.filter (fun name -> Terms.occurs_f name t) accNames in
+       if needNames <> []
+       then 
+	 let otherNames = List.filter (fun n -> not(List.mem n needNames)) accNames in
+	 addNames needNames (Let (patx,t,pushN otherNames pt, pushN otherNames pe, occ))
+       else Let (patx,t,pushN accNames pt, pushN accNames pe, occ)
+    | Test (t,pt,pe,occ)-> (* is there a needed name in accNames ? *)
+       let needNames = List.filter (fun name -> Terms.occurs_f name t) accNames in
+       if needNames <> []
+       then 
+	 let otherNames = List.filter (fun n -> not(List.mem n needNames)) accNames in
+	 addNames needNames (Test(t,pushN otherNames pt, pushN otherNames pe,occ))
+       else Test(t,pushN accNames pt, pushN accNames pe,occ)
+    | Event(t,p,occ) -> (* is there a needed name in accNames ? *)
+       let needNames = List.filter (fun name -> Terms.occurs_f name t) accNames in
+       if needNames <> []
+       then 
+	 let otherNames = List.filter (fun n -> not(List.mem n needNames)) accNames in
+	 addNames needNames (Event(t,pushN otherNames p, occ))
+       else Event(t,pushN accNames p, occ)
+    | Par (p1,Nil) -> pushN accNames p1
+    | Par (Nil,p2) -> pushN accNames p2
+    | Par (p1, (Output(tc,tm,Nil,occ) as p2)) -> (* this can happen because of translations done when checking Frame opacity *)
+       let needNames = List.filter (fun name -> Terms.occurs_f name tm) accNames in
+       if needNames <> []
+       then 
+	 let otherNames = List.filter (fun n -> not(List.mem n needNames)) accNames in
+	 addNames needNames (Par (pushN otherNames p1, p2))
+       else Par (pushN accNames p1, p2) 
+    | Par (_,_) as p -> errorClass ("[UKANO] [pushN] [PAR] Critical error, should never happen.") p
+    | Restr (_,_,_,_) -> failwith "WHAT RESTR"
+    | p -> errorClass ("[UKANO] [pushN]Critical error, should never happen.") p in
+  {
+    proto with
+    ini = pushN sessNames proto.ini;
+    res = pushN sessNames proto.res;
+    sessNames = [sessNameEvent];
+  }
+
+(************************************************************)
 (* Handling events & checking well-authentication           *)
 (************************************************************)
 (* erase idealized version of outputs from protocols *)
@@ -448,7 +513,8 @@ let transC2 p inNameFile nameOutFile =
   List.iter (fun s -> Printf.printf "%s\n" s) allQueries;
   pp "\n\n(* == PROTOCOL WITH EVENTS == *)\n";
   pp "let SYSTEM =\n";
-  displayProtocolProcess protoEvents;
+  let toDisplay = pushNames protoEvents in
+  displayProtocolProcess toDisplay;
   pp ".\nprocess SYSTEM\n"
 (* END OF REDIRECTION *)
 
@@ -668,7 +734,8 @@ let transC1 p inNameFile nameOutFile =
   pp " *)\n";
   pp "\n\n(* == PROTOCOL WITH NONCE VERSIONS == *)\n";
   pp "let SYSTEM =\n";
-  displayProtocolProcess cond1Proto;
+  let toDisplay = pushNames cond1Proto in
+  displayProtocolProcess toDisplay;
   pp ".\nprocess SYSTEM\n"
 (* END OF REDIRECTION *)
 
