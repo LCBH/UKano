@@ -1396,6 +1396,9 @@ let display_proc show_occ align proc =
 	   display_pattern pat;
 	   print_string ") = ";
            newline();
+	   print_string (align^"  ");
+	   print_string "choice[ ";
+           newline();
 	   (* We now display nested Let/If constructs *)
 	   let align2 = (align^Lang.indentstring) in
 	   let countElse = ref 0 in (* count the number of else we will need to add at the end *)
@@ -1431,7 +1434,7 @@ let display_proc show_occ align proc =
 	     | Output (t, t', p, occ) as proc -> begin
 		 (* End of nested Let/If: if all pass mergeOut = tout otherwise = tr *)
 		 print_string (align2^"   ");
-		 display_term2 tout;
+		 display_term2 tl;
 		 newline();
 		 (* add enough else *)
 		 for i = 0 to (!countElse-1) do begin
@@ -1440,7 +1443,10 @@ let display_proc show_occ align proc =
 		     display_term2 tr;
      		     newline();
 		   end done;
-		 print_string align;
+		 print_string (align^"  ");
+		 print_string ", ";
+		 display_term2 tr;
+		 print_string "] ";
 		 display_idcl CKeyword "in";
      		 newline();
 		 (* print the Output and go on *)
