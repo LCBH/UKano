@@ -1,0 +1,38 @@
+(* -------------------------------------------------- *)
+(*	       Hash-Lock                              *)
+(* -------------------------------------------------- *)
+
+(* ==THEORY== *)
+
+(* Public communication channel *)
+free i : channel.
+free r : channel.
+(* Public constants *)
+free ok : bitstring.
+(* functions *)
+fun h(bitstring) : bitstring.
+
+
+(* ==PROTOCOL== *)
+
+let I (k:bitstring) =
+   new nr:bitstring;
+   out(i, nr);
+   in(i, x:bitstring);
+   let (xnt:bitstring, xh:bitstring) = x in
+   if xh = h((nr,xnt,k))
+   then (* next step of the system should be inserted here,
+           we output a nonce instead *)
+        new nextStep:bitstring;
+        out(i, nextStep).
+
+let R (k:bitstring) =
+   new nt:bitstring;    
+   in(r, y:bitstring);
+   out(i, (nt, h((y,nt,k)))).
+
+let HL = 
+  ! new k:bitstring;
+    ! (I(k) | R(k)).
+
+process HL

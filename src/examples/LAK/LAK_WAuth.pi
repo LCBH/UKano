@@ -1,0 +1,61 @@
+(* -------------------------------------------------- *)
+(*	       FIXED LAK                              *)
+(* -------------------------------------------------- *)
+
+(* ==THEORY== *)
+(* Public communication channel *)
+free i : channel.
+free r : channel.
+(* functions *)
+fun h(bitstring) : bitstring.
+
+
+(*  *)
+
+
+(* == DECLARATIONS OF EVENTS == *)
+event Rin_1(bitstring,bitstring,bitstring).
+event Rout_1(bitstring,bitstring,bitstring,bitstring).
+event Iout_1(bitstring,bitstring,bitstring).
+event Iin_1(bitstring,bitstring,bitstring,bitstring).
+event Itest_1(bitstring,bitstring,bitstring,bitstring).
+event Iout_2(bitstring,bitstring,bitstring,bitstring,bitstring).
+
+
+(* == DECLARATIONS OF QUERIES == *)
+query k:bitstring, n1:bitstring, n2:bitstring,
+      m1:bitstring, m2:bitstring;
+   (event(Itest_1(k,n1,m1,m2))  ==>
+   (event(Iin_1(k,n1,m1,m2))  ==>
+   (event(Rout_1(k,n2,m1,m2))  ==>
+   (event(Rin_1(k,n2,m1))  ==>
+   (event(Iout_1(k,n1,m1))))))).
+
+
+(* == PROTOCOL WITH EVENTS == *)
+let SYSTEM =
+ !
+ new k : bitstring;
+   !
+   new sess : bitstring;
+   ((
+    new r1: bitstring;
+    event Iout_1(k,sess,r1);
+    out(i, r1);
+    in(i, x: bitstring);
+    event Iin_1(k,sess,r1,x);
+    let ((xr2: bitstring,xh: bitstring)) = x in
+    let (=h((r1,xr2,k))) = xh in
+    event Itest_1(k,sess,r1,x);
+    new nextStep: bitstring;
+    event Iout_2(k,sess,r1,x,nextStep);
+    out(i, nextStep)
+   )|(
+    in(r, xr1: bitstring);
+    event Rin_1(k,sess,xr1);
+    new r2: bitstring;
+    event Rout_1(k,sess,xr1,(r2,h((xr1,r2,k))));
+    out(r, (r2,h((xr1,r2,k))))
+   ))
+.
+process SYSTEM

@@ -1,0 +1,82 @@
+(******************************************************)
+(*                                                    *)
+(*               BAC+PA+AA                            *)
+(*                                                    *)
+(******************************************************)
+
+(* ==THEORY== *)
+
+(* public communication channel *)
+free c : channel.
+free ct : channel.
+free cr : channel.
+
+(* constant values *)
+free hole : bitstring.
+free error_mac : bitstring.
+free init : bitstring.
+free read : bitstring.
+free ok : bitstring.
+
+ (* Encryption (with mac inside) *)
+fun enc(bitstring, bitstring) : bitstring.
+  reduc forall xm:bitstring, xk:bitstring;
+        dec(enc(xm, xk), xk) = xm.
+		       (* we check mac using idTest*)
+letfun idEnc(m:bitstring, k:bitstring) = enc(dec(m, k), k).
+
+(* Mac function *)
+fun mac(bitstring,bitstring):bitstring.
+  reduc forall km:bitstring, m:bitstring;
+  	checkMac(mac(m,km),km) = m.
+
+(* generate new key from seed from two keys *)
+fun hashKey(bitstring, bitstring) : bitstring.
+
+
+(* ==PROTOCOL== *)
+
+(* BAC Protocol *)
+let TB (kE:bitstring, kM:bitstring, skP:bitstring, dgi:bitstring,nt:bitstring,kt:bitstring,randT:bitstring) =
+(* T ----[n_t]---> R *)
+    out(ct,nt);
+(* T <----[{nt,nr,kr}_k,mac()]--- R *)
+    in(ct,x1:bitstring);
+    let (xe:bitstring, xm:bitstring) = x1 in
+    let (=xe) = checkMac(xm, kM) in
+(* T ----[{nt,nr,kt}_k,mac()]---> R *)         
+         let (xnr:bitstring,=nt,xkr:bitstring) = dec(xe, kE) in (
+         out(ct, (enc((nt,xnr,kt), kE), mac(enc((nt,xnr,kt), kE), kM)))
+         ) else
+         out(ct, error_mac)	(* error bitstring in FR *)
+    else out(ct, error_mac).    (* error mac in FR *)
+      
+let RB (kE:bitstring, kM:bitstring, skP:bitstring,nr:bitstring,kr:bitstring,randR:bitstring) =
+(* R <----[n_t]--- T *)
+    in(cr, y1:bitstring);
+(* R ----[{nt,nr,kr}_k,mac()]---> T *)
+    out(cr, (enc((nr,y1,kr), kE), mac(enc((nr,y1,kr), kE),kM)));
+(* R <----[{nt,nr,kt}_k,mac()]--- T *)
+    in(cr, y2:bitstring);
+    let (ye:bitstring,ym:bitstring) = y2 in
+    let (=ye) = checkMac(ym, kM) in
+    let (=y1, =nr, ykt:bitstring) = dec(ye, kE) in (
+    out(cr, (enc((init, randR), hashKey(ykt, kr))))
+    ).
+
+(* WHOLE SYSTEM *)
+let ePassport =
+  new skP : bitstring ;
+  ! new kE:bitstring;
+    new kM:bitstring;
+    new dgi:bitstring;	(* information stored in passports *)
+    !
+    new nt:bitstring;
+    new kt:bitstring;
+    new randT:bitstring;	
+    new randR:bitstring;
+    new nr:bitstring;
+    new kr:bitstring;
+        (TB(kE, kM, skP, dgi,nt,kt,randT) | RB(kE, kM, skP,nr,kr,randR)).
+
+process ePassport
