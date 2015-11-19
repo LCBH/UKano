@@ -76,6 +76,9 @@ type proto = {
 
 let typeBit = {tname = "bitstring"}
 
+(* create fresh occurence (to be associated to each new syntactical action) *)
+let makeOcc () = Terms.new_occurrence ()
+
 (************************************************************)
 (* Parsing Protocols                                        *)
 (************************************************************)
@@ -160,10 +163,16 @@ let extractProto process =
 	  | Par (p1,p2) ->
 	     let ((iniP,iniN),(resP,resN)) = checkRoles p1 p2 in
 	     let iniPclean,resPclean = (removeRestr iniP, removeRestr resP) in
+	     let sessName = {    f_name = "sess";
+				 f_type = ([], typeBit);
+				 f_cat = Name {prev_inputs=None; prev_inputs_meaning=[]};
+				 f_initial_cat = Name {prev_inputs=None; prev_inputs_meaning=[]};
+				 f_private = true;
+				 f_options = 0;	} in
 	     {
 	       comNames = comNames;
 	       idNames = idNames;
-	       sessNames = (List.rev sessNames) @ (List.rev iniN) @ (List.rev resN);
+	       sessNames = sessName :: (List.rev sessNames) @ (List.rev iniN) @ (List.rev resN);
 	       ini = iniPclean;
 	       res = resPclean;
 	     }
@@ -286,9 +295,6 @@ let makeEvent name args =
       f_options = 0;
     } in
   FunApp (funSymbEvent, args)
-
-(* create fresh occurence (to be associated to each new syntactical action) *)
-let makeOcc () = Terms.new_occurrence ()
 				      
 (** Display a whole ProVerif file checking the first condition except for the theory (to be appended). *)      
 let transC2 p inNameFile nameOutFile = 
@@ -631,7 +637,7 @@ let transC1 p inNameFile nameOutFile =
 	     | (t::tl, []) -> Test (t,addLetIf (tl,[]),Nil,makeOcc()) in
 	   Let (letCatchPattern, (* before all new Let/Test/Out, we put the Let mergeOut = LetCatch[tl,tm,tm] *)
 		letCatchTerm,
-		addLetIf (accTest, accLet),
+		addLetIf (List.rev accTest, List.rev accLet),
 		Nil, makeOcc())
 	 end else begin
 	   (* the output does need conditionals  *)
@@ -676,4 +682,4 @@ let checkC1 p = failwith "Not Implemented"
 let checkC2 p = failwith "Not Implemented"
 
 (** Check UK & ANO *)
-let check p = failwith "Not Implemented"
+let check p =  checkC1 p && checkC2 p
