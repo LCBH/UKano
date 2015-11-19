@@ -461,7 +461,7 @@ let choiceSymb = {
   }
 let letCatchSymb = {
     f_name = "";
-    f_type = ([typeBit;typeBit;typeBit;typeBit], typeBit);
+    f_type = ([typeBit;typeBit;typeBit], typeBit);
     f_cat = LetCatch;
     f_initial_cat = LetCatch;
     f_private = true;		(* TODO *)
@@ -473,8 +473,7 @@ let hole =
 	f_name = "hole";
 	f_type = ([], typeBit);
 	f_cat = Tuple;
-	f_initial_cat = Tuple;
-	f_private = true;
+	f_initial_cat = Tuple;	f_private = true;
 	f_options = 0;		(* TODO *)
       }
     , [])
@@ -578,14 +577,22 @@ let transC1 p inNameFile nameOutFile =
     } in
   
   
-  (* -- 2. -- Deal with tests (should not create false attacks for diff-equivalent) *)
-  (* HACK: produce a term using factice funsymb equal to
-       'let [tm] = [calc] in [tm'] else [ifFail]' *)
-  let makeLet tm calc tm' ifFail = 
-    (* let strLet = *)
-    (*   Printf.sprintf "let m = %s in m else %s" in *)
-    FunApp (letCatchSymb, [tm;calc;tm';ifFail]) in 	(* todo *)
-  (* Check if the term tm contains variables from some patterns in accLet *)
+  (* -- 2. -- Deal with conditionals (should not create false attacks for diff-equivalent) *)
+  (* a) we push conditionals (Test and Let) and put them just before Output (when needed)
+     b) we use a hack to be sure the 'Let' construct will never fail:
+             let yn = dec(x,k) in
+             out(c, choice[yn,n4]
+        will be translated to
+             let mergeOut = let yn = dec(x,k) in
+                              choice[yn,n4]
+                            else n4 in
+             out(c, mergeOut).
+        Function cleanTest cannot produce nested let (it is actually syntactic sugar
+        and have no internal representation. We thus use a flag using a special funsymb
+        letCatch with a specific f_cat to warn the display function that it is needed to
+        put all following let/test construct INSIDE the first let mergeOut = [put here]. *)
+  
+(* Check if the term tm contains variables from some patterns in accLet *)
   let checkVar tm accLet = 
     let inPattern name (patx,_) = 
       let rec auxPatternTerm = function
@@ -610,24 +617,30 @@ let transC1 p inNameFile nameOutFile =
        (* check if tm use variables binded by patterns in accLet *)
        if checkVar tm accLet
        then begin
-	   let tml,tmr =
+	   (* we need to put a LetCatch construct here followed by all accLet,accTest *)
+	   let tml,tmr =	(* left/right part of choice *)
 	     (match tm with
 	      | FunApp (funSymb, tm1 :: tm2 :: tl)
 		   when funSymb.f_cat = Choice -> (tm1, tm2)
 	      | _ -> failwith "Cannot happen") in
-	   let letCatch = tm in
-	   (* TODO *)
-	   Let (PatVar mergeOut, letCatch,
-		Output(tc,Var mergeOut, cleanTest accTest accLet p, occ),
-		Nil, makeOcc());
+	   let letCatchTerm = FunApp (letCatchSymb, [tml;tmr;tm]) in
+	   let letCatchPattern = PatVar mergeOut in
+	   let rec addLetIf = function   (* add all accLet then accTest and the final Output *)
+	     | [],[] -> Output(tc,Var mergeOut, cleanTest accTest accLet p, occ)
+	     | (accT, (patx,t)::tl) -> Let (patx,t,addLetIf (accT,tl),Nil,makeOcc())
+	     | (t::tl, []) -> Test (t,addLetIf (tl,[]),Nil,makeOcc()) in
+	   Let (letCatchPattern, (* before all new Let/Test/Out, we put the Let mergeOut = LetCatch[tl,tm,tm] *)
+		letCatchTerm,
+		addLetIf (accTest, accLet),
+		Nil, makeOcc())
 	 end else begin
-	   (* the output does need accLet  *)
+	   (* the output does need conditionals  *)
 	   Output(tc,tm, cleanTest accTest accLet p, occ);
 	 end
     | Let (patx,t,pt,pe,occ) ->
        Par(cleanTest accTest ((patx,t)::accLet) pt,
 	   cleanTest accTest accLet pe)
-    | Test (t,pt,pe,occ)-> Par(cleanTest ((t,pt)::accTest) accLet pt, cleanTest accTest accLet pe)
+    | Test (t,pt,pe,occ)-> Par(cleanTest (t::accTest) accLet pt, cleanTest accTest accLet pe)
     | p -> errorClass ("Critical error, should never happen.") p in
   let cond1Proto = 
     { noncesProto with
