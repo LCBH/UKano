@@ -1387,6 +1387,8 @@ let display_proc show_occ align proc =
 	     match t with
 	     | FunApp (f, tl::tr::t::[]) -> (tl,tr,t)
 	     | _ -> failwith "[UKANO] Cannot happen." in
+	   let align2 = (align^Lang.indentstring) in
+	   let align3 = (align2^Lang.indentstring) in
 	   (* Print the first [let mergeOut =] *)
 	   print_string align;
 	   display_occ occ;
@@ -1396,17 +1398,16 @@ let display_proc show_occ align proc =
 	   display_pattern pat;
 	   print_string ") = ";
            newline();
-	   print_string (align^"  ");
+	   print_string align2;
 	   print_string "choice[ ";
            newline();
 	   (* We now display nested Let/If constructs *)
-	   let align2 = (align^Lang.indentstring) in
 	   let countElse = ref 0 in (* count the number of else we will need to add at the end *)
 	   let rec displayUntilOut = function
 	     | Let (pat, t, p, p', occ) -> begin
 		 (* one nested Let *)
 		 incr(countElse);
-		 print_string align2;
+		 print_string align3;
 		 display_occ occ;
 		 display_idcl CKeyword "let";
 		 print_string " (";
@@ -1421,7 +1422,7 @@ let display_proc show_occ align proc =
 	     | Test (t, p, p',occ) -> begin
 		 (* one nested If *)
 		 incr(countElse);
-		 print_string align2;
+		 print_string align3;
 		 display_occ occ;
 		 display_idcl CKeyword "if";
 		 print_string " ";
@@ -1433,17 +1434,17 @@ let display_proc show_occ align proc =
 	       end
 	     | Output (t, t', p, occ) as proc -> begin
 		 (* End of nested Let/If: if all pass mergeOut = tout otherwise = tr *)
-		 print_string (align2^"   ");
+		 print_string (align3^"   ");
 		 display_term2 tl;
 		 newline();
 		 (* add enough else *)
 		 for i = 0 to (!countElse-1) do begin
-		     print_string align2;
+		     print_string align3;
 		     display_idcl CKeyword "else ";
 		     display_term2 tr;
      		     newline();
 		   end done;
-		 print_string (align^"  ");
+		 print_string (align2);
 		 print_string ", ";
 		 display_term2 tr;
 		 print_string "] ";
