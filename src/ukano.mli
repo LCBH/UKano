@@ -28,6 +28,8 @@
 (* This module provides functions from the UnlinKability and ANOnymity
    verifier built on top of ProVerif as described in [1]. (todo-lucca:ref) *)
 
+(** Help message dedicated to Ukano *)
+val helpMess : string
 
 (** If the inputted process is not in the "2-agents protocol class" (see [1]). *)
 exception NotInClass of string

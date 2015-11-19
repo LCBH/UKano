@@ -17,6 +17,11 @@ INSTALL
 See the file README_PV.
 
 
+EXAMPLES
+
+To quickly test the tool: build it, go to src/examples/ and use the
+script AutoCheck.sh on our case studies (there is a subfolder for each).
+
 USAGE
 
 You must use the executable program proverif.

@@ -322,6 +322,7 @@ let interface_for_merging_process p =
 let first_file = ref true
 
 let anal_file s =
+  if !Param.trad_ukano && (s = "help" or s="") then begin Printf.printf "Error, you should enter a filename.\n%s\n" (Ukano.helpMess); exit(0); end;
   if not (!first_file) then
     Parsing_helper.user_error "Error: You can analyze a single ProVerif file for each run of ProVerif.\nPlease rerun ProVerif with your second file.\n";
   first_file := false;
@@ -810,7 +811,7 @@ let _ =
       Arg.Unit (fun () -> 
 		Param.trad_ukano := true;
 		in_kind :=PiType),
-      "Use Proverif to check UnlinKability and ANOnymity as explained in [1]. This mode only accepts pitype files.";
+      "Use Proverif to check UnlinKability and ANOnymity as explained in our paper. This mode only accepts pitype files. Type './proverif -ukano help' for more details.";
     (* todo ref/hyperref *)
     ]
     anal_file "Proverif. Cryptographic protocol verifier, by Bruno Blanchet and Vincent Cheval";
