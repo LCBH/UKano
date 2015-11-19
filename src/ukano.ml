@@ -74,6 +74,9 @@ type proto = {
 
 let typeBit = {tname = "bitstring"}
 
+(* create fresh occurence (to be associated to each new syntactical action) *)
+let makeOcc () = Terms.new_occurrence ()
+
 (************************************************************)
 (* Parsing Protocols                                        *)
 (************************************************************)
@@ -158,10 +161,16 @@ let extractProto process =
 	  | Par (p1,p2) ->
 	     let ((iniP,iniN),(resP,resN)) = checkRoles p1 p2 in
 	     let iniPclean,resPclean = (removeRestr iniP, removeRestr resP) in
+	     let sessName = {    f_name = "sess";
+				 f_type = ([], typeBit);
+				 f_cat = Name {prev_inputs=None; prev_inputs_meaning=[]};
+				 f_initial_cat = Name {prev_inputs=None; prev_inputs_meaning=[]};
+				 f_private = true;
+				 f_options = 0;	} in
 	     {
 	       comNames = comNames;
 	       idNames = idNames;
-	       sessNames = iniN @ resN @ sessNames;
+	       sessNames = sessName :: (List.rev sessNames) @ (List.rev iniN) @ (List.rev resN);
 	       ini = iniPclean;
 	       res = resPclean;
 	     }
@@ -250,7 +259,72 @@ let theoryStr inNameFile =
 
 
 (************************************************************)
-(* Handling events & checking Condition 2                   *)
+(* Push session names as far as possible                    *)
+(************************************************************)
+(* We suppose here that session names are not shared between agents
+   (as defined in the paper. *)
+let pushNames proto = 
+  let sessNames = List.tl proto.sessNames in
+  let sessNameEvent = List.hd proto.sessNames in
+  let addNames names continuationProc = 
+    List.fold_right (fun name proc ->
+		     Restr(name, 
+			   (None, Stringmap.StringMap.empty),
+			   proc,makeOcc()))
+		    names
+		    continuationProc in
+  let rec pushN accNames = function
+    | Nil -> Nil
+    | Input (tc,patx,p,occ) -> Input(tc,patx,pushN accNames p, occ)
+    | Output (tc,tm,p,occ) -> 	(* is there a needed name in accNames ? *)
+       let needNames = List.filter (fun name -> Terms.occurs_f name tm) accNames in
+       if needNames <> []
+       then 
+	 let otherNames = List.filter (fun n -> not(List.mem n needNames)) accNames in
+	 addNames needNames (Output(tc,tm,pushN otherNames p, occ))
+       else Output(tc,tm,pushN accNames p, occ)
+    | Let (patx,t,pt,pe,occ) -> (* is there a needed name in accNames ? *)
+       let needNames = List.filter (fun name -> Terms.occurs_f name t) accNames in
+       if needNames <> []
+       then 
+	 let otherNames = List.filter (fun n -> not(List.mem n needNames)) accNames in
+	 addNames needNames (Let (patx,t,pushN otherNames pt, pushN otherNames pe, occ))
+       else Let (patx,t,pushN accNames pt, pushN accNames pe, occ)
+    | Test (t,pt,pe,occ)-> (* is there a needed name in accNames ? *)
+       let needNames = List.filter (fun name -> Terms.occurs_f name t) accNames in
+       if needNames <> []
+       then 
+	 let otherNames = List.filter (fun n -> not(List.mem n needNames)) accNames in
+	 addNames needNames (Test(t,pushN otherNames pt, pushN otherNames pe,occ))
+       else Test(t,pushN accNames pt, pushN accNames pe,occ)
+    | Event(t,p,occ) -> (* is there a needed name in accNames ? *)
+       let needNames = List.filter (fun name -> Terms.occurs_f name t) accNames in
+       if needNames <> []
+       then 
+	 let otherNames = List.filter (fun n -> not(List.mem n needNames)) accNames in
+	 addNames needNames (Event(t,pushN otherNames p, occ))
+       else Event(t,pushN accNames p, occ)
+    | Par (p1,Nil) -> pushN accNames p1
+    | Par (Nil,p2) -> pushN accNames p2
+    | Par (p1, (Output(tc,tm,Nil,occ) as p2)) -> (* this can happen because of translations done when checking Frame opacity *)
+       let needNames = List.filter (fun name -> Terms.occurs_f name tm) accNames in
+       if needNames <> []
+       then 
+	 let otherNames = List.filter (fun n -> not(List.mem n needNames)) accNames in
+	 addNames needNames (Par (pushN otherNames p1, p2))
+       else Par (pushN accNames p1, p2) 
+    | Par (_,_) as p -> errorClass ("[UKANO] [pushN] [PAR] Critical error, should never happen.") p
+    | Restr (_,_,_,_) -> failwith "WHAT RESTR"
+    | p -> errorClass ("[UKANO] [pushN]Critical error, should never happen.") p in
+  {
+    proto with
+    ini = pushN sessNames proto.ini;
+    res = pushN sessNames proto.res;
+    sessNames = [sessNameEvent];
+  }
+
+(************************************************************)
+(* Handling events & checking well-authentication           *)
 (************************************************************)
 (* erase idealized version of outputs from protocols *)
 let cleanChoice proto = 
@@ -284,9 +358,6 @@ let makeEvent name args =
       f_options = 0;
     } in
   FunApp (funSymbEvent, args)
-
-(* create fresh occurence (to be associated to each new syntactical action) *)
-let makeOcc () = Terms.new_occurrence ()
 				      
 (** Display a whole ProVerif file checking the first condition except for the theory (to be appended). *)      
 let transC2 p inNameFile nameOutFile = 
@@ -440,13 +511,14 @@ let transC2 p inNameFile nameOutFile =
   List.iter (fun s -> Printf.printf "%s\n" s) allQueries;
   pp "\n\n(* == PROTOCOL WITH EVENTS == *)\n";
   pp "let SYSTEM =\n";
-  displayProtocolProcess protoEvents;
+  let toDisplay = pushNames protoEvents in
+  displayProtocolProcess toDisplay;
   pp ".\nprocess SYSTEM\n"
 (* END OF REDIRECTION *)
 
 
 (************************************************************)
-(* Handling nonce versions & checking condition 1           *)
+(* Handling nonce versions & checking Frame Opacity         *)
 (************************************************************)
 
 let choiceSymb = {
@@ -457,32 +529,64 @@ let choiceSymb = {
     f_private = false;		(* TODO *)
     f_options = 0;		(* TODO *)
   }
+let letCatchSymb = {
+    f_name = "";
+    f_type = ([typeBit;typeBit;typeBit], typeBit);
+    f_cat = LetCatch;
+    f_initial_cat = LetCatch;
+    f_private = true;		(* TODO *)
+    f_options = 0;		(* TODO *)
+  }
 let hole =
   FunApp
     ( {
 	f_name = "hole";
 	f_type = ([], typeBit);
 	f_cat = Tuple;
-	f_initial_cat = Tuple;
-	f_private = true;
+	f_initial_cat = Tuple;	f_private = true;
 	f_options = 0;		(* TODO *)
       }
     , [])
+let mergeOut = {
+    sname = "mergeOut";
+    vname = 0;
+    unfailing = true;
+    btype = typeBit;
+    link = NoLink;
+  }
+		 
+let debugF_type (tl,t) = 
+  ""
+let displayCat = function
+  | Tuple -> "Tuple"
+  | Name _ -> "Name"
+  | _ -> "todo"
 
+let debugFunSymb f = 
+  Printf.printf 
+    "Funsym[ name:%s, f_type:%s, f_cat: %s f_private %b f_options:%d]"
+    f.f_name
+    (debugF_type f.f_type)
+    (displayCat f.f_cat)
+    f.f_private
+    f.f_options
+    
 (** Display a whole ProVerif file checking the first condition except for the theory (to be appended). *)      
 let transC1 p inNameFile nameOutFile = 
   let proto = extractProto p in
 
   (* -- 1. -- Build nonce versions on the right *)
+  let nonTransparentSymbList = ["enc"; "aenc"; "dec"; "adec"; "h"; "hash"; "xor"] in
   let isName funSymb = match funSymb.f_cat with Name _ -> true | _ -> false in
-  let isConstant funSymb = match funSymb.f_cat with Tuple -> true | _ -> false in
+  let isPrivate funSymb = funSymb.f_private in
+  let isConstant funSymb = isName funSymb && not(isPrivate funSymb) in
   let isTuple funSymb = match funSymb.f_cat with Tuple -> true | _ -> false in
   let rec guessIdeal = function
     | FunApp (f, []) as t
-	 when isConstant f -> t	             (* constants *)
-    | FunApp (f, []) when isName f -> hole   (* names *)
+	 when isConstant f -> t	             (* public constants *)
+    | FunApp (f, []) when isName f -> hole   (* (private) names *)
     | FunApp (f, _)
-	 when (f.f_name = "enc" || f.f_name = "h" || f.f_name = "aenc")
+	 when (List.mem f.f_name nonTransparentSymbList) 
       -> hole	                             (* should be non-transparent *)
     | FunApp (f, listT)
 	 when isTuple f
@@ -515,7 +619,7 @@ let transC1 p inNameFile nameOutFile =
   let rec noncesTerm = function
     | FunApp (f, tList) when f.f_name = "hole" -> createNonce()
     | FunApp (f, tList) -> FunApp (f, List.map noncesTerm tList)
-    | Var _ -> errorClass ("Critical error, shiuld never happen.") p in
+    | Var _ -> errorClass ("Critical error, should never happen.") p in
   (* idealized process (some idealized output may miss) -> nonce process *)
   let rec noncesProc = function
     | Nil -> Nil
@@ -523,8 +627,12 @@ let transC1 p inNameFile nameOutFile =
     | Output (tc,tm,p,occ) ->
        let (tmReal, tmIdeal) =
 	 match tm with
-	 | FunApp (funSymb, tm1 :: tm2 :: tl) when funSymb.f_cat = Choice -> (tm1, tm2)
-	 | _ -> (tm, guessIdeal tm) in
+	 | FunApp (funSymb, tm1 :: tm2 :: tl) when funSymb.f_cat = Choice -> (tm1, tm2) (* user already built idealization *)
+	 | _ -> (* For debugging purpose: pp "\n"; 
+                   (match tm with | FunApp (f, li) -> debugFunSymb f);
+                   pp "\n"; Display.Text.display_term tm;
+        	   pp " -> "; Display.Text.display_term (guessIdeal tm);  pp "\n"; *)
+	    (tm, guessIdeal tm) in (* he did not, we need to guess it *)
        let tmNonce = noncesTerm tmIdeal in
        let tmChoice = FunApp (choiceSymb, [tmReal; tmNonce]) in
        Output(tc, tmChoice , noncesProc p, occ)
@@ -539,32 +647,76 @@ let transC1 p inNameFile nameOutFile =
     } in
   
   
-  (* -- 2. -- Deal with tests (should not create false attacks for diff-equivalent) *)
-  (* HACK: produce a term using factice funsymb equal to
-       'let [patt] = let m = [calc] in m else (ifFail]' *)
-  let makeLet patt calc ifFaill = 
-    let strLet =
-      Printf.sprintf "let m = %s in m else %s" in
-    FunApp (choiceSymb, []) in 	(* todo *)
-  let rec cleanTest = function
+  (* -- 2. -- Deal with conditionals (should not create false attacks for diff-equivalent) *)
+  (* a) we push conditionals (Test and Let) and put them just before Output (when needed)
+     b) we use a hack to be sure the 'Let' construct will never fail:
+             let yn = dec(x,k) in
+             out(c, choice[yn,n4]
+        will be translated to
+             let mergeOut = let yn = dec(x,k) in
+                              choice[yn,n4]
+                            else n4 in
+             out(c, mergeOut).
+        Function cleanTest cannot produce nested let (it is actually syntactic sugar
+        and have no internal representation. We thus use a flag using a special funsymb
+        letCatch with a specific f_cat to warn the display function that it is needed to
+        put all following let/test construct INSIDE the first let mergeOut = [put here]. *)
+  
+(* Check if the term tm contains variables from some patterns in accLet *)
+  let checkVar tm accLet = 
+    let inPattern name (patx,_) = 
+      let rec auxPatternTerm = function
+	| Var binder -> binder.sname = name
+	| FunApp (_,termList) -> List.exists auxPatternTerm termList in
+      let rec auxPattern = function
+	| PatVar binder -> name = binder.sname
+	| PatTuple (_,patList) -> List.exists auxPattern patList
+	| PatEqual t -> auxPatternTerm t in
+      auxPattern patx in
+    let rec auxTerm = function
+      | Var binder -> 
+	 List.exists (inPattern binder.sname) accLet
+      | FunApp (_,termList) -> List.exists auxTerm termList in
+    auxTerm tm in
+  (* clean conditional by pushing them before output (when they need them)
+     and using our special construction letCatch that cannot fail *)
+  let rec cleanTest accTest accLet = function
     | Nil -> Nil
-    | Input (tc,patx,p,occ) -> Input(tc,patx, cleanTest p, occ)
-    | Output (tc,tm,p,occ) ->  Output(tc,tm, cleanTest p, occ)
+    | Input (tc,patx,p,occ) -> Input(tc,patx, cleanTest accTest accLet p, occ)
+    | Output (tc,tm,p,occ) ->
+       (* check if tm use variables binded by patterns in accLet *)
+       if checkVar tm accLet
+       then begin
+	   (* we need to put a LetCatch construct here followed by all accLet,accTest *)
+	   let tml,tmr =	(* left/right part of choice *)
+	     (match tm with
+	      | FunApp (funSymb, tm1 :: tm2 :: tl)
+		   when funSymb.f_cat = Choice -> (tm1, tm2)
+	      | _ -> failwith "Cannot happen") in
+	   let letCatchTerm = FunApp (letCatchSymb, [tml;tmr;tm]) in
+	   let letCatchPattern = PatVar mergeOut in
+	   let rec addLetIf = function   (* add all accLet then accTest and the final Output *)
+	     | [],[] -> Output(tc,Var mergeOut, cleanTest accTest accLet p, occ)
+	     | (accT, (patx,t)::tl) -> Let (patx,t,addLetIf (accT,tl),Nil,makeOcc())
+	     | (t::tl, []) -> Test (t,addLetIf (tl,[]),Nil,makeOcc()) in
+	   Let (letCatchPattern, (* before all new Let/Test/Out, we put the Let mergeOut = LetCatch[tl,tm,tm] *)
+		letCatchTerm,
+		addLetIf (List.rev accTest, List.rev accLet),
+		Nil, makeOcc())
+	 end else begin
+	   (* the output does need conditionals  *)
+	   Output(tc,tm, cleanTest accTest accLet p, occ);
+	 end
     | Let (patx,t,pt,pe,occ) ->
-       let nonceIfFail = createNonce() in
-       let termNoFail =
-       (* todo: Let m = t in m else nonceIfFail *)
-	 (* ARGHH c'est mEGA DUR!!!!!! TROP CHIANT!!!! *)
-	 makeLet patx t nonceIfFail in
-       Par(Let (patx,t, cleanTest pt, Nil, occ),
-	   cleanTest pe)
-    | Test (t,pt,pe,occ)-> Par(cleanTest pt, cleanTest pe)
+       Par(cleanTest accTest ((patx,t)::accLet) pt,
+	   cleanTest accTest accLet pe)
+    | Test (t,pt,pe,occ)-> Par(cleanTest (t::accTest) accLet pt, cleanTest accTest accLet pe)
     | p -> errorClass ("Critical error, should never happen.") p in
   let cond1Proto = 
     { noncesProto with
       sessNames = proto.sessNames @ (List.rev !listNames);
-      ini = cleanTest noncesProto.ini;
-      res = cleanTest noncesProto.res;
+      ini = cleanTest [] [] noncesProto.ini;
+      res = cleanTest [] [] noncesProto.res;
     } in
 
   (* -- 3. -- GET the theory part of inNameFile *)
@@ -580,15 +732,19 @@ let transC1 p inNameFile nameOutFile =
   pp " *)\n";
   pp "\n\n(* == PROTOCOL WITH NONCE VERSIONS == *)\n";
   pp "let SYSTEM =\n";
-  displayProtocolProcess cond1Proto;
+  let toDisplay = pushNames cond1Proto in
+  displayProtocolProcess toDisplay;
   pp ".\nprocess SYSTEM\n"
 (* END OF REDIRECTION *)
 
 
 
 (* To implement later on: *)
-(** Check Condition 1 (outptuis are relation-free). *)
+(** Check Frame Opacity (outptuis are relation-free). *)
 let checkC1 p = failwith "Not Implemented"
 
-(** Check Condition 2 (tests do not leak information about agents). *)
+(** Check Well-Authentication (tests do not leak information about agents). *)
 let checkC2 p = failwith "Not Implemented"
+
+(** Check UK & ANO *)
+let check p =  checkC1 p && checkC2 p

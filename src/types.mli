@@ -121,6 +121,8 @@ and funcats =
   | General_mayfail_var
   | Choice
   | Failure
+  | LetCatch    (* new construction of the form [let m = t in a else b]
+                   taking 4 arguments [m,t,a,b] *)
 
 and rewrite_rule = term list * term * (term * term) list
 
