@@ -322,6 +322,7 @@ let interface_for_merging_process p =
 let first_file = ref true
 
 let anal_file s =
+  if !Param.trad_ukano && (s = "help" or s="") then begin Printf.printf "Error, you should enter a filename.\n%s\n" (Ukano.helpMess); exit(0); end;
   if not (!first_file) then
     Parsing_helper.user_error "Error: You can analyze a single ProVerif file for each run of ProVerif.\nPlease rerun ProVerif with your second file.\n";
   first_file := false;
@@ -373,9 +374,6 @@ let anal_file s =
 	Param.typed_frontend := true;
 	(* Param.ignore_types := false; *)
 
-	(* Lucca: val parse_file : string -> process * process option 
-           Cette fonction parse le fichier en renvoie un/deux processe MAIS ATTENTION
-           ELLE A MASSE d'EFFETS de BORD. Elle va créerune théorie équationnelle absolue. *)
 	let p0, second_p0 = Pitsyntax.parse_file s in
 	
 	let p0 =
@@ -519,8 +517,8 @@ let anal_file s =
 		      then List.hd splitDot
 		      else  String.concat "." (List.rev (List.tl (List.rev splitDot))) in
 		    let prefixRel = if prefix.[0] = '/' then "."^prefix else prefix in
-		    (prefixRel^"_C1.pi", prefixRel^"_C2.pi")
-		with _ -> ("OUTPUT_C1.pi","OUTPUT_C2.pi") in
+		    (prefixRel^"_FOpa.pi", prefixRel^"_WAuth.pi")
+		with _ -> ("OUTPUT_FOpa.pi","OUTPUT_WAuth.pi") in
 	      Ukano.transC1 p s fileNameC1;
 	      Ukano.transC2 p s fileNameC2;
 	    end else begin
@@ -813,7 +811,7 @@ let _ =
       Arg.Unit (fun () -> 
 		Param.trad_ukano := true;
 		in_kind :=PiType),
-      "Use Proverif to check UnlinKability and ANOnymity as explained in [1]. This mode only accepts pitype files.";
+      "Use Proverif to check UnlinKability and ANOnymity as explained in our paper. This mode only accepts pitype files. Type './proverif -ukano help' for more details.";
     (* todo ref/hyperref *)
     ]
     anal_file "Proverif. Cryptographic protocol verifier, by Bruno Blanchet and Vincent Cheval";

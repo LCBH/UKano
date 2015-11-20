@@ -1,0 +1,151 @@
+(**********)
+(* THEORY *)
+(**********)
+
+type nonce.
+(* public communication channel *)
+free c : channel.
+free ct : channel.
+free cr : channel.
+
+(* constant values *)
+free error_mac : bitstring.
+free init : bitstring.
+free read : bitstring.
+free ok : bitstring.
+free tagPass : bitstring.
+free tagReader : bitstring.
+free secret : bitstring [private].
+const g : bitstring [data].
+
+
+(* Generation of a new paramater *)
+fun gen(bitstring,bitstring) : bitstring.
+
+(* Diffie-Hellman exponentiation: partial axiomatization
+   as defined in the ProVerif 1.92's manual (p. 33) *)
+fun exp (bitstring, bitstring) : bitstring.
+equation forall x : bitstring, y : bitstring;
+  exp(exp(g,x),y) = exp(exp(g,y),x).
+equation forall x : bitstring, y : bitstring,
+                a : bitstring, b : bitstring;
+  exp(exp(gen(a,b),x),y) = exp(exp(gen(a,b),y),x).
+
+
+fun enc (bitstring, bitstring) : bitstring.
+fun dec (bitstring, bitstring) : bitstring.
+equation forall x : bitstring, y : bitstring;
+  dec(enc(x,y),y) = x.	       
+
+ (* Mac (of pairs) *)
+fun mac(bitstring, bitstring) : bitstring.
+
+ (* Signature *)
+fun spk(bitstring) : bitstring.
+fun sign (bitstring, bitstring) : bitstring.
+reduc forall m: bitstring , k:bitstring ;
+  getmess(sign(m, k)) = m.
+reduc forall m: bitstring , k:bitstring ;
+  checksign(sign(m, k), spk(k)) = m.
+
+			       
+(*************)
+(* PROTOCOLS *)
+(*************)
+
+(* Passive Authentication *)
+let RPA(k2:bitstring, skP:bitstring) =
+  out(cr, enc(read, k2));
+  in(cr, y4:bitstring);
+  let (ydgi:bitstring, ysign:bitstring) = dec(y4, k2) in
+  if checksign(ysign, spk(skP)) = ydgi
+  then out(cr, ok).
+
+let TPA(k2:bitstring, skP:bitstring, dgi:bitstring) =
+    in(ct, x3:bitstring);
+    if dec(x3, k2) = read
+    then out(ct, enc((dgi, sign(dgi, skP)), k2)).
+
+(* Active Authentication *)
+let RAA (k2:bitstring, skP:bitstring) =
+  new randR:bitstring;
+  out(cr, enc((init, randR), k2));
+  in(cr, y3:bitstring);
+  let m:bitstring = dec(y3, k2) in
+  if checksign(m, spk(skP)) = getmess(m)
+  then RPA(k2, skP).
+
+let TAA (k2:bitstring, skP:bitstring, dgi:bitstring) =
+  new randT:bitstring;
+  in(ct, x2:bitstring);
+  let (=init, xrandR:bitstring) = dec(x2,k2) in
+  out(ct, enc(sign((randT,xrandR), skP), k2));
+  TPA(k2, skP, dgi).
+
+
+(* When modeling the protocol, we add a constant inside the tag in order not to confuse authentication tokens
+   sent by the reader and those sent by the tag. Without this precaution there is an attack on authentication,
+   which consists in having two readers communicating with each other.
+   We discovered this problem after submitting the paper and would of course reflect this issue in the final
+   version of the paper. *)
+   
+(* PACE Protocol *)
+let T (k:bitstring, skP:bitstring, dgi:bitstring) =
+    new s:bitstring;
+    new b1:bitstring;
+    new b2:bitstring;
+(* T ----[{s}_k]---> R *)
+    out(ct,enc(s,k));
+(* T <---[exp(g,a1)]--- R *)
+    in(ct, x1:bitstring);
+(* T ----[exp(g,b1)]---> R *)
+    out(ct, exp(g,b1));
+(* T <---[exp(gen(g^s,g^(a1.b1)),a2)]--- R *)  
+    in(ct, x2:bitstring);
+    let newG = gen(exp(g,s),exp(x1,b1)) in
+(* T ----[exp(gen(g^s,g^(a1.b1)),b2)]---> R *)  
+    out(ct, exp(newG,b2));
+(* T <---[mac((tagReader,exp(gen(g^s,g^(a1.b1)),b2)),newKey)]--- R *)  
+    in(ct, x3:bitstring);
+    (* newKey = exp(gen(g^s,g^(a1.b1)),a2.b2) *)
+    let newKey:bitstring = exp(x2,b2) in
+    if mac((tagReader,exp(newG,b2)), newKey) = x3
+    then 
+(* T ----[mac((tagPass,exp(gen(g^s,g^(a1.b1)),a2)),newKey)]---> R *)  
+    out(cr, mac((tagPass,x2),newKey));
+    TAA(newKey,skP,dgi).
+   
+let R (k:bitstring,skP:bitstring) =
+    new a1:bitstring;
+    new a2:bitstring;
+(* R <---[enc(s,k)]--- T *)
+    in(cr, y1:bitstring);
+(* R ----[exp(g,a1)]---> T *)
+    out(cr, exp(g,a1));
+(* R <---[exp(g,b1)]--- T *)
+    in(cr, y2:bitstring);
+    let newG = gen(exp(g,dec(y1,k)),exp(y2,a1)) in
+(* R ----[exp(gen(g^s,g^(a1.b1)),a2)]---> T *)  
+    out(cr, exp(newG,a2));
+(* R <---[exp(gen(g^s,g^(a1.b1)),b2)]--- T *)  
+    in(cr, y3:bitstring);
+    (* newKey = exp(gen(g^s,g^(a1.b1)),a2.b2) *)
+
+    if y3<>exp(newG, a2) then  (* CRITICAL TO AVOID REFLECTION ATTACK *)
+
+    let newKey:bitstring = exp(y3,a2) in
+(* R ----[mac((tagReader,exp(gen(g^s,g^(a1.b1)),b2)),newKey)]---> T *)  
+    out(cr, mac((tagReader,y3),newKey));
+(* R <---[mac((tagPass,exp(gen(g^s,g^(a1.b1)),a2)),newKey)]--- T *)  
+    in(cr, y4:bitstring);
+    if mac((tagPass,exp(newG,a2)), newKey) = y4
+    then RAA(newKey,skP).
+
+(* WHOLE SYSTEM *)
+let PACE =
+new skP:bitstring;
+  ! new k:bitstring;
+    new dgi:bitstring;
+    ! (T(k,skP,dgi) | R(k,skP)).
+
+process PACE

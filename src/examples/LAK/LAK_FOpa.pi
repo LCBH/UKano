@@ -1,0 +1,42 @@
+
+(********   This file has been automatically generated using the tool UKano ********)
+
+(* -------------------------------------------------- *)
+(*	       FIXED LAK                              *)
+(* -------------------------------------------------- *)
+
+(* ==THEORY== *)
+(* Public communication channel *)
+free i : channel.
+free r : channel.
+(* functions *)
+fun h(bitstring) : bitstring.
+
+
+(*  *)
+
+
+(* == PROTOCOL WITH NONCE VERSIONS == *)
+let SYSTEM =
+ !
+ new k : bitstring;
+   !
+   new sess : bitstring;
+   ((
+    new r1: bitstring;
+    new n3: bitstring;
+    out(i, choice[r1,n3]);
+    in(i, x: bitstring);
+    new nextStep: bitstring;
+    new n4: bitstring;
+    out(i, choice[nextStep,n4])
+   )|(
+    in(r, xr1: bitstring);
+    new r2: bitstring;
+    new n1: bitstring;
+    new n2: bitstring;
+    out(r, choice[(r2,h((xr1,r2,k))),(n1,n2)])
+   ))
+.
+process SYSTEM
+

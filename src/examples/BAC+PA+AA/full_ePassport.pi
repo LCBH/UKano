@@ -1,4 +1,8 @@
-(* Lucca Hirschi: test on transformations of protocols *)
+(******************************************************)
+(*                                                    *)
+(*               BAC+PA+AA                            *)
+(*                                                    *)
+(******************************************************)
 
 (* ==THEORY== *)
 
@@ -15,6 +19,8 @@ free read : bitstring.
 free ok : bitstring.
 
  (* Encryption (with mac inside) *)
+ (* for better readability, we compact encryption+mac into the following
+    construction. We modeled this using pairs of encryption+mac in BAC sub-foler. *)
 fun enc(bitstring, bitstring) : bitstring.
   reduc forall xm:bitstring, xk:bitstring;
         dec(enc(xm, xk), xk) = xm.
@@ -29,36 +35,24 @@ reduc forall m: bitstring , k:bitstring ;
 reduc forall m: bitstring , k:bitstring ;
   checksign(sign(m, k), spk(k)) = m.
 
-(* Over-approximation of (kt XOR kr): xorKey has strictly more equations
--> Valid ? *)
-fun xorKey(bitstring, bitstring) : bitstring.
-(*
-fun projKey1(bitstring) : bitstring
-reduc forall k1:bitstring, k2:bitstring;
-        projKey1(xorKey(k1, k2)) = k1.
-fun projKey2(bitstring) : bitstring
-reduc forall k1:bitstring, k2:bitstring;
-        projKey2(xorKey(k1, k2)) = k2.
+(* generate new key from seed from two keys *)
+fun hashKey(bitstring, bitstring) : bitstring.
 
-fun trydec (bitstring, bitstring) : bitstring
-reduc forall m : bitstring, k:bitstring ; trydec ( enc(m,k) , k) = m
-otherwise forall x : bitstring , k : bitstring ; trydec ( x , k) = x .
-*)			       
 
 (* ==PROTOCOL== *)
 
 (* Passive Authentication *)
 let RPA(k2:bitstring, skP:bitstring) =
-  out(cr, choice[enc(read, k2), ok]);
+  out(cr, enc(read, k2));
   in(cr, y4:bitstring);
   let (ydgi:bitstring, ysign:bitstring) = dec(y4, k2) in
   if checksign(ysign, spk(skP)) = ydgi
-  then out(cr, choice[ok, ok]).
+  then out(cr, ok).
 
 let TPA(k2:bitstring, skP:bitstring, dgi:bitstring) =
     in(ct, x3:bitstring);
     if dec(x3, k2) = read
-    then out(ct, choice[enc((dgi, sign(dgi, skP)), k2), hole]).
+    then out(ct, enc((dgi, sign(dgi, skP)), k2)).
 
 (* Active Authentication *)
 let RAA (k2:bitstring, skP:bitstring,randR:bitstring) =
@@ -84,8 +78,7 @@ let TB (k:bitstring, skP:bitstring, dgi:bitstring,nt:bitstring,kt:bitstring,rand
 (* T ----[{nt,nr,kt}_k]---> R *)         
          let (xnr:bitstring,=nt,xkr:bitstring) = dec(x1, k) in (
          out(ct, enc((nt,xnr,kt), k));
-(* HOLE *)
-         TAA(xorKey(kt,xkr), skP, dgi,randT)
+         TAA(hashKey(kt,xkr), skP, dgi,randT)
          ) else
          out(ct, error_mac)	(* error bitstring in FR *)
     else out(ct, error_mac).    (* error mac in FR *)
@@ -98,22 +91,22 @@ let RB (k:bitstring, skP:bitstring,nr:bitstring,kr:bitstring,randR:bitstring) =
 (* R <----[{nt,nr,kt}_k]--- T *)
     in(cr, y2:bitstring);
     let (=y1, =nr, ykt:bitstring) = dec(y2, k) in (
-(* HOLE *)
-     out(cr, enc((init, randR), xorKey(ykt, kr)));
-      RAA(xorKey(ykt, kr), skP,randR)
+    out(cr, enc((init, randR), hashKey(ykt, kr)));
+    RAA(hashKey(ykt, kr), skP,randR)
     ).
 
 (* WHOLE SYSTEM *)
-let BAC =
+let ePassport =
   new skP : bitstring ;
   ! new k:bitstring;
-    ! new dgi:bitstring;	(* information stored in passports *)
+    new idDGI:bitstring;	(* information stored in passports *)
+    ! 
     new nt:bitstring;
     new kt:bitstring;
     new randT:bitstring;	
     new randR:bitstring;
     new nr:bitstring;
     new kr:bitstring;
-        (TB(k, skP, dgi,nt,kt,randT) | RB(k, skP,nr,kr,randR)).
+        (TB(k, skP, idDGI,nt,kt,randT) | RB(k, skP,nr,kr,randR)).
 
-process BAC
+process ePassport

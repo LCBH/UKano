@@ -1279,6 +1279,10 @@ let rec may_have_else = function
   | Restr(_,_,p,_) | Event(_,p,_) | Output(_,_,p,_) | Input(_,_,p,_) | Insert(_,p,_) 
   | Phase(_,p,_) -> may_have_else p
 
+let isLetCatch = function
+  | FunApp (f,_) when f.f_cat = LetCatch -> true
+  | _ -> false
+	   
 let display_proc show_occ align proc =
   let display_occ occ =
     if show_occ then Lang.display_occ_ref occ
@@ -1376,33 +1380,115 @@ let display_proc show_occ align proc =
 	print_string ")";
 	display_opt_process align p
     | Let (pat, t, p, p', occ) ->
-	print_string align;
-	display_occ occ;
-	display_idcl CKeyword "let";
-	print_string " ";
-	display_pattern pat;
-	print_string " = ";
-	display_term2 t;
-	print_string " ";
-	display_idcl CKeyword "in";
-	newline();
-	if (p' = Nil) then
-	  display_process align p
-	else 
-	  begin
-	    display_process_paren align p;
-	    print_string align;
-	    display_idcl CKeyword "else";
-	    newline();
-	    display_process (align^Lang.indentstring) p'
-	  end
+       if isLetCatch t
+       then begin
+	   (* BEGIN SPECIAL CASE DEALING WITH THE HACK INTRODUCED BY UKANO *)
+	   let (tl,tr,tout) = 	(* left, right part of tout (tout should be outputed if tests pass) *)
+	     match t with
+	     | FunApp (f, tl::tr::t::[]) -> (tl,tr,t)
+	     | _ -> failwith "[UKANO] Cannot happen." in
+	   let align2 = (align^Lang.indentstring) in
+	   let align3 = (align2^Lang.indentstring) in
+	   let align4 = (align3^Lang.indentstring) in
+	   (* Print the first [let mergeOut =] *)
+	   print_string align;
+	   display_occ occ;
+	   display_idcl CKeyword "let";
+	   print_string " (";
+	   (* pat is "mergeOut" *)
+	   display_pattern pat;
+	   print_string ") = ";
+           newline();
+	   print_string align2;
+	   print_string "choice[ ";
+           newline();
+	   print_string align3;
+	   print_string "let catchRealMess:bitstring = (";
+           newline();
+	   (* We now display nested Let/If constructs *)
+	   let rec displayUntilOut = function
+	     | Let (pat, t, p, p', occ) -> begin
+		 (* one nested Let *)
+		 print_string align4;
+		 display_occ occ;
+		 display_idcl CKeyword "let";
+		 print_string " (";
+		 display_pattern pat;
+		 print_string ") = ";
+		 display_term2 t;
+		 print_string " ";
+		 display_idcl CKeyword "in";
+		 newline();
+		 displayUntilOut p;
+	       end
+	     | Test (t, p, p',occ) -> begin
+		 (* one nested If *)
+		 print_string align4;
+		 display_occ occ;
+		 display_idcl CKeyword "if";
+		 print_string " ";
+		 display_term2 t;
+		 print_string " ";
+		 display_idcl CKeyword "then";
+		 newline();
+		 displayUntilOut p;
+	       end
+	     | Output (t, t', p, occ) as proc -> begin
+		 (* End of nested Let/If: if all pass mergeOut = tout otherwise = tr *)
+		 print_string (align4^"   ");
+		 display_term2 tl;
+		 print_string "  )";
+                 display_idcl CKeyword " in";
+   		 newline();
+		 print_string align3;
+		 print_string "catchRealMess";
+   		 newline();
+		 (* add the final esle (if the computation fails on the left, we do like on the right *)
+		 print_string align3;
+                 display_idcl CKeyword "else ";
+	         display_term2 tr;
+   		 newline();
+		 print_string align2;
+		 print_string ", ";
+		 display_term2 tr;
+		 print_string "] ";
+		 display_idcl CKeyword "in";
+     		 newline();
+		 (* print the Output and go on *)
+		 display_process align proc;
+	       end
+	     | _ -> failwith "[UKANO] Never happen." in
+	   displayUntilOut p;
+	 end else begin
+	   (* END HACK *)
+	   print_string align;
+	   display_occ occ;
+	   display_idcl CKeyword "let";
+	   print_string " (";
+	   display_pattern pat;
+	   print_string ") = ";
+	   display_term2 t;
+	   print_string " ";
+	   display_idcl CKeyword "in";
+	   newline();
+	   if (p' = Nil) then
+	     display_process align p
+	   else 
+	     begin
+	       display_process_paren align p;
+	       print_string align;
+	       display_idcl CKeyword "else";
+	       newline();
+	       display_process (align^Lang.indentstring) p'
+	     end;
+	 end
     | Event (f,p,occ) ->
-	print_string align;
-	display_occ occ;
-	display_idcl CKeyword "event";
-	print_string " ";
-	display_term2 f;
-	display_opt_process align p
+       print_string align;
+       display_occ occ;
+       display_idcl CKeyword "event";
+       print_string " ";
+       display_term2 f;
+       display_opt_process align p
     | Insert (f,p,occ) ->
 	print_string align;
 	display_occ occ;

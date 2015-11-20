@@ -122,7 +122,16 @@ WITHDBM =dbm.cma -cclib -lmldbm -cclib -lndbm
 ################ Nothing to set up or fix here
 ##############################################################
 
-all: depend $(EXEC)
+all: 
+	ocamlyacc parser.mly
+	ocamllex lexer.mll
+	ocamlyacc piparser.mly
+	ocamllex pilexer.mll
+	ocamlyacc pitparser.mly
+	ocamllex pitlexer.mll
+	make build
+
+build: depend $(EXEC)
 
 opt : $(EXEC).opt
 
