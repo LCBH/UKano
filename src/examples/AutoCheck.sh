@@ -5,7 +5,7 @@ echo "This script uses the tool UKano to automatically translate 2-agents protoc
 echo "specified in a ProVerif file into two ProVerif files checking respectively Frame"
 echo "opacity and Well-Authentication. The script then launch ProVerif on those files "
 echo "and fetch the result of the verification. For more details about the expected   "
-echo "file, type './proverif -ukano help'.                                            "
+echo "file, see the README fil at the root of the project.                            "
 
 # Modify this if needed:
 PRO=./../proverif
@@ -32,7 +32,7 @@ echo "folder as your input file. They are suffixed repsectively by 'FOpa.pi' (ch
 echo "frame opacity) and 'WAuth.pi' (checking well-authentication).                   "
 echo "If some warnings about idealization were displayed, you should check that the   "
 echo "tool guessed idealizations correctly. If not, you should help him by adding     "
-echo "holes. See the UKano's help message for more details.                           "
+echo "holes. See the README file for more details on this.                            "
 
 echo ""
 echo "## Checking Frame Opacity...                                                     "
@@ -45,3 +45,7 @@ $PRO -in pitype $FILE_WA | grep -E "RESULT"
 echo ""
 echo "If all checks went well, your protocol is unlinkable and ensure anonymity w.r.t."
 echo "session names prefixed by 'id'.                                                 "
+
+echo "Note that, well-authentication is checked for all conditionals (event for safe  "
+echo "conditionals). Do not take into accout checks that failed when verifying        "
+echo "well-authentication if their first event target a safe conditional.        "

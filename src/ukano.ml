@@ -26,7 +26,9 @@
 
  *)
 (* This module provides functions from the UnlinKability and ANOnymity
-   verifier built on top of ProVerif as described in [1]. (todo-lucca:ref) *)
+   verifier built on top of ProVerif as described in [1]. *)
+
+(* [1]: Submitted paper *)
 
 open Types
 open Pervasives
@@ -41,17 +43,8 @@ let splitTheoryString = "==PROTOCOL=="
 (* Helping message *)
 let helpMess = 
   (  "Only typed ProVerif files are accepted (the option '-in pitype' is enabled by default). See the folder './examples/' for examples\n"^
-     "of files in the correct format. They can be used to bootsrap your own file. The file should not define new types and only use\n"^
-     "the type 'bitstring'. The equational theory must declare a constant 'hole' by adding this line: 'free hole:bitstring;'.\n"^
-     "After the definition of the equational theory (without any declaration of events), the inputted file should contain a commentary:\n"^
-     "       (* "^splitTheoryString^" *)\n"^
-     "and then define only one process corresponding to the whole multiple sessions system. This process should satisfy the\n"^
-     "syntactical restrictions described in [1]. However, multiple tests (conditional or evaluation) can be performed in a row between\n"^
-     "an input and an output if the corresponding 'else' branches are the same. Each output message should be of the form:\n"^
-     "'choice[u,uh]' where 'u' is the real message outputted by the protocol and 'uh' is the idealization of any concrete message\n"^
-     "outputted here (by using the constant 'hole' instead of holes). Finally, to check anonymity as well, identity names to be revelead\n"^
-     " (and only them) must have 'id-' as prefix (e.g., id-name).\n")
-(* TODO [1]  *)
+     "of files in the correct format. They can be used to bootsrap your own file. For more details, see the README file at the root of\n"^
+     "the project.\n")
 
 (* Raised when the inputted process is not a 2-agents protocol as defined
    in [1], the associated string is the reason/explanation. *)
