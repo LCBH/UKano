@@ -49,7 +49,7 @@ fun hashKey(bitstring, bitstring) : bitstring.
 let SYSTEM =
 new skP : bitstring;
  !
- new dgi : bitstring;
+ new idDGI : bitstring;
  new k_51 : bitstring;
    !
    new sess : bitstring;
@@ -63,10 +63,11 @@ new skP : bitstring;
         new n5: bitstring;
         let (mergeOut: bitstring) = 
             choice[ 
-                let ((xnr: bitstring,=nt,xkr: bitstring)) = dec(x1,k_51) in
-                if (enc(dec(x1,k_51),k_51) = x1) then
-                   enc((nt,xnr,kt),k_51)
-                else n5
+                let catchRealMess:bitstring = (
+                    let ((xnr: bitstring,=nt,xkr: bitstring)) = dec(x1,k_51) in
+                    if (enc(dec(x1,k_51),k_51) = x1) then
+                       enc((nt,xnr,kt),k_51)  ) in
+                catchRealMess
                 else n5
             , n5] in
         out(ct, mergeOut);
@@ -75,12 +76,12 @@ new skP : bitstring;
         new n6: bitstring;
         let (mergeOut: bitstring) = 
             choice[ 
-                let ((xnr: bitstring,=nt,xkr: bitstring)) = dec(x1,k_51) in
-                let ((=init,xrandR: bitstring)) = dec(x2,hashKey(kt,xkr)) in
-                if (enc(dec(x1,k_51),k_51) = x1) then
-                   enc(sign((randT,xrandR),skP),hashKey(kt,xkr))
-                else n6
-                else n6
+                let catchRealMess:bitstring = (
+                    let ((xnr: bitstring,=nt,xkr: bitstring)) = dec(x1,k_51) in
+                    let ((=init,xrandR: bitstring)) = dec(x2,hashKey(kt,xkr)) in
+                    if (enc(dec(x1,k_51),k_51) = x1) then
+                       enc(sign((randT,xrandR),skP),hashKey(kt,xkr))  ) in
+                catchRealMess
                 else n6
             , n6] in
         out(ct, mergeOut);
@@ -88,14 +89,13 @@ new skP : bitstring;
         new n7: bitstring;
         let (mergeOut: bitstring) = 
             choice[ 
-                let ((xnr: bitstring,=nt,xkr: bitstring)) = dec(x1,k_51) in
-                let ((=init,xrandR: bitstring)) = dec(x2,hashKey(kt,xkr)) in
-                if (enc(dec(x1,k_51),k_51) = x1) then
-                if (dec(x3,hashKey(kt,xkr)) = read) then
-                   enc((dgi,sign(dgi,skP)),hashKey(kt,xkr))
-                else n7
-                else n7
-                else n7
+                let catchRealMess:bitstring = (
+                    let ((xnr: bitstring,=nt,xkr: bitstring)) = dec(x1,k_51) in
+                    let ((=init,xrandR: bitstring)) = dec(x2,hashKey(kt,xkr)) in
+                    if (enc(dec(x1,k_51),k_51) = x1) then
+                    if (dec(x3,hashKey(kt,xkr)) = read) then
+                       enc((idDGI,sign(idDGI,skP)),hashKey(kt,xkr))  ) in
+                catchRealMess
                 else n7
             , n7] in
         out(ct, mergeOut)
@@ -115,8 +115,10 @@ new skP : bitstring;
     new n2: bitstring;
     let (mergeOut: bitstring) = 
         choice[ 
-            let ((=y1,=nr,ykt: bitstring)) = dec(y2,k_51) in
-               enc((init,randR),hashKey(ykt,kr))
+            let catchRealMess:bitstring = (
+                let ((=y1,=nr,ykt: bitstring)) = dec(y2,k_51) in
+                   enc((init,randR),hashKey(ykt,kr))  ) in
+            catchRealMess
             else n2
         , n2] in
     out(cr, mergeOut);
@@ -124,12 +126,12 @@ new skP : bitstring;
     new n3: bitstring;
     let (mergeOut: bitstring) = 
         choice[ 
-            let ((=y1,=nr,ykt: bitstring)) = dec(y2,k_51) in
-            let (m_52: bitstring) = dec(y3,hashKey(ykt,kr)) in
-            if (checksign(m_52,spk(skP)) = getmess(m_52)) then
-               enc(read,hashKey(ykt,kr))
-            else n3
-            else n3
+            let catchRealMess:bitstring = (
+                let ((=y1,=nr,ykt: bitstring)) = dec(y2,k_51) in
+                let (m_52: bitstring) = dec(y3,hashKey(ykt,kr)) in
+                if (checksign(m_52,spk(skP)) = getmess(m_52)) then
+                   enc(read,hashKey(ykt,kr))  ) in
+            catchRealMess
             else n3
         , n3] in
     out(cr, mergeOut);

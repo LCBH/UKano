@@ -52,7 +52,7 @@ let RPA(k2:bitstring, skP:bitstring) =
 let TPA(k2:bitstring, skP:bitstring, dgi:bitstring) =
     in(ct, x3:bitstring);
     if dec(x3, k2) = read
-    then out(ct, choice[enc((dgi, sign(dgi, skP)), k2), hole]).
+    then out(ct, enc((dgi, sign(dgi, skP)), k2)).
 
 (* Active Authentication *)
 let RAA (k2:bitstring, skP:bitstring,randR:bitstring) =
@@ -99,7 +99,7 @@ let RB (k:bitstring, skP:bitstring,nr:bitstring,kr:bitstring,randR:bitstring) =
 let ePassport =
   new skP : bitstring ;
   ! new k:bitstring;
-    new dgi:bitstring;	(* information stored in passports *)
+    new idDGI:bitstring;	(* information stored in passports *)
     ! 
     new nt:bitstring;
     new kt:bitstring;
@@ -107,6 +107,6 @@ let ePassport =
     new randR:bitstring;
     new nr:bitstring;
     new kr:bitstring;
-        (TB(k, skP, dgi,nt,kt,randT) | RB(k, skP,nr,kr,randR)).
+        (TB(k, skP, idDGI,nt,kt,randT) | RB(k, skP,nr,kr,randR)).
 
 process ePassport

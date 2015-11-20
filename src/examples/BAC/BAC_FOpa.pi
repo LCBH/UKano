@@ -60,12 +60,12 @@ new skP : bitstring;
         new n6: bitstring;
         let (mergeOut: bitstring) = 
             choice[ 
-                let ((xe: bitstring,xm_40: bitstring)) = x1 in
-                let (=xe) = checkMac(xm_40,kM) in
-                let ((xnr: bitstring,=nt,xkr: bitstring)) = dec(xe,kE) in
-                   (enc((nt,xnr,kt),kE),mac(enc((nt,xnr,kt),kE),kM))
-                else (n5,n6)
-                else (n5,n6)
+                let catchRealMess:bitstring = (
+                    let ((xe: bitstring,xm_40: bitstring)) = x1 in
+                    let (=xe) = checkMac(xm_40,kM) in
+                    let ((xnr: bitstring,=nt,xkr: bitstring)) = dec(xe,kE) in
+                       (enc((nt,xnr,kt),kE),mac(enc((nt,xnr,kt),kE),kM))  ) in
+                catchRealMess
                 else (n5,n6)
             , (n5,n6)] in
         out(ct, mergeOut)
@@ -86,12 +86,12 @@ new skP : bitstring;
     new n3: bitstring;
     let (mergeOut: bitstring) = 
         choice[ 
-            let ((ye: bitstring,ym: bitstring)) = y2 in
-            let (=ye) = checkMac(ym,kM) in
-            let ((=y1,=nr,ykt: bitstring)) = dec(ye,kE) in
-               enc((init,randR),hashKey(ykt,kr))
-            else n3
-            else n3
+            let catchRealMess:bitstring = (
+                let ((ye: bitstring,ym: bitstring)) = y2 in
+                let (=ye) = checkMac(ym,kM) in
+                let ((=y1,=nr,ykt: bitstring)) = dec(ye,kE) in
+                   enc((init,randR),hashKey(ykt,kr))  ) in
+            catchRealMess
             else n3
         , n3] in
     out(cr, mergeOut)

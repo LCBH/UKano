@@ -67,8 +67,10 @@ let SYSTEM =
     new n6: bitstring;
     let (mergeOut: bitstring) = 
         choice[ 
-            let (newG: bitstring) = gen(exp(g,s),exp(x1,b1)) in
-               exp(newG,b2)
+            let catchRealMess:bitstring = (
+                let (newG: bitstring) = gen(exp(g,s),exp(x1,b1)) in
+                   exp(newG,b2)  ) in
+            catchRealMess
             else n6
         , n6] in
     out(ct, mergeOut);
@@ -76,12 +78,12 @@ let SYSTEM =
     new n7: bitstring;
     let (mergeOut: bitstring) = 
         choice[ 
-            let (newG: bitstring) = gen(exp(g,s),exp(x1,b1)) in
-            let (newKey: bitstring) = exp(x2,b2) in
-            if (mac((tagReader,exp(newG,b2)),newKey) = x3) then
-               mac((tagPass,x2),newKey)
-            else n7
-            else n7
+            let catchRealMess:bitstring = (
+                let (newG: bitstring) = gen(exp(g,s),exp(x1,b1)) in
+                let (newKey: bitstring) = exp(x2,b2) in
+                if (mac((tagReader,exp(newG,b2)),newKey) = x3) then
+                   mac((tagPass,x2),newKey)  ) in
+            catchRealMess
             else n7
         , n7] in
     out(cr, mergeOut)
@@ -95,8 +97,10 @@ let SYSTEM =
     new n2: bitstring;
     let (mergeOut: bitstring) = 
         choice[ 
-            let (newG_61: bitstring) = gen(exp(g,dec(y1,k)),exp(y2,a1)) in
-               exp(newG_61,a2)
+            let catchRealMess:bitstring = (
+                let (newG_61: bitstring) = gen(exp(g,dec(y1,k)),exp(y2,a1)) in
+                   exp(newG_61,a2)  ) in
+            catchRealMess
             else n2
         , n2] in
     out(cr, mergeOut);
@@ -104,12 +108,12 @@ let SYSTEM =
     new n3: bitstring;
     let (mergeOut: bitstring) = 
         choice[ 
-            let (newG_61: bitstring) = gen(exp(g,dec(y1,k)),exp(y2,a1)) in
-            let (newKey_62: bitstring) = exp(y3,a2) in
-            if (y3 <> exp(newG_61,a2)) then
-               mac((tagReader,y3),newKey_62)
-            else n3
-            else n3
+            let catchRealMess:bitstring = (
+                let (newG_61: bitstring) = gen(exp(g,dec(y1,k)),exp(y2,a1)) in
+                let (newKey_62: bitstring) = exp(y3,a2) in
+                if (y3 <> exp(newG_61,a2)) then
+                   mac((tagReader,y3),newKey_62)  ) in
+            catchRealMess
             else n3
         , n3] in
     out(cr, mergeOut);
