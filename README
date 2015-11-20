@@ -65,8 +65,7 @@ First, the equational theory must declare a constant 'hole' by adding this
 line: 'free hole:bitstring;'. Output messages that cannot be guessed
 automatically should be of the form: 'choice[u,uh]' where 'u' is the real
 message outputted by the protocol and 'uh' is the idealization of any concrete
-message outputted here (by using the constant 'hole' incstead of
-holes).
+message outputted here (by using the constant 'hole' instead of holes).
 
 See the folder 'examples/' for see some examples of such files.
 
