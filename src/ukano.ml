@@ -60,6 +60,7 @@ let errorClass s p =
 type proto = {
     comNames : funsymb list;	(* common names of all agents (created before the first !)  *)
     idNames : funsymb list;	(* identity names *)
+    idNamesANO : funsymb list;	(* subset of identity names to be revealed for anonymity *)
     sessNames : funsymb list;	(* session names *)
     ini : process;		(* (open) process of the initiator *)
     res : process;		(* (open) process of the responder *)
@@ -160,9 +161,13 @@ let extractProto process =
 				 f_initial_cat = Name {prev_inputs=None; prev_inputs_meaning=[]};
 				 f_private = true;
 				 f_options = 0;	} in
+	     let idNamesANO = List.filter 
+				(fun s -> (String.length s.f_name) >= 2 && (s.f_name.[0] = 'i') && (s.f_name.[1] = 'd'))
+				idNames in
 	     {
 	       comNames = comNames;
 	       idNames = idNames;
+	       idNamesANO = idNamesANO;
 	       sessNames = sessName :: (List.rev sessNames) @ (List.rev iniN) @ (List.rev resN);
 	       ini = iniPclean;
 	       res = resPclean;
@@ -183,6 +188,8 @@ let displayProtocol proto =
   pp  "\n   Identity Names: ";
   List.iter (fun s -> Display.Text.display_function_name s; pp ", ") proto.idNames;
   pp  "\n   Session Names:  ";   
+  List.iter (fun s -> Display.Text.display_function_name s; pp ", ") proto.idNamesANO;
+  pp  "\n   Session Names to be revealed for ANO:  ";   
   List.iter (fun s -> Display.Text.display_function_name s; pp ", ") proto.sessNames;
   let sep = "      >   " in
   pp  "\n   Initiator:\n";
@@ -198,24 +205,45 @@ let displayProcessProtocol p =
 
 (* Given a protcol, diplay the process implementing the full system with multiple sessions *)
 let displayProtocolProcess proto =
-  let indent = " " in
+  let indent = "  " in
+  let displayMultipleSessions () =
+    pp (indent^indent^" !\n");
+    List.iter 
+      (fun q -> Printf.printf "%snew %s : bitstring;\n" (indent^indent^indent) q.f_name)
+      proto.sessNames;
+    pp (indent^indent^indent^"((\n");
+    Display.Text.display_process (indent^indent^indent^indent) proto.ini;
+    pp (indent^indent^indent^")|(\n");
+    Display.Text.display_process (indent^indent^indent^indent) proto.res;
+    pp (indent^indent^indent^"))\n")
+  in
+  (* Common names *)
   List.iter 
     (fun q -> Printf.printf "new %s : bitstring;\n" q.f_name)
     proto.comNames;
-  pp " !\n";
+  pp "( !\n";
+  (* Multiple identities *)
   List.iter 
     (fun q -> Printf.printf "%snew %s : bitstring;\n" indent q.f_name)
-    proto.idNames;
-  pp (indent^indent^" !\n");
-  List.iter 
-    (fun q -> Printf.printf "%snew %s : bitstring;\n" (indent^indent^indent) q.f_name)
-    proto.sessNames;
-  pp (indent^indent^indent^"((\n");
-  Display.Text.display_process (indent^indent^indent^indent) proto.ini;
-  pp (indent^indent^indent^")|(\n");
-    Display.Text.display_process (indent^indent^indent^indent) proto.res;
-  pp (indent^indent^indent^"))\n")
-
+    proto.idNames;  
+  (* Multiple sessions *)
+  displayMultipleSessions ();
+  pp ")\n";
+  if proto.idNamesANO <> [] 
+  then begin
+  pp " | (!\n";
+      (* Multiple identities whose idNamesANO are revealed *)
+      List.iter 
+	(fun q -> Printf.printf "%snew %s : bitstring;\n" indent q.f_name)
+	proto.idNames;  
+      (* Revealed idNamesANO *)
+      List.iter 
+	(fun q -> Printf.printf "%sout(c, %s);\n" indent q.f_name)
+	proto.idNamesANO;  
+      (* Multiple sessions *)
+      displayMultipleSessions ();
+      pp ")\n";
+    end
 
 (************************************************************)
 (* Deal with IO                                             *)
@@ -249,7 +277,7 @@ let theoryStr inNameFile =
   let theoStr = Str.global_replace (Str.regexp_string "nonce") "bitstring" theoStr in
   let theoStr = Str.global_replace (Str.regexp_string "type bitstring.") "" theoStr in
   theoStr
-
+    
 
 (************************************************************)
 (* Push session names as far as possible                    *)

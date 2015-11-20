@@ -61,7 +61,7 @@ let RB (kE:bitstring, kM:bitstring, skP:bitstring,nr:bitstring,kr:bitstring,rand
     let (ye:bitstring,ym:bitstring) = y2 in
     let (=ye) = checkMac(ym, kM) in
     let (=y1, =nr, ykt:bitstring) = dec(ye, kE) in (
-    out(cr, (enc((init, randR), hashKey(ykt, kr))))
+    out(cr, (enc((init, randR), hashKey(ykt, kr))))  (* then, either PA or AA starts here *)
     ).
 
 (* WHOLE SYSTEM *)

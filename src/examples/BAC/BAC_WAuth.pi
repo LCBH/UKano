@@ -74,47 +74,48 @@ query k:bitstring, n1:bitstring, n2:bitstring,
 (* == PROTOCOL WITH EVENTS == *)
 let SYSTEM =
 new skP : bitstring;
- !
- new dgi : bitstring;
- new kM : bitstring;
- new kE : bitstring;
-   !
-   new sess : bitstring;
-   ((
-    new nt: bitstring;
-    event Iout_1(dgi,sess,nt);
-    out(ct, nt);
-    in(ct, x1: bitstring);
-    event Iin_1(dgi,sess,nt,x1);
-    let ((xe: bitstring,xm_40: bitstring)) = x1 in
-    let (=xe) = checkMac(xm_40,kM) in
-    (
-        let ((xnr: bitstring,=nt,xkr: bitstring)) = dec(xe,kE) in
-            event Itest_1(dgi,sess,nt,x1);
-            new kt: bitstring;
-            event Iout_2(dgi,sess,nt,x1,(enc((nt,xnr,kt),kE),mac(enc((nt,xnr,kt),kE),kM)));
-            out(ct, (enc((nt,xnr,kt),kE),mac(enc((nt,xnr,kt),kE),kM)))
+( !
+  new dgi : bitstring;
+  new kM : bitstring;
+  new kE : bitstring;
+     !
+      new sess : bitstring;
+      ((
+        new nt: bitstring;
+        event Iout_1(dgi,sess,nt);
+        out(ct, nt);
+        in(ct, x1: bitstring);
+        event Iin_1(dgi,sess,nt,x1);
+        let ((xe: bitstring,xm_40: bitstring)) = x1 in
+        let (=xe) = checkMac(xm_40,kM) in
+        (
+            let ((xnr: bitstring,=nt,xkr: bitstring)) = dec(xe,kE) in
+                event Itest_1(dgi,sess,nt,x1);
+                new kt: bitstring;
+                event Iout_2(dgi,sess,nt,x1,(enc((nt,xnr,kt),kE),mac(enc((nt,xnr,kt),kE),kM)));
+                out(ct, (enc((nt,xnr,kt),kE),mac(enc((nt,xnr,kt),kE),kM)))
+            else
+                out(ct, error_mac)
+        )
         else
             out(ct, error_mac)
-    )
-    else
-        out(ct, error_mac)
-   )|(
-    in(cr, y1: bitstring);
-    event Rin_1(dgi,sess,y1);
-    new nr: bitstring;
-    new kr: bitstring;
-    event Rout_1(dgi,sess,y1,(enc((nr,y1,kr),kE),mac(enc((nr,y1,kr),kE),kM)));
-    out(cr, (enc((nr,y1,kr),kE),mac(enc((nr,y1,kr),kE),kM)));
-    in(cr, y2: bitstring);
-    event Rin_2(dgi,sess,y1,(enc((nr,y1,kr),kE),mac(enc((nr,y1,kr),kE),kM)),y2);
-    let ((ye: bitstring,ym: bitstring)) = y2 in
-    let (=ye) = checkMac(ym,kM) in
-    let ((=y1,=nr,ykt: bitstring)) = dec(ye,kE) in
-    event Rtest_1(dgi,sess,y1,(enc((nr,y1,kr),kE),mac(enc((nr,y1,kr),kE),kM)),y2);
-    new randR: bitstring;
-    event Rout_2(dgi,sess,y1,(enc((nr,y1,kr),kE),mac(enc((nr,y1,kr),kE),kM)),y2,enc((init,randR),hashKey(ykt,kr)));
-    out(cr, enc((init,randR),hashKey(ykt,kr)))
-   ))
+      )|(
+        in(cr, y1: bitstring);
+        event Rin_1(dgi,sess,y1);
+        new nr: bitstring;
+        new kr: bitstring;
+        event Rout_1(dgi,sess,y1,(enc((nr,y1,kr),kE),mac(enc((nr,y1,kr),kE),kM)));
+        out(cr, (enc((nr,y1,kr),kE),mac(enc((nr,y1,kr),kE),kM)));
+        in(cr, y2: bitstring);
+        event Rin_2(dgi,sess,y1,(enc((nr,y1,kr),kE),mac(enc((nr,y1,kr),kE),kM)),y2);
+        let ((ye: bitstring,ym: bitstring)) = y2 in
+        let (=ye) = checkMac(ym,kM) in
+        let ((=y1,=nr,ykt: bitstring)) = dec(ye,kE) in
+        event Rtest_1(dgi,sess,y1,(enc((nr,y1,kr),kE),mac(enc((nr,y1,kr),kE),kM)),y2);
+        new randR: bitstring;
+        event Rout_2(dgi,sess,y1,(enc((nr,y1,kr),kE),mac(enc((nr,y1,kr),kE),kM)),y2,enc((init,randR),hashKey(ykt,kr)));
+        out(cr, enc((init,randR),hashKey(ykt,kr)))
+      ))
+)
 .
 process SYSTEM
