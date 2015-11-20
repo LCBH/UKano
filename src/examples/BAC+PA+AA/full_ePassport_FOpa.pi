@@ -1,3 +1,6 @@
+
+(********   This file has been automatically generated using the tool UKano ********)
+
 (******************************************************)
 (*                                                    *)
 (*               BAC+PA+AA                            *)
@@ -52,37 +55,37 @@ new skP : bitstring;
    new sess : bitstring;
    ((
     new nt: bitstring;
-    new n3: bitstring;
-    out(ct, choice[nt,n3]);
+    new n4: bitstring;
+    out(ct, choice[nt,n4]);
     in(ct, x1: bitstring);
     (
         new kt: bitstring;
-        new n4: bitstring;
+        new n5: bitstring;
         let (mergeOut: bitstring) = 
             choice[ 
                 let ((xnr: bitstring,=nt,xkr: bitstring)) = dec(x1,k_51) in
                 if (enc(dec(x1,k_51),k_51) = x1) then
                    enc((nt,xnr,kt),k_51)
-                else n4
-                else n4
-            , n4] in
+                else n5
+                else n5
+            , n5] in
         out(ct, mergeOut);
         in(ct, x2: bitstring);
         new randT: bitstring;
-        new n5: bitstring;
+        new n6: bitstring;
         let (mergeOut: bitstring) = 
             choice[ 
                 let ((xnr: bitstring,=nt,xkr: bitstring)) = dec(x1,k_51) in
                 let ((=init,xrandR: bitstring)) = dec(x2,hashKey(kt,xkr)) in
                 if (enc(dec(x1,k_51),k_51) = x1) then
                    enc(sign((randT,xrandR),skP),hashKey(kt,xkr))
-                else n5
-                else n5
-                else n5
-            , n5] in
+                else n6
+                else n6
+                else n6
+            , n6] in
         out(ct, mergeOut);
         in(ct, x3: bitstring);
-        new n6: bitstring;
+        new n7: bitstring;
         let (mergeOut: bitstring) = 
             choice[ 
                 let ((xnr: bitstring,=nt,xkr: bitstring)) = dec(x1,k_51) in
@@ -90,11 +93,11 @@ new skP : bitstring;
                 if (enc(dec(x1,k_51),k_51) = x1) then
                 if (dec(x3,hashKey(kt,xkr)) = read) then
                    enc((dgi,sign(dgi,skP)),hashKey(kt,xkr))
-                else n6
-                else n6
-                else n6
-                else n6
-            , n6] in
+                else n7
+                else n7
+                else n7
+                else n7
+            , n7] in
         out(ct, mergeOut)
     ) | (
         out(ct, error_mac)
@@ -118,16 +121,17 @@ new skP : bitstring;
         , n2] in
     out(cr, mergeOut);
     in(cr, y3: bitstring);
+    new n3: bitstring;
     let (mergeOut: bitstring) = 
         choice[ 
             let ((=y1,=nr,ykt: bitstring)) = dec(y2,k_51) in
             let (m_52: bitstring) = dec(y3,hashKey(ykt,kr)) in
             if (checksign(m_52,spk(skP)) = getmess(m_52)) then
                enc(read,hashKey(ykt,kr))
-            else ok
-            else ok
-            else ok
-        , ok] in
+            else n3
+            else n3
+            else n3
+        , n3] in
     out(cr, mergeOut);
     in(cr, y4: bitstring);
     out(cr, ok)

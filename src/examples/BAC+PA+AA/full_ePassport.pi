@@ -43,11 +43,11 @@ fun hashKey(bitstring, bitstring) : bitstring.
 
 (* Passive Authentication *)
 let RPA(k2:bitstring, skP:bitstring) =
-  out(cr, choice[enc(read, k2), ok]);
+  out(cr, enc(read, k2));
   in(cr, y4:bitstring);
   let (ydgi:bitstring, ysign:bitstring) = dec(y4, k2) in
   if checksign(ysign, spk(skP)) = ydgi
-  then out(cr, choice[ok, ok]).
+  then out(cr, ok).
 
 let TPA(k2:bitstring, skP:bitstring, dgi:bitstring) =
     in(ct, x3:bitstring);
