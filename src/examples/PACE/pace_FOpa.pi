@@ -1,0 +1,121 @@
+
+(********   This file has been automatically generated using the tool UKano ********)
+
+(**********)
+(* THEORY *)
+(**********)
+
+
+(* public communication channel *)
+free c : channel.
+free ct : channel.
+free cr : channel.
+
+(* constant values *)
+free error_mac : bitstring.
+free init : bitstring.
+free read : bitstring.
+free ok : bitstring.
+free tagPass : bitstring.
+free tagReader : bitstring.
+free secret : bitstring [private].
+const g : bitstring [data].
+
+
+(* Generation of a new paramater *)
+fun gen(bitstring,bitstring) : bitstring.
+
+(* Diffie-Hellman exponentiation: partial axiomatization
+   as defined in the ProVerif 1.92's manual (p. 33) *)
+fun exp (bitstring, bitstring) : bitstring.
+equation forall x : bitstring, y : bitstring;
+  exp(exp(g,x),y) = exp(exp(g,y),x).
+equation forall x : bitstring, y : bitstring,
+                a : bitstring, b : bitstring;
+  exp(exp(gen(a,b),x),y) = exp(exp(gen(a,b),y),x).
+
+
+fun enc (bitstring, bitstring) : bitstring.
+fun dec (bitstring, bitstring) : bitstring.
+equation forall x : bitstring, y : bitstring;
+  dec(enc(x,y),y) = x.	       
+
+ (* Mac (of pairs) *)
+fun mac(bitstring, bitstring) : bitstring.
+
+			       
+(*************)
+(*  *)
+
+
+(* == PROTOCOL WITH NONCE VERSIONS == *)
+let SYSTEM =
+ !
+ new k : bitstring;
+   !
+   new sess : bitstring;
+   ((
+    new s: bitstring;
+    new n4: bitstring;
+    out(ct, choice[enc(s,k),n4]);
+    in(ct, x1: bitstring);
+    new b1: bitstring;
+    new n5: bitstring;
+    out(ct, choice[exp(g,b1),n5]);
+    in(ct, x2: bitstring);
+    new b2: bitstring;
+    new n6: bitstring;
+    let (mergeOut: bitstring) = 
+        choice[ 
+            let (newG: bitstring) = gen(exp(g,s),exp(x1,b1)) in
+               exp(newG,b2)
+            else n6
+        , n6] in
+    out(ct, mergeOut);
+    in(ct, x3: bitstring);
+    new n7: bitstring;
+    let (mergeOut: bitstring) = 
+        choice[ 
+            let (newG: bitstring) = gen(exp(g,s),exp(x1,b1)) in
+            let (newKey: bitstring) = exp(x2,b2) in
+            if (mac((tagReader,exp(newG,b2)),newKey) = x3) then
+               mac((tagPass,x2),newKey)
+            else n7
+            else n7
+            else n7
+        , n7] in
+    out(cr, mergeOut)
+   )|(
+    in(cr, y1: bitstring);
+    new a1: bitstring;
+    new n1: bitstring;
+    out(cr, choice[exp(g,a1),n1]);
+    in(cr, y2: bitstring);
+    new a2: bitstring;
+    new n2: bitstring;
+    let (mergeOut: bitstring) = 
+        choice[ 
+            let (newG_61: bitstring) = gen(exp(g,dec(y1,k)),exp(y2,a1)) in
+               exp(newG_61,a2)
+            else n2
+        , n2] in
+    out(cr, mergeOut);
+    in(cr, y3: bitstring);
+    new n3: bitstring;
+    let (mergeOut: bitstring) = 
+        choice[ 
+            let (newG_61: bitstring) = gen(exp(g,dec(y1,k)),exp(y2,a1)) in
+            let (newKey_62: bitstring) = exp(y3,a2) in
+            if (y3 <> exp(newG_61,a2)) then
+               mac((tagReader,y3),newKey_62)
+            else n3
+            else n3
+            else n3
+        , n3] in
+    out(cr, mergeOut);
+    in(cr, y4: bitstring);
+    out(cr, ok)
+   ))
+.
+process SYSTEM
+

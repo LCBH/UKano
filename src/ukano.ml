@@ -498,6 +498,7 @@ let transC2 p inNameFile nameOutFile =
   Unix.dup2 (Unix.descr_of_out_channel newstdout) Unix.stdout;
   (* Print (=write in the file) the complete ProVerif file *)
 (*  pp "\n\n(* == THEORY == *)\n"; *)
+  pp "\n(********   This file has been automatically generated using the tool UKano ********)\n\n";
   pp theoryStr;
   pp " *)\n";
   pp "\n\n(* == DECLARATIONS OF EVENTS == *)\n";
@@ -723,6 +724,7 @@ let transC1 p inNameFile nameOutFile =
   Unix.dup2 (Unix.descr_of_out_channel newstdout) Unix.stdout;
   (* Print (=write in the file) the complete ProVerif file *)
 (*  pp "\n\n(* == THEORY == *)\n"; *)
+  pp "\n(********   This file has been automatically generated using the tool UKano ********)\n\n";
   pp theoryStr;
   pp " *)\n";
   pp "\n\n(* == PROTOCOL WITH NONCE VERSIONS == *)\n";
