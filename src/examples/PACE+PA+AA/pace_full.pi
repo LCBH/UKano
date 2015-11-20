@@ -145,7 +145,7 @@ let R (k:bitstring,skP:bitstring) =
 let PACE =
 new skP:bitstring;
   ! new k:bitstring;
-    new dgi:bitstring;
-    ! (T(k,skP,dgi) | R(k,skP)).
+    new idDGI:bitstring;
+    ! (T(k,skP,idDGI) | R(k,skP)).
 
 process PACE

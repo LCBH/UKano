@@ -48,96 +48,189 @@ fun hashKey(bitstring, bitstring) : bitstring.
 (* == PROTOCOL WITH NONCE VERSIONS == *)
 let SYSTEM =
 new skP : bitstring;
- !
- new idDGI : bitstring;
- new k_51 : bitstring;
-   !
-   new sess : bitstring;
-   ((
-    new nt: bitstring;
-    new n4: bitstring;
-    out(ct, choice[nt,n4]);
-    in(ct, x1: bitstring);
-    (
-        new kt: bitstring;
-        new n5: bitstring;
+( !
+  new idDGI : bitstring;
+  new k_51 : bitstring;
+     !
+      new sess : bitstring;
+      ((
+        new nt: bitstring;
+        new n4: bitstring;
+        out(ct, choice[nt,n4]);
+        in(ct, x1: bitstring);
+        (
+            new kt: bitstring;
+            new n5: bitstring;
+            let (mergeOut: bitstring) = 
+                choice[ 
+                    let catchRealMess:bitstring = (
+                        let ((xnr: bitstring,=nt,xkr: bitstring)) = dec(x1,k_51) in
+                        if (enc(dec(x1,k_51),k_51) = x1) then
+                           enc((nt,xnr,kt),k_51)  ) in
+                    catchRealMess
+                    else n5
+                , n5] in
+            out(ct, mergeOut);
+            in(ct, x2: bitstring);
+            new randT: bitstring;
+            new n6: bitstring;
+            let (mergeOut: bitstring) = 
+                choice[ 
+                    let catchRealMess:bitstring = (
+                        let ((xnr: bitstring,=nt,xkr: bitstring)) = dec(x1,k_51) in
+                        let ((=init,xrandR: bitstring)) = dec(x2,hashKey(kt,xkr)) in
+                        if (enc(dec(x1,k_51),k_51) = x1) then
+                           enc(sign((randT,xrandR),skP),hashKey(kt,xkr))  ) in
+                    catchRealMess
+                    else n6
+                , n6] in
+            out(ct, mergeOut);
+            in(ct, x3: bitstring);
+            new n7: bitstring;
+            let (mergeOut: bitstring) = 
+                choice[ 
+                    let catchRealMess:bitstring = (
+                        let ((xnr: bitstring,=nt,xkr: bitstring)) = dec(x1,k_51) in
+                        let ((=init,xrandR: bitstring)) = dec(x2,hashKey(kt,xkr)) in
+                        if (enc(dec(x1,k_51),k_51) = x1) then
+                        if (dec(x3,hashKey(kt,xkr)) = read) then
+                           enc((idDGI,sign(idDGI,skP)),hashKey(kt,xkr))  ) in
+                    catchRealMess
+                    else n7
+                , n7] in
+            out(ct, mergeOut)
+        ) | (
+            out(ct, error_mac)
+        ) | (
+            out(ct, error_mac)
+        )
+      )|(
+        in(cr, y1: bitstring);
+        new nr: bitstring;
+        new kr: bitstring;
+        new n1: bitstring;
+        out(cr, choice[enc((nr,y1,kr),k_51),n1]);
+        in(cr, y2: bitstring);
+        new randR: bitstring;
+        new n2: bitstring;
         let (mergeOut: bitstring) = 
             choice[ 
                 let catchRealMess:bitstring = (
-                    let ((xnr: bitstring,=nt,xkr: bitstring)) = dec(x1,k_51) in
-                    if (enc(dec(x1,k_51),k_51) = x1) then
-                       enc((nt,xnr,kt),k_51)  ) in
+                    let ((=y1,=nr,ykt: bitstring)) = dec(y2,k_51) in
+                       enc((init,randR),hashKey(ykt,kr))  ) in
                 catchRealMess
-                else n5
-            , n5] in
-        out(ct, mergeOut);
-        in(ct, x2: bitstring);
-        new randT: bitstring;
-        new n6: bitstring;
+                else n2
+            , n2] in
+        out(cr, mergeOut);
+        in(cr, y3: bitstring);
+        new n3: bitstring;
         let (mergeOut: bitstring) = 
             choice[ 
                 let catchRealMess:bitstring = (
-                    let ((xnr: bitstring,=nt,xkr: bitstring)) = dec(x1,k_51) in
-                    let ((=init,xrandR: bitstring)) = dec(x2,hashKey(kt,xkr)) in
-                    if (enc(dec(x1,k_51),k_51) = x1) then
-                       enc(sign((randT,xrandR),skP),hashKey(kt,xkr))  ) in
+                    let ((=y1,=nr,ykt: bitstring)) = dec(y2,k_51) in
+                    let (m_52: bitstring) = dec(y3,hashKey(ykt,kr)) in
+                    if (checksign(m_52,spk(skP)) = getmess(m_52)) then
+                       enc(read,hashKey(ykt,kr))  ) in
                 catchRealMess
-                else n6
-            , n6] in
-        out(ct, mergeOut);
-        in(ct, x3: bitstring);
-        new n7: bitstring;
+                else n3
+            , n3] in
+        out(cr, mergeOut);
+        in(cr, y4: bitstring);
+        out(cr, ok)
+      ))
+)
+ | (!
+  new idDGI : bitstring;
+  new k_51 : bitstring;
+  out(c, idDGI);
+     !
+      new sess : bitstring;
+      ((
+        new nt: bitstring;
+        new n4: bitstring;
+        out(ct, choice[nt,n4]);
+        in(ct, x1: bitstring);
+        (
+            new kt: bitstring;
+            new n5: bitstring;
+            let (mergeOut: bitstring) = 
+                choice[ 
+                    let catchRealMess:bitstring = (
+                        let ((xnr: bitstring,=nt,xkr: bitstring)) = dec(x1,k_51) in
+                        if (enc(dec(x1,k_51),k_51) = x1) then
+                           enc((nt,xnr,kt),k_51)  ) in
+                    catchRealMess
+                    else n5
+                , n5] in
+            out(ct, mergeOut);
+            in(ct, x2: bitstring);
+            new randT: bitstring;
+            new n6: bitstring;
+            let (mergeOut: bitstring) = 
+                choice[ 
+                    let catchRealMess:bitstring = (
+                        let ((xnr: bitstring,=nt,xkr: bitstring)) = dec(x1,k_51) in
+                        let ((=init,xrandR: bitstring)) = dec(x2,hashKey(kt,xkr)) in
+                        if (enc(dec(x1,k_51),k_51) = x1) then
+                           enc(sign((randT,xrandR),skP),hashKey(kt,xkr))  ) in
+                    catchRealMess
+                    else n6
+                , n6] in
+            out(ct, mergeOut);
+            in(ct, x3: bitstring);
+            new n7: bitstring;
+            let (mergeOut: bitstring) = 
+                choice[ 
+                    let catchRealMess:bitstring = (
+                        let ((xnr: bitstring,=nt,xkr: bitstring)) = dec(x1,k_51) in
+                        let ((=init,xrandR: bitstring)) = dec(x2,hashKey(kt,xkr)) in
+                        if (enc(dec(x1,k_51),k_51) = x1) then
+                        if (dec(x3,hashKey(kt,xkr)) = read) then
+                           enc((idDGI,sign(idDGI,skP)),hashKey(kt,xkr))  ) in
+                    catchRealMess
+                    else n7
+                , n7] in
+            out(ct, mergeOut)
+        ) | (
+            out(ct, error_mac)
+        ) | (
+            out(ct, error_mac)
+        )
+      )|(
+        in(cr, y1: bitstring);
+        new nr: bitstring;
+        new kr: bitstring;
+        new n1: bitstring;
+        out(cr, choice[enc((nr,y1,kr),k_51),n1]);
+        in(cr, y2: bitstring);
+        new randR: bitstring;
+        new n2: bitstring;
         let (mergeOut: bitstring) = 
             choice[ 
                 let catchRealMess:bitstring = (
-                    let ((xnr: bitstring,=nt,xkr: bitstring)) = dec(x1,k_51) in
-                    let ((=init,xrandR: bitstring)) = dec(x2,hashKey(kt,xkr)) in
-                    if (enc(dec(x1,k_51),k_51) = x1) then
-                    if (dec(x3,hashKey(kt,xkr)) = read) then
-                       enc((idDGI,sign(idDGI,skP)),hashKey(kt,xkr))  ) in
+                    let ((=y1,=nr,ykt: bitstring)) = dec(y2,k_51) in
+                       enc((init,randR),hashKey(ykt,kr))  ) in
                 catchRealMess
-                else n7
-            , n7] in
-        out(ct, mergeOut)
-    ) | (
-        out(ct, error_mac)
-    ) | (
-        out(ct, error_mac)
-    )
-   )|(
-    in(cr, y1: bitstring);
-    new nr: bitstring;
-    new kr: bitstring;
-    new n1: bitstring;
-    out(cr, choice[enc((nr,y1,kr),k_51),n1]);
-    in(cr, y2: bitstring);
-    new randR: bitstring;
-    new n2: bitstring;
-    let (mergeOut: bitstring) = 
-        choice[ 
-            let catchRealMess:bitstring = (
-                let ((=y1,=nr,ykt: bitstring)) = dec(y2,k_51) in
-                   enc((init,randR),hashKey(ykt,kr))  ) in
-            catchRealMess
-            else n2
-        , n2] in
-    out(cr, mergeOut);
-    in(cr, y3: bitstring);
-    new n3: bitstring;
-    let (mergeOut: bitstring) = 
-        choice[ 
-            let catchRealMess:bitstring = (
-                let ((=y1,=nr,ykt: bitstring)) = dec(y2,k_51) in
-                let (m_52: bitstring) = dec(y3,hashKey(ykt,kr)) in
-                if (checksign(m_52,spk(skP)) = getmess(m_52)) then
-                   enc(read,hashKey(ykt,kr))  ) in
-            catchRealMess
-            else n3
-        , n3] in
-    out(cr, mergeOut);
-    in(cr, y4: bitstring);
-    out(cr, ok)
-   ))
+                else n2
+            , n2] in
+        out(cr, mergeOut);
+        in(cr, y3: bitstring);
+        new n3: bitstring;
+        let (mergeOut: bitstring) = 
+            choice[ 
+                let catchRealMess:bitstring = (
+                    let ((=y1,=nr,ykt: bitstring)) = dec(y2,k_51) in
+                    let (m_52: bitstring) = dec(y3,hashKey(ykt,kr)) in
+                    if (checksign(m_52,spk(skP)) = getmess(m_52)) then
+                       enc(read,hashKey(ykt,kr))  ) in
+                catchRealMess
+                else n3
+            , n3] in
+        out(cr, mergeOut);
+        in(cr, y4: bitstring);
+        out(cr, ok)
+      ))
+)
 .
 process SYSTEM
 
