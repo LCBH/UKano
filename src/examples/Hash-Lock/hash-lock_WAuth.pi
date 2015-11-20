@@ -1,0 +1,64 @@
+(* -------------------------------------------------- *)
+(*	       Hash-Lock                              *)
+(* -------------------------------------------------- *)
+
+(* ==THEORY== *)
+
+(* Public communication channel *)
+free i : channel.
+free r : channel.
+(* Public constants *)
+free ok : bitstring.
+(* functions *)
+fun h(bitstring) : bitstring.
+
+
+(*  *)
+
+
+(* == DECLARATIONS OF EVENTS == *)
+event Rin_1(bitstring,bitstring,bitstring).
+event Rout_1(bitstring,bitstring,bitstring,bitstring).
+event Iout_1(bitstring,bitstring,bitstring).
+event Iin_1(bitstring,bitstring,bitstring,bitstring).
+event Itest_1(bitstring,bitstring,bitstring,bitstring).
+event Iout_2(bitstring,bitstring,bitstring,bitstring,bitstring).
+
+
+(* == DECLARATIONS OF QUERIES == *)
+query k:bitstring, n1:bitstring, n2:bitstring,
+      m1:bitstring, m2:bitstring;
+   (event(Itest_1(k,n1,m1,m2))  ==>
+   (event(Iin_1(k,n1,m1,m2))  ==>
+   (event(Rout_1(k,n2,m1,m2))  ==>
+   (event(Rin_1(k,n2,m1))  ==>
+   (event(Iout_1(k,n1,m1))))))).
+
+
+(* == PROTOCOL WITH EVENTS == *)
+let SYSTEM =
+ !
+ new k : bitstring;
+   !
+   new sess : bitstring;
+   ((
+    new nr: bitstring;
+    event Iout_1(k,sess,nr);
+    out(i, nr);
+    in(i, x: bitstring);
+    event Iin_1(k,sess,nr,x);
+    let ((xnt: bitstring,xh: bitstring)) = x in
+    if (xh = h((nr,xnt,k))) then
+    event Itest_1(k,sess,nr,x);
+    new nextStep: bitstring;
+    event Iout_2(k,sess,nr,x,nextStep);
+    out(i, nextStep)
+   )|(
+    in(r, y: bitstring);
+    event Rin_1(k,sess,y);
+    new nt: bitstring;
+    event Rout_1(k,sess,y,(nt,h((y,nt,k))));
+    out(i, (nt,h((y,nt,k))))
+   ))
+.
+process SYSTEM
