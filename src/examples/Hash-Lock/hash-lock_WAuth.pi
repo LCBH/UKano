@@ -1,14 +1,14 @@
-
-(********   This file has been automatically generated using the tool UKano ********)
-
 (* -------------------------------------------------- *)
-(*	       FIXED LAK                              *)
+(*	       Hash-Lock                              *)
 (* -------------------------------------------------- *)
 
 (* ==THEORY== *)
+
 (* Public communication channel *)
 free i : channel.
 free r : channel.
+(* Public constants *)
+free ok : bitstring.
 (* functions *)
 fun h(bitstring) : bitstring.
 
@@ -42,23 +42,23 @@ let SYSTEM =
    !
    new sess : bitstring;
    ((
-    new r1: bitstring;
-    event Iout_1(k,sess,r1);
-    out(i, r1);
+    new nr: bitstring;
+    event Iout_1(k,sess,nr);
+    out(i, nr);
     in(i, x: bitstring);
-    event Iin_1(k,sess,r1,x);
-    let ((xr2: bitstring,xh: bitstring)) = x in
-    let (=h((r1,xr2,k))) = xh in
-    event Itest_1(k,sess,r1,x);
+    event Iin_1(k,sess,nr,x);
+    let ((xnt: bitstring,xh: bitstring)) = x in
+    if (xh = h((nr,xnt,k))) then
+    event Itest_1(k,sess,nr,x);
     new nextStep: bitstring;
-    event Iout_2(k,sess,r1,x,nextStep);
+    event Iout_2(k,sess,nr,x,nextStep);
     out(i, nextStep)
    )|(
-    in(r, xr1: bitstring);
-    event Rin_1(k,sess,xr1);
-    new r2: bitstring;
-    event Rout_1(k,sess,xr1,(r2,h((xr1,r2,k))));
-    out(r, (r2,h((xr1,r2,k))))
+    in(r, y: bitstring);
+    event Rin_1(k,sess,y);
+    new nt: bitstring;
+    event Rout_1(k,sess,y,(nt,h((y,nt,k))));
+    out(i, (nt,h((y,nt,k))))
    ))
 .
 process SYSTEM

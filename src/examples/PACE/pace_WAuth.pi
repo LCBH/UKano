@@ -1,0 +1,199 @@
+
+(********   This file has been automatically generated using the tool UKano ********)
+
+(**********)
+(* THEORY *)
+(**********)
+
+
+(* public communication channel *)
+free c : channel.
+free ct : channel.
+free cr : channel.
+
+(* constant values *)
+free error_mac : bitstring.
+free init : bitstring.
+free read : bitstring.
+free ok : bitstring.
+free tagPass : bitstring.
+free tagReader : bitstring.
+free secret : bitstring [private].
+const g : bitstring [data].
+
+
+(* Generation of a new paramater *)
+fun gen(bitstring,bitstring) : bitstring.
+
+(* Diffie-Hellman exponentiation: partial axiomatization
+   as defined in the ProVerif 1.92's manual (p. 33) *)
+fun exp (bitstring, bitstring) : bitstring.
+equation forall x : bitstring, y : bitstring;
+  exp(exp(g,x),y) = exp(exp(g,y),x).
+equation forall x : bitstring, y : bitstring,
+                a : bitstring, b : bitstring;
+  exp(exp(gen(a,b),x),y) = exp(exp(gen(a,b),y),x).
+
+
+fun enc (bitstring, bitstring) : bitstring.
+fun dec (bitstring, bitstring) : bitstring.
+equation forall x : bitstring, y : bitstring;
+  dec(enc(x,y),y) = x.	       
+
+ (* Mac (of pairs) *)
+fun mac(bitstring, bitstring) : bitstring.
+
+			       
+(*************)
+(*  *)
+
+
+(* == DECLARATIONS OF EVENTS == *)
+event Rin_1(bitstring,bitstring,bitstring).
+event Rout_1(bitstring,bitstring,bitstring,bitstring).
+event Rin_2(bitstring,bitstring,bitstring,bitstring,bitstring).
+event Rtest_1(bitstring,bitstring,bitstring,bitstring,bitstring).
+event Rout_2(bitstring,bitstring,bitstring,bitstring,bitstring,bitstring).
+event Rin_3(bitstring,bitstring,bitstring,bitstring,bitstring,bitstring,bitstring).
+event Rtest_2(bitstring,bitstring,bitstring,bitstring,bitstring,bitstring,bitstring).
+event Rout_3(bitstring,bitstring,bitstring,bitstring,bitstring,bitstring,bitstring,bitstring).
+event Rin_4(bitstring,bitstring,bitstring,bitstring,bitstring,bitstring,bitstring,bitstring,bitstring).
+event Rtest_3(bitstring,bitstring,bitstring,bitstring,bitstring,bitstring,bitstring,bitstring,bitstring).
+event Rout_4(bitstring,bitstring,bitstring,bitstring,bitstring,bitstring,bitstring,bitstring,bitstring,bitstring).
+event Iout_1(bitstring,bitstring,bitstring).
+event Iin_1(bitstring,bitstring,bitstring,bitstring).
+event Iout_2(bitstring,bitstring,bitstring,bitstring,bitstring).
+event Iin_2(bitstring,bitstring,bitstring,bitstring,bitstring,bitstring).
+event Itest_1(bitstring,bitstring,bitstring,bitstring,bitstring,bitstring).
+event Iout_3(bitstring,bitstring,bitstring,bitstring,bitstring,bitstring,bitstring).
+event Iin_3(bitstring,bitstring,bitstring,bitstring,bitstring,bitstring,bitstring,bitstring).
+event Itest_2(bitstring,bitstring,bitstring,bitstring,bitstring,bitstring,bitstring,bitstring).
+event Iout_4(bitstring,bitstring,bitstring,bitstring,bitstring,bitstring,bitstring,bitstring,bitstring).
+
+
+(* == DECLARATIONS OF QUERIES == *)
+query k:bitstring, n1:bitstring, n2:bitstring,
+      m1:bitstring, m2:bitstring, m3:bitstring, m4:bitstring;
+   (event(Itest_1(k,n1,m1,m2,m3,m4))  ==>
+   (event(Iin_2(k,n1,m1,m2,m3,m4))  ==>
+   (event(Rout_2(k,n2,m1,m2,m3,m4))  ==>
+   (event(Rin_2(k,n2,m1,m2,m3))  ==>
+   (event(Iout_2(k,n1,m1,m2,m3))  ==>
+   (event(Iin_1(k,n1,m1,m2))  ==>
+   (event(Rout_1(k,n2,m1,m2))  ==>
+   (event(Rin_1(k,n2,m1))  ==>
+   (event(Iout_1(k,n1,m1))))))))))).
+query k:bitstring, n1:bitstring, n2:bitstring,
+      m1:bitstring, m2:bitstring, m3:bitstring, m4:bitstring, m5:bitstring, m6:bitstring;
+   (event(Itest_2(k,n1,m1,m2,m3,m4,m5,m6))  ==>
+   (event(Iin_3(k,n1,m1,m2,m3,m4,m5,m6))  ==>
+   (event(Rout_3(k,n2,m1,m2,m3,m4,m5,m6))  ==>
+   (event(Rin_3(k,n2,m1,m2,m3,m4,m5))  ==>
+   (event(Iout_3(k,n1,m1,m2,m3,m4,m5))  ==>
+   (event(Iin_2(k,n1,m1,m2,m3,m4))  ==>
+   (event(Rout_2(k,n2,m1,m2,m3,m4))  ==>
+   (event(Rin_2(k,n2,m1,m2,m3))  ==>
+   (event(Iout_2(k,n1,m1,m2,m3))  ==>
+   (event(Iin_1(k,n1,m1,m2))  ==>
+   (event(Rout_1(k,n2,m1,m2))  ==>
+   (event(Rin_1(k,n2,m1))  ==>
+   (event(Iout_1(k,n1,m1))))))))))))))).
+query k:bitstring, n1:bitstring, n2:bitstring,
+      m1:bitstring, m2:bitstring, m3:bitstring;
+   (event(Rtest_1(k,n2,m1,m2,m3))  ==>
+   (event(Rin_2(k,n2,m1,m2,m3))  ==>
+   (event(Iout_2(k,n1,m1,m2,m3))  ==>
+   (event(Iin_1(k,n1,m1,m2))  ==>
+   (event(Rout_1(k,n2,m1,m2))  ==>
+   (event(Rin_1(k,n2,m1))  ==>
+   (event(Iout_1(k,n1,m1))))))))).
+query k:bitstring, n1:bitstring, n2:bitstring,
+      m1:bitstring, m2:bitstring, m3:bitstring, m4:bitstring, m5:bitstring;
+   (event(Rtest_2(k,n2,m1,m2,m3,m4,m5))  ==>
+   (event(Rin_3(k,n2,m1,m2,m3,m4,m5))  ==>
+   (event(Iout_3(k,n1,m1,m2,m3,m4,m5))  ==>
+   (event(Iin_2(k,n1,m1,m2,m3,m4))  ==>
+   (event(Rout_2(k,n2,m1,m2,m3,m4))  ==>
+   (event(Rin_2(k,n2,m1,m2,m3))  ==>
+   (event(Iout_2(k,n1,m1,m2,m3))  ==>
+   (event(Iin_1(k,n1,m1,m2))  ==>
+   (event(Rout_1(k,n2,m1,m2))  ==>
+   (event(Rin_1(k,n2,m1))  ==>
+   (event(Iout_1(k,n1,m1))))))))))))).
+query k:bitstring, n1:bitstring, n2:bitstring,
+      m1:bitstring, m2:bitstring, m3:bitstring, m4:bitstring, m5:bitstring, m6:bitstring, m7:bitstring;
+   (event(Rtest_3(k,n2,m1,m2,m3,m4,m5,m6,m7))  ==>
+   (event(Rin_4(k,n2,m1,m2,m3,m4,m5,m6,m7))  ==>
+   (event(Iout_4(k,n1,m1,m2,m3,m4,m5,m6,m7))  ==>
+   (event(Iin_3(k,n1,m1,m2,m3,m4,m5,m6))  ==>
+   (event(Rout_3(k,n2,m1,m2,m3,m4,m5,m6))  ==>
+   (event(Rin_3(k,n2,m1,m2,m3,m4,m5))  ==>
+   (event(Iout_3(k,n1,m1,m2,m3,m4,m5))  ==>
+   (event(Iin_2(k,n1,m1,m2,m3,m4))  ==>
+   (event(Rout_2(k,n2,m1,m2,m3,m4))  ==>
+   (event(Rin_2(k,n2,m1,m2,m3))  ==>
+   (event(Iout_2(k,n1,m1,m2,m3))  ==>
+   (event(Iin_1(k,n1,m1,m2))  ==>
+   (event(Rout_1(k,n2,m1,m2))  ==>
+   (event(Rin_1(k,n2,m1))  ==>
+   (event(Iout_1(k,n1,m1))))))))))))))))).
+
+
+(* == PROTOCOL WITH EVENTS == *)
+let SYSTEM =
+ !
+ new k : bitstring;
+   !
+   new sess : bitstring;
+   ((
+    new s: bitstring;
+    event Iout_1(k,sess,enc(s,k));
+    out(ct, enc(s,k));
+    in(ct, x1: bitstring);
+    event Iin_1(k,sess,enc(s,k),x1);
+    new b1: bitstring;
+    event Iout_2(k,sess,enc(s,k),x1,exp(g,b1));
+    out(ct, exp(g,b1));
+    in(ct, x2: bitstring);
+    event Iin_2(k,sess,enc(s,k),x1,exp(g,b1),x2);
+    let (newG: bitstring) = gen(exp(g,s),exp(x1,b1)) in
+    event Itest_1(k,sess,enc(s,k),x1,exp(g,b1),x2);
+    new b2: bitstring;
+    event Iout_3(k,sess,enc(s,k),x1,exp(g,b1),x2,exp(newG,b2));
+    out(ct, exp(newG,b2));
+    in(ct, x3: bitstring);
+    event Iin_3(k,sess,enc(s,k),x1,exp(g,b1),x2,exp(newG,b2),x3);
+    let (newKey: bitstring) = exp(x2,b2) in
+    if (mac((tagReader,exp(newG,b2)),newKey) = x3) then
+    event Itest_2(k,sess,enc(s,k),x1,exp(g,b1),x2,exp(newG,b2),x3);
+    event Iout_4(k,sess,enc(s,k),x1,exp(g,b1),x2,exp(newG,b2),x3,mac((tagPass,x2),newKey));
+    out(cr, mac((tagPass,x2),newKey))
+   )|(
+    in(cr, y1: bitstring);
+    event Rin_1(k,sess,y1);
+    new a1: bitstring;
+    event Rout_1(k,sess,y1,exp(g,a1));
+    out(cr, exp(g,a1));
+    in(cr, y2: bitstring);
+    event Rin_2(k,sess,y1,exp(g,a1),y2);
+    let (newG_61: bitstring) = gen(exp(g,dec(y1,k)),exp(y2,a1)) in
+    event Rtest_1(k,sess,y1,exp(g,a1),y2);
+    new a2: bitstring;
+    event Rout_2(k,sess,y1,exp(g,a1),y2,exp(newG_61,a2));
+    out(cr, exp(newG_61,a2));
+    in(cr, y3: bitstring);
+    event Rin_3(k,sess,y1,exp(g,a1),y2,exp(newG_61,a2),y3);
+    if (y3 <> exp(newG_61,a2)) then
+    let (newKey_62: bitstring) = exp(y3,a2) in
+    event Rtest_2(k,sess,y1,exp(g,a1),y2,exp(newG_61,a2),y3);
+    event Rout_3(k,sess,y1,exp(g,a1),y2,exp(newG_61,a2),y3,mac((tagReader,y3),newKey_62));
+    out(cr, mac((tagReader,y3),newKey_62));
+    in(cr, y4: bitstring);
+    event Rin_4(k,sess,y1,exp(g,a1),y2,exp(newG_61,a2),y3,mac((tagReader,y3),newKey_62),y4);
+    if (mac((tagPass,exp(newG_61,a2)),newKey_62) = y4) then
+    event Rtest_3(k,sess,y1,exp(g,a1),y2,exp(newG_61,a2),y3,mac((tagReader,y3),newKey_62),y4);
+    event Rout_4(k,sess,y1,exp(g,a1),y2,exp(newG_61,a2),y3,mac((tagReader,y3),newKey_62),y4,ok);
+    out(cr, ok)
+   ))
+.
+process SYSTEM

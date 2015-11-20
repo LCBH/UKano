@@ -5,7 +5,7 @@ echo "This script uses the tool UKano to automatically translate 2-agents protoc
 echo "specified in a ProVerif file into two ProVerif files checking respectively Frame"
 echo "opacity and Well-Authentication. The script then launch ProVerif on those files "
 echo "and fetch the result of the verification. For more details about the expected   "
-echo "file, see the README fil at the root of the project.                            "
+echo "file, see the README file at the root of the project.                           "
 
 # Modify this if needed:
 PRO=./../proverif

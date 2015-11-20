@@ -1,14 +1,14 @@
-
-(********   This file has been automatically generated using the tool UKano ********)
-
 (* -------------------------------------------------- *)
-(*	       FIXED LAK                              *)
+(*	       Hash-Lock                              *)
 (* -------------------------------------------------- *)
 
 (* ==THEORY== *)
+
 (* Public communication channel *)
 free i : channel.
 free r : channel.
+(* Public constants *)
+free ok : bitstring.
 (* functions *)
 fun h(bitstring) : bitstring.
 
@@ -23,19 +23,19 @@ let SYSTEM =
    !
    new sess : bitstring;
    ((
-    new r1: bitstring;
+    new nr: bitstring;
     new n3: bitstring;
-    out(i, choice[r1,n3]);
+    out(i, choice[nr,n3]);
     in(i, x: bitstring);
     new nextStep: bitstring;
     new n4: bitstring;
     out(i, choice[nextStep,n4])
    )|(
-    in(r, xr1: bitstring);
-    new r2: bitstring;
+    in(r, y: bitstring);
+    new nt: bitstring;
     new n1: bitstring;
     new n2: bitstring;
-    out(r, choice[(r2,h((xr1,r2,k))),(n1,n2)])
+    out(i, choice[(nt,h((y,nt,k))),(n1,n2)])
    ))
 .
 process SYSTEM
