@@ -11,13 +11,17 @@ The file README_PV contains the README file of ProVerif.
 
 INSTALL
 
-See the file README_PV.
-
+You need OCaml >=3.00 (you can find Objective Caml at ocaml.org).
+Go to ./src/ and type:
+   make
+The executable program 'proverif' has been built.
+See the file README_PV for all the details.
 
 EXAMPLES
 
 To quickly test the tool: build it, go to src/examples/ and use the
 script AutoCheck.sh on our case studies (there is a subfolder for each).
+For instance: './AutoCheck.sh Feldhofer/feldhofer.pi'.
 
 USAGE
 
@@ -32,21 +36,35 @@ protocols.
 
 Only typed ProVerif files are accepted (the option '-in pitype' is
 enabled by default). The file should not define new types and only use
-the type 'bitstring'. The equational theory must declare a constant
-'hole' by adding this line: 'free hole:bitstring;'. After the
-definition of the equational theory (without any declaration of
-events), the inputted file should contain a commentary:
+the type 'bitstring'. After the definition of the equational theory
+(without any declaration of events), the inputted file should contain
+a commentary:
        (* ==PROTOCOL== *)
 and then define only one process corresponding to the whole multiple
 sessions system. This process should satisfy the syntactical
 restrictions described in [1]. However, multiple tests (conditional or
 evaluation) can be performed in a row between an input and an output
-if the corresponding 'else' branches are the same. Each output message
-should be of the form: 'choice[u,uh]' where 'u' is the real message
-outputted by the protocol and 'uh' is the idealization of any concrete
-message outputted here (by using the constant 'hole' incstead of
-holes). This will be used to check the first condition (outputs are
-without relation). Finally, to check anonymity as well, identity names
-to be revealed (and only them) must have 'id-' as prefix (e.g., 
-id-name). See the folder 'examples/' for see some examples of such
-files.
+if the corresponding 'else' branches are the same. You can also use most
+of syntactical sugars allowed by ProVerif (e.g., modular definitions
+through definitions of functions and call, etc.).
+Finally, to check anonymity as well, identity names to be revealed
+(and only them) must have 'id' as prefix (e.g.,  id-name). 
+
+Note that, currently, UKano does not detect safe conditionals and consider
+all conditiionals unsafe by default. Thus, in case some queries in the 
+file checking well-authentication cannot be proved, you should remove them
+from the file if they target a safe conditional (i.e., to find it, look at
+the first event of the query and find the conditional it corresponds to).
+
+If the tool cannot guess idealizations of outputs (to check frame opacity),
+you can compute them manually and add it to the file as follow. 
+First, the equational theory must declare a constant 'hole' by adding this
+line: 'free hole:bitstring;'. Output messages that cannot be guessed
+automatically should be of the form: 'choice[u,uh]' where 'u' is the real
+message outputted by the protocol and 'uh' is the idealization of any concrete
+message outputted here (by using the constant 'hole' instead of holes).
+
+See the folder 'examples/' for see some examples of such files.
+
+[1] Submitted paper
+

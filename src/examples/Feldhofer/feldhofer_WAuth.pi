@@ -1,0 +1,86 @@
+(**********)
+(* THEORY *)
+(**********)
+
+(* public communication channel *)
+free c : channel.
+free ci : channel.
+free cr : channel.
+free secret : bitstring [private].
+(* constant values *)
+free ok : bitstring.
+free hole : bitstring.
+
+
+(* Diffie-Hellman exponentiation *)
+(* Symmetric Encryption *)
+fun enc(bitstring, bitstring) : bitstring.
+  reduc forall xm:bitstring, xk:bitstring;
+        dec(enc(xm, xk), xk) = xm.
+			       
+(*************)
+(*  *)
+
+
+(* == DECLARATIONS OF EVENTS == *)
+event Rin_1(bitstring,bitstring,bitstring).
+event Rout_1(bitstring,bitstring,bitstring,bitstring).
+event Rin_2(bitstring,bitstring,bitstring,bitstring,bitstring).
+event Rtest_1(bitstring,bitstring,bitstring,bitstring,bitstring).
+event Rout_2(bitstring,bitstring,bitstring,bitstring,bitstring,bitstring).
+event Iout_1(bitstring,bitstring,bitstring).
+event Iin_1(bitstring,bitstring,bitstring,bitstring).
+event Itest_1(bitstring,bitstring,bitstring,bitstring).
+event Iout_2(bitstring,bitstring,bitstring,bitstring,bitstring).
+
+
+(* == DECLARATIONS OF QUERIES == *)
+query k:bitstring, n1:bitstring, n2:bitstring,
+      m1:bitstring, m2:bitstring;
+   (event(Itest_1(k,n1,m1,m2))  ==>
+   (event(Iin_1(k,n1,m1,m2))  ==>
+   (event(Rout_1(k,n2,m1,m2))  ==>
+   (event(Rin_1(k,n2,m1))  ==>
+   (event(Iout_1(k,n1,m1))))))).
+query k:bitstring, n1:bitstring, n2:bitstring,
+      m1:bitstring, m2:bitstring, m3:bitstring;
+   (event(Rtest_1(k,n2,m1,m2,m3))  ==>
+   (event(Rin_2(k,n2,m1,m2,m3))  ==>
+   (event(Iout_2(k,n1,m1,m2,m3))  ==>
+   (event(Iin_1(k,n1,m1,m2))  ==>
+   (event(Rout_1(k,n2,m1,m2))  ==>
+   (event(Rin_1(k,n2,m1))  ==>
+   (event(Iout_1(k,n1,m1))))))))).
+
+
+(* == PROTOCOL WITH EVENTS == *)
+let SYSTEM =
+ !
+ new k : bitstring;
+   !
+   new sess : bitstring;
+   ((
+    new nI: bitstring;
+    event Iout_1(k,sess,nI);
+    out(ci, nI);
+    in(ci, x: bitstring);
+    event Iin_1(k,sess,nI,x);
+    let ((=nI,xnr: bitstring)) = dec(x,k) in
+    event Itest_1(k,sess,nI,x);
+    event Iout_2(k,sess,nI,x,enc((xnr,nI),k));
+    out(ci, enc((xnr,nI),k))
+   )|(
+    in(cr, ynI: bitstring);
+    event Rin_1(k,sess,ynI);
+    new nR: bitstring;
+    event Rout_1(k,sess,ynI,enc((ynI,nR),k));
+    out(cr, enc((ynI,nR),k));
+    in(cr, y: bitstring);
+    event Rin_2(k,sess,ynI,enc((ynI,nR),k),y);
+    let ((=nR,=ynI)) = dec(y,k) in
+    event Rtest_1(k,sess,ynI,enc((ynI,nR),k),y);
+    event Rout_2(k,sess,ynI,enc((ynI,nR),k),y,ok);
+    out(cr, ok)
+   ))
+.
+process SYSTEM
