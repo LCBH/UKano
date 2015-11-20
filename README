@@ -17,11 +17,14 @@ Go to ./src/ and type:
 The executable program 'proverif' has been built.
 See the file README_PV for all the details.
 
-EXAMPLES
 
-To quickly test the tool: build it, go to src/examples/ and use the
-script AutoCheck.sh on our case studies (there is a subfolder for each).
-For instance: './AutoCheck.sh Feldhofer/feldhofer.pi'.
+QUICK TEST
+
+To quickly test the tool on our case studies: build it, go to
+src/examples/ and use the script AutoCheck.sh on our case studies
+(there is a subfolder for each). For instance:
+       ./AutoCheck.sh Feldhofer/feldhofer.pi
+
 
 USAGE
 
@@ -29,10 +32,18 @@ You must use the executable program proverif.
 To run UKANO on a ProVerif file <filename> (see next for the expected
 format of this file), use 
         ./proverif -ukano <filename>
+After parsing your file, the tool creates two other files in the same
+directory by using translations described in the paper. One is suffixed
+with '_FOpa.pi' and can be used to check frame opacity of the given
+protocol. The second suffixed with '_WAuth.pi' can be used to check
+well-authentication. The latter contains a query per conditional.
 
 The folder './examples/' contain some ProVerif files in the expected
 format. It can be used as a starting point to write your own
 protocols.
+
+
+EXPECTED FORMAT
 
 Only typed ProVerif files are accepted (the option '-in pitype' is
 enabled by default). The file should not define new types and only use
@@ -66,7 +77,9 @@ automatically should be of the form: 'choice[u,uh]' where 'u' is the real
 message outputted by the protocol and 'uh' is the idealization of any concrete
 message outputted here (by using the constant 'hole' instead of holes).
 
-
-See the folder 'examples/' to see some examples of such files.
+Finally, when frame opacity cannot be checked directly, it is sometimes
+possible to make ProVerif prove it just by slightly modifying the file
+without altering the underlying protocol (for instance, by moving creation
+of names).
 
 [1] Submitted paper
