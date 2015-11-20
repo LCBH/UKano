@@ -381,7 +381,6 @@ let anal_file s =
 	    Pitransl.move_new p0
 	  else p0 in
 	  
-	(* Effet de bord: orient les égalités --> réductions *)
 	TermsEq.record_eqs_with_destr();
 	
 	(* Check if destructors are deterministic *)
