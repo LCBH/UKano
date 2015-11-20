@@ -18,7 +18,6 @@ free read : bitstring.
 free ok : bitstring.
 free tagPass : bitstring.
 free tagReader : bitstring.
-free secret : bitstring [private].
 const g : bitstring [data].
 
 
@@ -97,32 +96,32 @@ new skP : bitstring;
                 else n9
             , n9] in
         out(cr, mergeOut);
-        in(ct, x2_82: bitstring);
-        new randT: bitstring;
+        in(ct, x3_82: bitstring);
         new n10: bitstring;
         let (mergeOut: bitstring) = 
             choice[ 
                 let catchRealMess:bitstring = (
                     let (newG: bitstring) = gen(exp(g,s),exp(x1,b1)) in
                     let (newKey: bitstring) = exp(x2,b2) in
-                    let ((=init,xrandR: bitstring)) = dec(x2_82,newKey) in
                     if (mac((tagReader,exp(newG,b2)),newKey) = x3) then
-                       enc(sign((randT,xrandR),skP),newKey)  ) in
+                    if (dec(x3_82,newKey) = read) then
+                       enc((idDGI,sign(idDGI,skP)),newKey)  ) in
                 catchRealMess
                 else n10
             , n10] in
         out(ct, mergeOut);
-        in(ct, x3_83: bitstring);
+        in(ct, x2_83: bitstring);
+        new randT: bitstring;
         new n11: bitstring;
         let (mergeOut: bitstring) = 
             choice[ 
                 let catchRealMess:bitstring = (
                     let (newG: bitstring) = gen(exp(g,s),exp(x1,b1)) in
                     let (newKey: bitstring) = exp(x2,b2) in
-                    let ((=init,xrandR: bitstring)) = dec(x2_82,newKey) in
+                    let ((=init,xrandR: bitstring)) = dec(x2_83,newKey) in
                     if (mac((tagReader,exp(newG,b2)),newKey) = x3) then
-                    if (dec(x3_83,newKey) = read) then
-                       enc((idDGI,sign(idDGI,skP)),newKey)  ) in
+                    if (dec(x3_82,newKey) = read) then
+                       enc(sign((randT,xrandR),skP),newKey)  ) in
                 catchRealMess
                 else n11
             , n11] in
@@ -158,7 +157,6 @@ new skP : bitstring;
             , n3] in
         out(cr, mergeOut);
         in(cr, y4: bitstring);
-        new randR: bitstring;
         new n4: bitstring;
         let (mergeOut: bitstring) = 
             choice[ 
@@ -167,28 +165,29 @@ new skP : bitstring;
                     let (newKey_85: bitstring) = exp(y3,a2) in
                     if (y3 <> exp(newG_84,a2)) then
                     if (mac((tagPass,exp(newG_84,a2)),newKey_85) = y4) then
-                       enc((init,randR),newKey_85)  ) in
+                       enc(read,newKey_85)  ) in
                 catchRealMess
                 else n4
             , n4] in
         out(cr, mergeOut);
-        in(cr, y3_86: bitstring);
+        in(cr, y4_86: bitstring);
+        new randR: bitstring;
         new n5: bitstring;
         let (mergeOut: bitstring) = 
             choice[ 
                 let catchRealMess:bitstring = (
                     let (newG_84: bitstring) = gen(exp(g,dec(y1,k_81)),exp(y2,a1)) in
                     let (newKey_85: bitstring) = exp(y3,a2) in
-                    let (m_87: bitstring) = dec(y3_86,newKey_85) in
+                    let ((ydgi: bitstring,ysign: bitstring)) = dec(y4_86,newKey_85) in
                     if (y3 <> exp(newG_84,a2)) then
                     if (mac((tagPass,exp(newG_84,a2)),newKey_85) = y4) then
-                    if (checksign(m_87,spk(skP)) = getmess(m_87)) then
-                       enc(read,newKey_85)  ) in
+                    if (checksign(ysign,spk(skP)) = ydgi) then
+                       enc((init,randR),newKey_85)  ) in
                 catchRealMess
                 else n5
             , n5] in
         out(cr, mergeOut);
-        in(cr, y4_88: bitstring);
+        in(cr, y3_87: bitstring);
         out(cr, ok)
       ))
 )
@@ -231,32 +230,32 @@ new skP : bitstring;
                 else n9
             , n9] in
         out(cr, mergeOut);
-        in(ct, x2_82: bitstring);
-        new randT: bitstring;
+        in(ct, x3_82: bitstring);
         new n10: bitstring;
         let (mergeOut: bitstring) = 
             choice[ 
                 let catchRealMess:bitstring = (
                     let (newG: bitstring) = gen(exp(g,s),exp(x1,b1)) in
                     let (newKey: bitstring) = exp(x2,b2) in
-                    let ((=init,xrandR: bitstring)) = dec(x2_82,newKey) in
                     if (mac((tagReader,exp(newG,b2)),newKey) = x3) then
-                       enc(sign((randT,xrandR),skP),newKey)  ) in
+                    if (dec(x3_82,newKey) = read) then
+                       enc((idDGI,sign(idDGI,skP)),newKey)  ) in
                 catchRealMess
                 else n10
             , n10] in
         out(ct, mergeOut);
-        in(ct, x3_83: bitstring);
+        in(ct, x2_83: bitstring);
+        new randT: bitstring;
         new n11: bitstring;
         let (mergeOut: bitstring) = 
             choice[ 
                 let catchRealMess:bitstring = (
                     let (newG: bitstring) = gen(exp(g,s),exp(x1,b1)) in
                     let (newKey: bitstring) = exp(x2,b2) in
-                    let ((=init,xrandR: bitstring)) = dec(x2_82,newKey) in
+                    let ((=init,xrandR: bitstring)) = dec(x2_83,newKey) in
                     if (mac((tagReader,exp(newG,b2)),newKey) = x3) then
-                    if (dec(x3_83,newKey) = read) then
-                       enc((idDGI,sign(idDGI,skP)),newKey)  ) in
+                    if (dec(x3_82,newKey) = read) then
+                       enc(sign((randT,xrandR),skP),newKey)  ) in
                 catchRealMess
                 else n11
             , n11] in
@@ -292,7 +291,6 @@ new skP : bitstring;
             , n3] in
         out(cr, mergeOut);
         in(cr, y4: bitstring);
-        new randR: bitstring;
         new n4: bitstring;
         let (mergeOut: bitstring) = 
             choice[ 
@@ -301,28 +299,29 @@ new skP : bitstring;
                     let (newKey_85: bitstring) = exp(y3,a2) in
                     if (y3 <> exp(newG_84,a2)) then
                     if (mac((tagPass,exp(newG_84,a2)),newKey_85) = y4) then
-                       enc((init,randR),newKey_85)  ) in
+                       enc(read,newKey_85)  ) in
                 catchRealMess
                 else n4
             , n4] in
         out(cr, mergeOut);
-        in(cr, y3_86: bitstring);
+        in(cr, y4_86: bitstring);
+        new randR: bitstring;
         new n5: bitstring;
         let (mergeOut: bitstring) = 
             choice[ 
                 let catchRealMess:bitstring = (
                     let (newG_84: bitstring) = gen(exp(g,dec(y1,k_81)),exp(y2,a1)) in
                     let (newKey_85: bitstring) = exp(y3,a2) in
-                    let (m_87: bitstring) = dec(y3_86,newKey_85) in
+                    let ((ydgi: bitstring,ysign: bitstring)) = dec(y4_86,newKey_85) in
                     if (y3 <> exp(newG_84,a2)) then
                     if (mac((tagPass,exp(newG_84,a2)),newKey_85) = y4) then
-                    if (checksign(m_87,spk(skP)) = getmess(m_87)) then
-                       enc(read,newKey_85)  ) in
+                    if (checksign(ysign,spk(skP)) = ydgi) then
+                       enc((init,randR),newKey_85)  ) in
                 catchRealMess
                 else n5
             , n5] in
         out(cr, mergeOut);
-        in(cr, y4_88: bitstring);
+        in(cr, y3_87: bitstring);
         out(cr, ok)
       ))
 )
