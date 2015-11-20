@@ -39,9 +39,10 @@ protocols.
 
 Only typed ProVerif files are accepted (the option '-in pitype' is
 enabled by default). The file should not define new types and only use
-the type 'bitstring'. After the definition of the equational theory
-(without any declaration of events), the inputted file should contain
-a commentary:
+types 'bitstring' and 'channel'. The file must declare at least one
+channel 'c' (i.e., contains a line 'free c:channel.'). After the
+definition of the equational theory (without any declaration of
+events), the inputted file should contain a commentary:
        (* ==PROTOCOL== *)
 and then define only one process corresponding to the whole multiple
 sessions system. This process should satisfy the syntactical
