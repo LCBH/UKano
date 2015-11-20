@@ -58,32 +58,33 @@ query k:bitstring, n1:bitstring, n2:bitstring,
 
 (* == PROTOCOL WITH EVENTS == *)
 let SYSTEM =
- !
- new k : bitstring;
-   !
-   new sess : bitstring;
-   ((
-    new nI: bitstring;
-    event Iout_1(k,sess,nI);
-    out(ci, nI);
-    in(ci, x: bitstring);
-    event Iin_1(k,sess,nI,x);
-    let ((=nI,xnr: bitstring)) = dec(x,k) in
-    event Itest_1(k,sess,nI,x);
-    event Iout_2(k,sess,nI,x,enc((xnr,nI),k));
-    out(ci, enc((xnr,nI),k))
-   )|(
-    in(cr, ynI: bitstring);
-    event Rin_1(k,sess,ynI);
-    new nR: bitstring;
-    event Rout_1(k,sess,ynI,enc((ynI,nR),k));
-    out(cr, enc((ynI,nR),k));
-    in(cr, y: bitstring);
-    event Rin_2(k,sess,ynI,enc((ynI,nR),k),y);
-    let ((=nR,=ynI)) = dec(y,k) in
-    event Rtest_1(k,sess,ynI,enc((ynI,nR),k),y);
-    event Rout_2(k,sess,ynI,enc((ynI,nR),k),y,ok);
-    out(cr, ok)
-   ))
+( !
+  new k : bitstring;
+     !
+      new sess : bitstring;
+      ((
+        new nI: bitstring;
+        event Iout_1(k,sess,nI);
+        out(ci, nI);
+        in(ci, x: bitstring);
+        event Iin_1(k,sess,nI,x);
+        let ((=nI,xnr: bitstring)) = dec(x,k) in
+        event Itest_1(k,sess,nI,x);
+        event Iout_2(k,sess,nI,x,enc((xnr,nI),k));
+        out(ci, enc((xnr,nI),k))
+      )|(
+        in(cr, ynI: bitstring);
+        event Rin_1(k,sess,ynI);
+        new nR: bitstring;
+        event Rout_1(k,sess,ynI,enc((ynI,nR),k));
+        out(cr, enc((ynI,nR),k));
+        in(cr, y: bitstring);
+        event Rin_2(k,sess,ynI,enc((ynI,nR),k),y);
+        let ((=nR,=ynI)) = dec(y,k) in
+        event Rtest_1(k,sess,ynI,enc((ynI,nR),k),y);
+        event Rout_2(k,sess,ynI,enc((ynI,nR),k),y,ok);
+        out(cr, ok)
+      ))
+)
 .
 process SYSTEM

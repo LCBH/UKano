@@ -37,28 +37,29 @@ query k:bitstring, n1:bitstring, n2:bitstring,
 
 (* == PROTOCOL WITH EVENTS == *)
 let SYSTEM =
- !
- new k : bitstring;
-   !
-   new sess : bitstring;
-   ((
-    new r1: bitstring;
-    event Iout_1(k,sess,r1);
-    out(i, r1);
-    in(i, x: bitstring);
-    event Iin_1(k,sess,r1,x);
-    let ((xr2: bitstring,xh: bitstring)) = x in
-    let (=h((r1,xr2,k))) = xh in
-    event Itest_1(k,sess,r1,x);
-    new nextStep: bitstring;
-    event Iout_2(k,sess,r1,x,nextStep);
-    out(i, nextStep)
-   )|(
-    in(r, xr1: bitstring);
-    event Rin_1(k,sess,xr1);
-    new r2: bitstring;
-    event Rout_1(k,sess,xr1,(r2,h((xr1,r2,k))));
-    out(r, (r2,h((xr1,r2,k))))
-   ))
+( !
+  new k : bitstring;
+     !
+      new sess : bitstring;
+      ((
+        new r1: bitstring;
+        event Iout_1(k,sess,r1);
+        out(i, r1);
+        in(i, x: bitstring);
+        event Iin_1(k,sess,r1,x);
+        let ((xr2: bitstring,xh: bitstring)) = x in
+        let (=h((r1,xr2,k))) = xh in
+        event Itest_1(k,sess,r1,x);
+        new nextStep: bitstring;
+        event Iout_2(k,sess,r1,x,nextStep);
+        out(i, nextStep)
+      )|(
+        in(r, xr1: bitstring);
+        event Rin_1(k,sess,xr1);
+        new r2: bitstring;
+        event Rout_1(k,sess,xr1,(r2,h((xr1,r2,k))));
+        out(r, (r2,h((xr1,r2,k))))
+      ))
+)
 .
 process SYSTEM

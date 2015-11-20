@@ -250,88 +250,174 @@ query k:bitstring, n1:bitstring, n2:bitstring,
 (* == PROTOCOL WITH EVENTS == *)
 let SYSTEM =
 new skP : bitstring;
- !
- new dgi : bitstring;
- new k_81 : bitstring;
-   !
-   new sess : bitstring;
-   ((
-    new s: bitstring;
-    event Iout_1(dgi,sess,enc(s,k_81));
-    out(ct, enc(s,k_81));
-    in(ct, x1: bitstring);
-    event Iin_1(dgi,sess,enc(s,k_81),x1);
-    new b1: bitstring;
-    event Iout_2(dgi,sess,enc(s,k_81),x1,exp(g,b1));
-    out(ct, exp(g,b1));
-    in(ct, x2: bitstring);
-    event Iin_2(dgi,sess,enc(s,k_81),x1,exp(g,b1),x2);
-    let (newG: bitstring) = gen(exp(g,s),exp(x1,b1)) in
-    event Itest_1(dgi,sess,enc(s,k_81),x1,exp(g,b1),x2);
-    new b2: bitstring;
-    event Iout_3(dgi,sess,enc(s,k_81),x1,exp(g,b1),x2,exp(newG,b2));
-    out(ct, exp(newG,b2));
-    in(ct, x3: bitstring);
-    event Iin_3(dgi,sess,enc(s,k_81),x1,exp(g,b1),x2,exp(newG,b2),x3);
-    let (newKey: bitstring) = exp(x2,b2) in
-    if (mac((tagReader,exp(newG,b2)),newKey) = x3) then
-    event Itest_2(dgi,sess,enc(s,k_81),x1,exp(g,b1),x2,exp(newG,b2),x3);
-    event Iout_4(dgi,sess,enc(s,k_81),x1,exp(g,b1),x2,exp(newG,b2),x3,mac((tagPass,x2),newKey));
-    out(cr, mac((tagPass,x2),newKey));
-    in(ct, x2_82: bitstring);
-    event Iin_4(dgi,sess,enc(s,k_81),x1,exp(g,b1),x2,exp(newG,b2),x3,mac((tagPass,x2),newKey),x2_82);
-    let ((=init,xrandR: bitstring)) = dec(x2_82,newKey) in
-    event Itest_3(dgi,sess,enc(s,k_81),x1,exp(g,b1),x2,exp(newG,b2),x3,mac((tagPass,x2),newKey),x2_82);
-    new randT: bitstring;
-    event Iout_5(dgi,sess,enc(s,k_81),x1,exp(g,b1),x2,exp(newG,b2),x3,mac((tagPass,x2),newKey),x2_82,enc(sign((randT,xrandR),skP),newKey));
-    out(ct, enc(sign((randT,xrandR),skP),newKey));
-    in(ct, x3_83: bitstring);
-    event Iin_5(dgi,sess,enc(s,k_81),x1,exp(g,b1),x2,exp(newG,b2),x3,mac((tagPass,x2),newKey),x2_82,enc(sign((randT,xrandR),skP),newKey),x3_83);
-    if (dec(x3_83,newKey) = read) then
-    event Itest_4(dgi,sess,enc(s,k_81),x1,exp(g,b1),x2,exp(newG,b2),x3,mac((tagPass,x2),newKey),x2_82,enc(sign((randT,xrandR),skP),newKey),x3_83);
-    event Iout_6(dgi,sess,enc(s,k_81),x1,exp(g,b1),x2,exp(newG,b2),x3,mac((tagPass,x2),newKey),x2_82,enc(sign((randT,xrandR),skP),newKey),x3_83,enc((dgi,sign(dgi,skP)),newKey));
-    out(ct, enc((dgi,sign(dgi,skP)),newKey))
-   )|(
-    in(cr, y1: bitstring);
-    event Rin_1(dgi,sess,y1);
-    new a1: bitstring;
-    event Rout_1(dgi,sess,y1,exp(g,a1));
-    out(cr, exp(g,a1));
-    in(cr, y2: bitstring);
-    event Rin_2(dgi,sess,y1,exp(g,a1),y2);
-    let (newG_84: bitstring) = gen(exp(g,dec(y1,k_81)),exp(y2,a1)) in
-    event Rtest_1(dgi,sess,y1,exp(g,a1),y2);
-    new a2: bitstring;
-    event Rout_2(dgi,sess,y1,exp(g,a1),y2,exp(newG_84,a2));
-    out(cr, exp(newG_84,a2));
-    in(cr, y3: bitstring);
-    event Rin_3(dgi,sess,y1,exp(g,a1),y2,exp(newG_84,a2),y3);
-    if (y3 <> exp(newG_84,a2)) then
-    let (newKey_85: bitstring) = exp(y3,a2) in
-    event Rtest_2(dgi,sess,y1,exp(g,a1),y2,exp(newG_84,a2),y3);
-    event Rout_3(dgi,sess,y1,exp(g,a1),y2,exp(newG_84,a2),y3,mac((tagReader,y3),newKey_85));
-    out(cr, mac((tagReader,y3),newKey_85));
-    in(cr, y4: bitstring);
-    event Rin_4(dgi,sess,y1,exp(g,a1),y2,exp(newG_84,a2),y3,mac((tagReader,y3),newKey_85),y4);
-    if (mac((tagPass,exp(newG_84,a2)),newKey_85) = y4) then
-    event Rtest_3(dgi,sess,y1,exp(g,a1),y2,exp(newG_84,a2),y3,mac((tagReader,y3),newKey_85),y4);
-    new randR: bitstring;
-    event Rout_4(dgi,sess,y1,exp(g,a1),y2,exp(newG_84,a2),y3,mac((tagReader,y3),newKey_85),y4,enc((init,randR),newKey_85));
-    out(cr, enc((init,randR),newKey_85));
-    in(cr, y3_86: bitstring);
-    event Rin_5(dgi,sess,y1,exp(g,a1),y2,exp(newG_84,a2),y3,mac((tagReader,y3),newKey_85),y4,enc((init,randR),newKey_85),y3_86);
-    let (m_87: bitstring) = dec(y3_86,newKey_85) in
-    if (checksign(m_87,spk(skP)) = getmess(m_87)) then
-    event Rtest_4(dgi,sess,y1,exp(g,a1),y2,exp(newG_84,a2),y3,mac((tagReader,y3),newKey_85),y4,enc((init,randR),newKey_85),y3_86);
-    event Rout_5(dgi,sess,y1,exp(g,a1),y2,exp(newG_84,a2),y3,mac((tagReader,y3),newKey_85),y4,enc((init,randR),newKey_85),y3_86,enc(read,newKey_85));
-    out(cr, enc(read,newKey_85));
-    in(cr, y4_88: bitstring);
-    event Rin_6(dgi,sess,y1,exp(g,a1),y2,exp(newG_84,a2),y3,mac((tagReader,y3),newKey_85),y4,enc((init,randR),newKey_85),y3_86,enc(read,newKey_85),y4_88);
-    let ((ydgi: bitstring,ysign: bitstring)) = dec(y4_88,newKey_85) in
-    if (checksign(ysign,spk(skP)) = ydgi) then
-    event Rtest_5(dgi,sess,y1,exp(g,a1),y2,exp(newG_84,a2),y3,mac((tagReader,y3),newKey_85),y4,enc((init,randR),newKey_85),y3_86,enc(read,newKey_85),y4_88);
-    event Rout_6(dgi,sess,y1,exp(g,a1),y2,exp(newG_84,a2),y3,mac((tagReader,y3),newKey_85),y4,enc((init,randR),newKey_85),y3_86,enc(read,newKey_85),y4_88,ok);
-    out(cr, ok)
-   ))
+( !
+  new idDGI : bitstring;
+  new k_81 : bitstring;
+     !
+      new sess : bitstring;
+      ((
+        new s: bitstring;
+        event Iout_1(idDGI,sess,enc(s,k_81));
+        out(ct, enc(s,k_81));
+        in(ct, x1: bitstring);
+        event Iin_1(idDGI,sess,enc(s,k_81),x1);
+        new b1: bitstring;
+        event Iout_2(idDGI,sess,enc(s,k_81),x1,exp(g,b1));
+        out(ct, exp(g,b1));
+        in(ct, x2: bitstring);
+        event Iin_2(idDGI,sess,enc(s,k_81),x1,exp(g,b1),x2);
+        let (newG: bitstring) = gen(exp(g,s),exp(x1,b1)) in
+        event Itest_1(idDGI,sess,enc(s,k_81),x1,exp(g,b1),x2);
+        new b2: bitstring;
+        event Iout_3(idDGI,sess,enc(s,k_81),x1,exp(g,b1),x2,exp(newG,b2));
+        out(ct, exp(newG,b2));
+        in(ct, x3: bitstring);
+        event Iin_3(idDGI,sess,enc(s,k_81),x1,exp(g,b1),x2,exp(newG,b2),x3);
+        let (newKey: bitstring) = exp(x2,b2) in
+        if (mac((tagReader,exp(newG,b2)),newKey) = x3) then
+        event Itest_2(idDGI,sess,enc(s,k_81),x1,exp(g,b1),x2,exp(newG,b2),x3);
+        event Iout_4(idDGI,sess,enc(s,k_81),x1,exp(g,b1),x2,exp(newG,b2),x3,mac((tagPass,x2),newKey));
+        out(cr, mac((tagPass,x2),newKey));
+        in(ct, x2_82: bitstring);
+        event Iin_4(idDGI,sess,enc(s,k_81),x1,exp(g,b1),x2,exp(newG,b2),x3,mac((tagPass,x2),newKey),x2_82);
+        let ((=init,xrandR: bitstring)) = dec(x2_82,newKey) in
+        event Itest_3(idDGI,sess,enc(s,k_81),x1,exp(g,b1),x2,exp(newG,b2),x3,mac((tagPass,x2),newKey),x2_82);
+        new randT: bitstring;
+        event Iout_5(idDGI,sess,enc(s,k_81),x1,exp(g,b1),x2,exp(newG,b2),x3,mac((tagPass,x2),newKey),x2_82,enc(sign((randT,xrandR),skP),newKey));
+        out(ct, enc(sign((randT,xrandR),skP),newKey));
+        in(ct, x3_83: bitstring);
+        event Iin_5(idDGI,sess,enc(s,k_81),x1,exp(g,b1),x2,exp(newG,b2),x3,mac((tagPass,x2),newKey),x2_82,enc(sign((randT,xrandR),skP),newKey),x3_83);
+        if (dec(x3_83,newKey) = read) then
+        event Itest_4(idDGI,sess,enc(s,k_81),x1,exp(g,b1),x2,exp(newG,b2),x3,mac((tagPass,x2),newKey),x2_82,enc(sign((randT,xrandR),skP),newKey),x3_83);
+        event Iout_6(idDGI,sess,enc(s,k_81),x1,exp(g,b1),x2,exp(newG,b2),x3,mac((tagPass,x2),newKey),x2_82,enc(sign((randT,xrandR),skP),newKey),x3_83,enc((idDGI,sign(idDGI,skP)),newKey));
+        out(ct, enc((idDGI,sign(idDGI,skP)),newKey))
+      )|(
+        in(cr, y1: bitstring);
+        event Rin_1(idDGI,sess,y1);
+        new a1: bitstring;
+        event Rout_1(idDGI,sess,y1,exp(g,a1));
+        out(cr, exp(g,a1));
+        in(cr, y2: bitstring);
+        event Rin_2(idDGI,sess,y1,exp(g,a1),y2);
+        let (newG_84: bitstring) = gen(exp(g,dec(y1,k_81)),exp(y2,a1)) in
+        event Rtest_1(idDGI,sess,y1,exp(g,a1),y2);
+        new a2: bitstring;
+        event Rout_2(idDGI,sess,y1,exp(g,a1),y2,exp(newG_84,a2));
+        out(cr, exp(newG_84,a2));
+        in(cr, y3: bitstring);
+        event Rin_3(idDGI,sess,y1,exp(g,a1),y2,exp(newG_84,a2),y3);
+        if (y3 <> exp(newG_84,a2)) then
+        let (newKey_85: bitstring) = exp(y3,a2) in
+        event Rtest_2(idDGI,sess,y1,exp(g,a1),y2,exp(newG_84,a2),y3);
+        event Rout_3(idDGI,sess,y1,exp(g,a1),y2,exp(newG_84,a2),y3,mac((tagReader,y3),newKey_85));
+        out(cr, mac((tagReader,y3),newKey_85));
+        in(cr, y4: bitstring);
+        event Rin_4(idDGI,sess,y1,exp(g,a1),y2,exp(newG_84,a2),y3,mac((tagReader,y3),newKey_85),y4);
+        if (mac((tagPass,exp(newG_84,a2)),newKey_85) = y4) then
+        event Rtest_3(idDGI,sess,y1,exp(g,a1),y2,exp(newG_84,a2),y3,mac((tagReader,y3),newKey_85),y4);
+        new randR: bitstring;
+        event Rout_4(idDGI,sess,y1,exp(g,a1),y2,exp(newG_84,a2),y3,mac((tagReader,y3),newKey_85),y4,enc((init,randR),newKey_85));
+        out(cr, enc((init,randR),newKey_85));
+        in(cr, y3_86: bitstring);
+        event Rin_5(idDGI,sess,y1,exp(g,a1),y2,exp(newG_84,a2),y3,mac((tagReader,y3),newKey_85),y4,enc((init,randR),newKey_85),y3_86);
+        let (m_87: bitstring) = dec(y3_86,newKey_85) in
+        if (checksign(m_87,spk(skP)) = getmess(m_87)) then
+        event Rtest_4(idDGI,sess,y1,exp(g,a1),y2,exp(newG_84,a2),y3,mac((tagReader,y3),newKey_85),y4,enc((init,randR),newKey_85),y3_86);
+        event Rout_5(idDGI,sess,y1,exp(g,a1),y2,exp(newG_84,a2),y3,mac((tagReader,y3),newKey_85),y4,enc((init,randR),newKey_85),y3_86,enc(read,newKey_85));
+        out(cr, enc(read,newKey_85));
+        in(cr, y4_88: bitstring);
+        event Rin_6(idDGI,sess,y1,exp(g,a1),y2,exp(newG_84,a2),y3,mac((tagReader,y3),newKey_85),y4,enc((init,randR),newKey_85),y3_86,enc(read,newKey_85),y4_88);
+        let ((ydgi: bitstring,ysign: bitstring)) = dec(y4_88,newKey_85) in
+        if (checksign(ysign,spk(skP)) = ydgi) then
+        event Rtest_5(idDGI,sess,y1,exp(g,a1),y2,exp(newG_84,a2),y3,mac((tagReader,y3),newKey_85),y4,enc((init,randR),newKey_85),y3_86,enc(read,newKey_85),y4_88);
+        event Rout_6(idDGI,sess,y1,exp(g,a1),y2,exp(newG_84,a2),y3,mac((tagReader,y3),newKey_85),y4,enc((init,randR),newKey_85),y3_86,enc(read,newKey_85),y4_88,ok);
+        out(cr, ok)
+      ))
+)
+ | (!
+  new idDGI : bitstring;
+  new k_81 : bitstring;
+  out(c, idDGI);
+     !
+      new sess : bitstring;
+      ((
+        new s: bitstring;
+        event Iout_1(idDGI,sess,enc(s,k_81));
+        out(ct, enc(s,k_81));
+        in(ct, x1: bitstring);
+        event Iin_1(idDGI,sess,enc(s,k_81),x1);
+        new b1: bitstring;
+        event Iout_2(idDGI,sess,enc(s,k_81),x1,exp(g,b1));
+        out(ct, exp(g,b1));
+        in(ct, x2: bitstring);
+        event Iin_2(idDGI,sess,enc(s,k_81),x1,exp(g,b1),x2);
+        let (newG: bitstring) = gen(exp(g,s),exp(x1,b1)) in
+        event Itest_1(idDGI,sess,enc(s,k_81),x1,exp(g,b1),x2);
+        new b2: bitstring;
+        event Iout_3(idDGI,sess,enc(s,k_81),x1,exp(g,b1),x2,exp(newG,b2));
+        out(ct, exp(newG,b2));
+        in(ct, x3: bitstring);
+        event Iin_3(idDGI,sess,enc(s,k_81),x1,exp(g,b1),x2,exp(newG,b2),x3);
+        let (newKey: bitstring) = exp(x2,b2) in
+        if (mac((tagReader,exp(newG,b2)),newKey) = x3) then
+        event Itest_2(idDGI,sess,enc(s,k_81),x1,exp(g,b1),x2,exp(newG,b2),x3);
+        event Iout_4(idDGI,sess,enc(s,k_81),x1,exp(g,b1),x2,exp(newG,b2),x3,mac((tagPass,x2),newKey));
+        out(cr, mac((tagPass,x2),newKey));
+        in(ct, x2_82: bitstring);
+        event Iin_4(idDGI,sess,enc(s,k_81),x1,exp(g,b1),x2,exp(newG,b2),x3,mac((tagPass,x2),newKey),x2_82);
+        let ((=init,xrandR: bitstring)) = dec(x2_82,newKey) in
+        event Itest_3(idDGI,sess,enc(s,k_81),x1,exp(g,b1),x2,exp(newG,b2),x3,mac((tagPass,x2),newKey),x2_82);
+        new randT: bitstring;
+        event Iout_5(idDGI,sess,enc(s,k_81),x1,exp(g,b1),x2,exp(newG,b2),x3,mac((tagPass,x2),newKey),x2_82,enc(sign((randT,xrandR),skP),newKey));
+        out(ct, enc(sign((randT,xrandR),skP),newKey));
+        in(ct, x3_83: bitstring);
+        event Iin_5(idDGI,sess,enc(s,k_81),x1,exp(g,b1),x2,exp(newG,b2),x3,mac((tagPass,x2),newKey),x2_82,enc(sign((randT,xrandR),skP),newKey),x3_83);
+        if (dec(x3_83,newKey) = read) then
+        event Itest_4(idDGI,sess,enc(s,k_81),x1,exp(g,b1),x2,exp(newG,b2),x3,mac((tagPass,x2),newKey),x2_82,enc(sign((randT,xrandR),skP),newKey),x3_83);
+        event Iout_6(idDGI,sess,enc(s,k_81),x1,exp(g,b1),x2,exp(newG,b2),x3,mac((tagPass,x2),newKey),x2_82,enc(sign((randT,xrandR),skP),newKey),x3_83,enc((idDGI,sign(idDGI,skP)),newKey));
+        out(ct, enc((idDGI,sign(idDGI,skP)),newKey))
+      )|(
+        in(cr, y1: bitstring);
+        event Rin_1(idDGI,sess,y1);
+        new a1: bitstring;
+        event Rout_1(idDGI,sess,y1,exp(g,a1));
+        out(cr, exp(g,a1));
+        in(cr, y2: bitstring);
+        event Rin_2(idDGI,sess,y1,exp(g,a1),y2);
+        let (newG_84: bitstring) = gen(exp(g,dec(y1,k_81)),exp(y2,a1)) in
+        event Rtest_1(idDGI,sess,y1,exp(g,a1),y2);
+        new a2: bitstring;
+        event Rout_2(idDGI,sess,y1,exp(g,a1),y2,exp(newG_84,a2));
+        out(cr, exp(newG_84,a2));
+        in(cr, y3: bitstring);
+        event Rin_3(idDGI,sess,y1,exp(g,a1),y2,exp(newG_84,a2),y3);
+        if (y3 <> exp(newG_84,a2)) then
+        let (newKey_85: bitstring) = exp(y3,a2) in
+        event Rtest_2(idDGI,sess,y1,exp(g,a1),y2,exp(newG_84,a2),y3);
+        event Rout_3(idDGI,sess,y1,exp(g,a1),y2,exp(newG_84,a2),y3,mac((tagReader,y3),newKey_85));
+        out(cr, mac((tagReader,y3),newKey_85));
+        in(cr, y4: bitstring);
+        event Rin_4(idDGI,sess,y1,exp(g,a1),y2,exp(newG_84,a2),y3,mac((tagReader,y3),newKey_85),y4);
+        if (mac((tagPass,exp(newG_84,a2)),newKey_85) = y4) then
+        event Rtest_3(idDGI,sess,y1,exp(g,a1),y2,exp(newG_84,a2),y3,mac((tagReader,y3),newKey_85),y4);
+        new randR: bitstring;
+        event Rout_4(idDGI,sess,y1,exp(g,a1),y2,exp(newG_84,a2),y3,mac((tagReader,y3),newKey_85),y4,enc((init,randR),newKey_85));
+        out(cr, enc((init,randR),newKey_85));
+        in(cr, y3_86: bitstring);
+        event Rin_5(idDGI,sess,y1,exp(g,a1),y2,exp(newG_84,a2),y3,mac((tagReader,y3),newKey_85),y4,enc((init,randR),newKey_85),y3_86);
+        let (m_87: bitstring) = dec(y3_86,newKey_85) in
+        if (checksign(m_87,spk(skP)) = getmess(m_87)) then
+        event Rtest_4(idDGI,sess,y1,exp(g,a1),y2,exp(newG_84,a2),y3,mac((tagReader,y3),newKey_85),y4,enc((init,randR),newKey_85),y3_86);
+        event Rout_5(idDGI,sess,y1,exp(g,a1),y2,exp(newG_84,a2),y3,mac((tagReader,y3),newKey_85),y4,enc((init,randR),newKey_85),y3_86,enc(read,newKey_85));
+        out(cr, enc(read,newKey_85));
+        in(cr, y4_88: bitstring);
+        event Rin_6(idDGI,sess,y1,exp(g,a1),y2,exp(newG_84,a2),y3,mac((tagReader,y3),newKey_85),y4,enc((init,randR),newKey_85),y3_86,enc(read,newKey_85),y4_88);
+        let ((ydgi: bitstring,ysign: bitstring)) = dec(y4_88,newKey_85) in
+        if (checksign(ysign,spk(skP)) = ydgi) then
+        event Rtest_5(idDGI,sess,y1,exp(g,a1),y2,exp(newG_84,a2),y3,mac((tagReader,y3),newKey_85),y4,enc((init,randR),newKey_85),y3_86,enc(read,newKey_85),y4_88);
+        event Rout_6(idDGI,sess,y1,exp(g,a1),y2,exp(newG_84,a2),y3,mac((tagReader,y3),newKey_85),y4,enc((init,randR),newKey_85),y3_86,enc(read,newKey_85),y4_88,ok);
+        out(cr, ok)
+      ))
+)
 .
 process SYSTEM

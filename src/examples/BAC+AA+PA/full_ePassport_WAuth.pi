@@ -1,0 +1,288 @@
+
+(********   This file has been automatically generated using the tool UKano ********)
+
+(******************************************************)
+(*                                                    *)
+(*               BAC+PA+AA                            *)
+(*                                                    *)
+(******************************************************)
+
+(* ==THEORY== *)
+
+(* public communication channel *)
+free c : channel.
+free ct : channel.
+free cr : channel.
+
+(* constant values *)
+free hole : bitstring.
+free error_mac : bitstring.
+free init : bitstring.
+free read : bitstring.
+free ok : bitstring.
+
+ (* Encryption (with mac inside) *)
+ (* for better readability, we compact encryption+mac into the following
+    construction. We modeled this using pairs of encryption+mac in BAC sub-foler. *)
+fun enc(bitstring, bitstring) : bitstring.
+  reduc forall xm:bitstring, xk:bitstring;
+        dec(enc(xm, xk), xk) = xm.
+		       (* we check mac using idTest*)
+letfun idEnc(m:bitstring, k:bitstring) = enc(dec(m, k), k).
+
+ (* Signature *)
+fun spk(bitstring) : bitstring.
+fun sign (bitstring, bitstring) : bitstring.
+reduc forall m: bitstring , k:bitstring ;
+  getmess(sign(m, k)) = m.
+reduc forall m: bitstring , k:bitstring ;
+  checksign(sign(m, k), spk(k)) = m.
+
+(* generate new bitstring from seed from two bitstrings *)
+fun hashKey(bitstring, bitstring) : bitstring.
+
+
+(*  *)
+
+
+(* == DECLARATIONS OF EVENTS == *)
+event Rin_1(bitstring,bitstring,bitstring).
+event Rout_1(bitstring,bitstring,bitstring,bitstring).
+event Rin_2(bitstring,bitstring,bitstring,bitstring,bitstring).
+event Rtest_1(bitstring,bitstring,bitstring,bitstring,bitstring).
+event Rout_2(bitstring,bitstring,bitstring,bitstring,bitstring,bitstring).
+event Rin_3(bitstring,bitstring,bitstring,bitstring,bitstring,bitstring,bitstring).
+event Rtest_2(bitstring,bitstring,bitstring,bitstring,bitstring,bitstring,bitstring).
+event Rout_3(bitstring,bitstring,bitstring,bitstring,bitstring,bitstring,bitstring,bitstring).
+event Rin_4(bitstring,bitstring,bitstring,bitstring,bitstring,bitstring,bitstring,bitstring,bitstring).
+event Rtest_3(bitstring,bitstring,bitstring,bitstring,bitstring,bitstring,bitstring,bitstring,bitstring).
+event Rout_4(bitstring,bitstring,bitstring,bitstring,bitstring,bitstring,bitstring,bitstring,bitstring,bitstring).
+event Iout_1(bitstring,bitstring,bitstring).
+event Iin_1(bitstring,bitstring,bitstring,bitstring).
+event Itest_1(bitstring,bitstring,bitstring,bitstring).
+event Iout_2(bitstring,bitstring,bitstring,bitstring,bitstring).
+event Iin_2(bitstring,bitstring,bitstring,bitstring,bitstring,bitstring).
+event Itest_2(bitstring,bitstring,bitstring,bitstring,bitstring,bitstring).
+event Iout_3(bitstring,bitstring,bitstring,bitstring,bitstring,bitstring,bitstring).
+event Iin_3(bitstring,bitstring,bitstring,bitstring,bitstring,bitstring,bitstring,bitstring).
+event Itest_3(bitstring,bitstring,bitstring,bitstring,bitstring,bitstring,bitstring,bitstring).
+event Iout_4(bitstring,bitstring,bitstring,bitstring,bitstring,bitstring,bitstring,bitstring,bitstring).
+
+
+(* == DECLARATIONS OF QUERIES == *)
+query k:bitstring, n1:bitstring, n2:bitstring,
+      m1:bitstring, m2:bitstring;
+   (event(Itest_1(k,n1,m1,m2))  ==>
+   (event(Iin_1(k,n1,m1,m2))  ==>
+   (event(Rout_1(k,n2,m1,m2))  ==>
+   (event(Rin_1(k,n2,m1))  ==>
+   (event(Iout_1(k,n1,m1))))))).
+query k:bitstring, n1:bitstring, n2:bitstring,
+      m1:bitstring, m2:bitstring, m3:bitstring, m4:bitstring;
+   (event(Itest_2(k,n1,m1,m2,m3,m4))  ==>
+   (event(Iin_2(k,n1,m1,m2,m3,m4))  ==>
+   (event(Rout_2(k,n2,m1,m2,m3,m4))  ==>
+   (event(Rin_2(k,n2,m1,m2,m3))  ==>
+   (event(Iout_2(k,n1,m1,m2,m3))  ==>
+   (event(Iin_1(k,n1,m1,m2))  ==>
+   (event(Rout_1(k,n2,m1,m2))  ==>
+   (event(Rin_1(k,n2,m1))  ==>
+   (event(Iout_1(k,n1,m1))))))))))).
+query k:bitstring, n1:bitstring, n2:bitstring,
+      m1:bitstring, m2:bitstring, m3:bitstring, m4:bitstring, m5:bitstring, m6:bitstring;
+   (event(Itest_3(k,n1,m1,m2,m3,m4,m5,m6))  ==>
+   (event(Iin_3(k,n1,m1,m2,m3,m4,m5,m6))  ==>
+   (event(Rout_3(k,n2,m1,m2,m3,m4,m5,m6))  ==>
+   (event(Rin_3(k,n2,m1,m2,m3,m4,m5))  ==>
+   (event(Iout_3(k,n1,m1,m2,m3,m4,m5))  ==>
+   (event(Iin_2(k,n1,m1,m2,m3,m4))  ==>
+   (event(Rout_2(k,n2,m1,m2,m3,m4))  ==>
+   (event(Rin_2(k,n2,m1,m2,m3))  ==>
+   (event(Iout_2(k,n1,m1,m2,m3))  ==>
+   (event(Iin_1(k,n1,m1,m2))  ==>
+   (event(Rout_1(k,n2,m1,m2))  ==>
+   (event(Rin_1(k,n2,m1))  ==>
+   (event(Iout_1(k,n1,m1))))))))))))))).
+query k:bitstring, n1:bitstring, n2:bitstring,
+      m1:bitstring, m2:bitstring, m3:bitstring;
+   (event(Rtest_1(k,n2,m1,m2,m3))  ==>
+   (event(Rin_2(k,n2,m1,m2,m3))  ==>
+   (event(Iout_2(k,n1,m1,m2,m3))  ==>
+   (event(Iin_1(k,n1,m1,m2))  ==>
+   (event(Rout_1(k,n2,m1,m2))  ==>
+   (event(Rin_1(k,n2,m1))  ==>
+   (event(Iout_1(k,n1,m1))))))))).
+query k:bitstring, n1:bitstring, n2:bitstring,
+      m1:bitstring, m2:bitstring, m3:bitstring, m4:bitstring, m5:bitstring;
+   (event(Rtest_2(k,n2,m1,m2,m3,m4,m5))  ==>
+   (event(Rin_3(k,n2,m1,m2,m3,m4,m5))  ==>
+   (event(Iout_3(k,n1,m1,m2,m3,m4,m5))  ==>
+   (event(Iin_2(k,n1,m1,m2,m3,m4))  ==>
+   (event(Rout_2(k,n2,m1,m2,m3,m4))  ==>
+   (event(Rin_2(k,n2,m1,m2,m3))  ==>
+   (event(Iout_2(k,n1,m1,m2,m3))  ==>
+   (event(Iin_1(k,n1,m1,m2))  ==>
+   (event(Rout_1(k,n2,m1,m2))  ==>
+   (event(Rin_1(k,n2,m1))  ==>
+   (event(Iout_1(k,n1,m1))))))))))))).
+query k:bitstring, n1:bitstring, n2:bitstring,
+      m1:bitstring, m2:bitstring, m3:bitstring, m4:bitstring, m5:bitstring, m6:bitstring, m7:bitstring;
+   (event(Rtest_3(k,n2,m1,m2,m3,m4,m5,m6,m7))  ==>
+   (event(Rin_4(k,n2,m1,m2,m3,m4,m5,m6,m7))  ==>
+   (event(Iout_4(k,n1,m1,m2,m3,m4,m5,m6,m7))  ==>
+   (event(Iin_3(k,n1,m1,m2,m3,m4,m5,m6))  ==>
+   (event(Rout_3(k,n2,m1,m2,m3,m4,m5,m6))  ==>
+   (event(Rin_3(k,n2,m1,m2,m3,m4,m5))  ==>
+   (event(Iout_3(k,n1,m1,m2,m3,m4,m5))  ==>
+   (event(Iin_2(k,n1,m1,m2,m3,m4))  ==>
+   (event(Rout_2(k,n2,m1,m2,m3,m4))  ==>
+   (event(Rin_2(k,n2,m1,m2,m3))  ==>
+   (event(Iout_2(k,n1,m1,m2,m3))  ==>
+   (event(Iin_1(k,n1,m1,m2))  ==>
+   (event(Rout_1(k,n2,m1,m2))  ==>
+   (event(Rin_1(k,n2,m1))  ==>
+   (event(Iout_1(k,n1,m1))))))))))))))))).
+
+
+(* == PROTOCOL WITH EVENTS == *)
+let SYSTEM =
+new skP : bitstring;
+( !
+  new idDGI : bitstring;
+  new k_51 : bitstring;
+     !
+      new sess : bitstring;
+      ((
+        new nt: bitstring;
+        event Iout_1(idDGI,sess,nt);
+        out(ct, nt);
+        in(ct, x1: bitstring);
+        event Iin_1(idDGI,sess,nt,x1);
+        if (enc(dec(x1,k_51),k_51) = x1) then
+        (
+            let ((xnr: bitstring,=nt,xkr: bitstring)) = dec(x1,k_51) in
+            (
+                event Itest_1(idDGI,sess,nt,x1);
+                new kt: bitstring;
+                event Iout_2(idDGI,sess,nt,x1,enc((nt,xnr,kt),k_51));
+                out(ct, enc((nt,xnr,kt),k_51));
+                in(ct, x3: bitstring);
+                event Iin_2(idDGI,sess,nt,x1,enc((nt,xnr,kt),k_51),x3);
+                if (dec(x3,hashKey(kt,xkr)) = read) then
+                event Itest_2(idDGI,sess,nt,x1,enc((nt,xnr,kt),k_51),x3);
+                event Iout_3(idDGI,sess,nt,x1,enc((nt,xnr,kt),k_51),x3,enc((idDGI,sign(idDGI,skP)),hashKey(kt,xkr)));
+                out(ct, enc((idDGI,sign(idDGI,skP)),hashKey(kt,xkr)));
+                in(ct, x2: bitstring);
+                event Iin_3(idDGI,sess,nt,x1,enc((nt,xnr,kt),k_51),x3,enc((idDGI,sign(idDGI,skP)),hashKey(kt,xkr)),x2);
+                let ((=init,xrandR: bitstring)) = dec(x2,hashKey(kt,xkr)) in
+                event Itest_3(idDGI,sess,nt,x1,enc((nt,xnr,kt),k_51),x3,enc((idDGI,sign(idDGI,skP)),hashKey(kt,xkr)),x2);
+                new randT: bitstring;
+                event Iout_4(idDGI,sess,nt,x1,enc((nt,xnr,kt),k_51),x3,enc((idDGI,sign(idDGI,skP)),hashKey(kt,xkr)),x2,enc(sign((randT,xrandR),skP),hashKey(kt,xkr)));
+                out(ct, enc(sign((randT,xrandR),skP),hashKey(kt,xkr)))
+            )
+            else
+                out(ct, error_mac)
+        )
+        else
+            out(ct, error_mac)
+      )|(
+        in(cr, y1: bitstring);
+        event Rin_1(idDGI,sess,y1);
+        new nr: bitstring;
+        new kr: bitstring;
+        event Rout_1(idDGI,sess,y1,enc((nr,y1,kr),k_51));
+        out(cr, enc((nr,y1,kr),k_51));
+        in(cr, y2: bitstring);
+        event Rin_2(idDGI,sess,y1,enc((nr,y1,kr),k_51),y2);
+        let ((=y1,=nr,ykt: bitstring)) = dec(y2,k_51) in
+        event Rtest_1(idDGI,sess,y1,enc((nr,y1,kr),k_51),y2);
+        event Rout_2(idDGI,sess,y1,enc((nr,y1,kr),k_51),y2,enc(read,hashKey(ykt,kr)));
+        out(cr, enc(read,hashKey(ykt,kr)));
+        in(cr, y4: bitstring);
+        event Rin_3(idDGI,sess,y1,enc((nr,y1,kr),k_51),y2,enc(read,hashKey(ykt,kr)),y4);
+        let ((ydgi: bitstring,ysign: bitstring)) = dec(y4,hashKey(ykt,kr)) in
+        if (checksign(ysign,spk(skP)) = ydgi) then
+        event Rtest_2(idDGI,sess,y1,enc((nr,y1,kr),k_51),y2,enc(read,hashKey(ykt,kr)),y4);
+        new randR: bitstring;
+        event Rout_3(idDGI,sess,y1,enc((nr,y1,kr),k_51),y2,enc(read,hashKey(ykt,kr)),y4,enc((init,randR),hashKey(ykt,kr)));
+        out(cr, enc((init,randR),hashKey(ykt,kr)));
+        in(cr, y3: bitstring);
+        event Rin_4(idDGI,sess,y1,enc((nr,y1,kr),k_51),y2,enc(read,hashKey(ykt,kr)),y4,enc((init,randR),hashKey(ykt,kr)),y3);
+        let (m_52: bitstring) = dec(y3,hashKey(ykt,kr)) in
+        if (checksign(m_52,spk(skP)) = getmess(m_52)) then
+        event Rtest_3(idDGI,sess,y1,enc((nr,y1,kr),k_51),y2,enc(read,hashKey(ykt,kr)),y4,enc((init,randR),hashKey(ykt,kr)),y3);
+        event Rout_4(idDGI,sess,y1,enc((nr,y1,kr),k_51),y2,enc(read,hashKey(ykt,kr)),y4,enc((init,randR),hashKey(ykt,kr)),y3,ok);
+        out(cr, ok)
+      ))
+)
+ | (!
+  new idDGI : bitstring;
+  new k_51 : bitstring;
+  out(c, idDGI);
+     !
+      new sess : bitstring;
+      ((
+        new nt: bitstring;
+        event Iout_1(idDGI,sess,nt);
+        out(ct, nt);
+        in(ct, x1: bitstring);
+        event Iin_1(idDGI,sess,nt,x1);
+        if (enc(dec(x1,k_51),k_51) = x1) then
+        (
+            let ((xnr: bitstring,=nt,xkr: bitstring)) = dec(x1,k_51) in
+            (
+                event Itest_1(idDGI,sess,nt,x1);
+                new kt: bitstring;
+                event Iout_2(idDGI,sess,nt,x1,enc((nt,xnr,kt),k_51));
+                out(ct, enc((nt,xnr,kt),k_51));
+                in(ct, x3: bitstring);
+                event Iin_2(idDGI,sess,nt,x1,enc((nt,xnr,kt),k_51),x3);
+                if (dec(x3,hashKey(kt,xkr)) = read) then
+                event Itest_2(idDGI,sess,nt,x1,enc((nt,xnr,kt),k_51),x3);
+                event Iout_3(idDGI,sess,nt,x1,enc((nt,xnr,kt),k_51),x3,enc((idDGI,sign(idDGI,skP)),hashKey(kt,xkr)));
+                out(ct, enc((idDGI,sign(idDGI,skP)),hashKey(kt,xkr)));
+                in(ct, x2: bitstring);
+                event Iin_3(idDGI,sess,nt,x1,enc((nt,xnr,kt),k_51),x3,enc((idDGI,sign(idDGI,skP)),hashKey(kt,xkr)),x2);
+                let ((=init,xrandR: bitstring)) = dec(x2,hashKey(kt,xkr)) in
+                event Itest_3(idDGI,sess,nt,x1,enc((nt,xnr,kt),k_51),x3,enc((idDGI,sign(idDGI,skP)),hashKey(kt,xkr)),x2);
+                new randT: bitstring;
+                event Iout_4(idDGI,sess,nt,x1,enc((nt,xnr,kt),k_51),x3,enc((idDGI,sign(idDGI,skP)),hashKey(kt,xkr)),x2,enc(sign((randT,xrandR),skP),hashKey(kt,xkr)));
+                out(ct, enc(sign((randT,xrandR),skP),hashKey(kt,xkr)))
+            )
+            else
+                out(ct, error_mac)
+        )
+        else
+            out(ct, error_mac)
+      )|(
+        in(cr, y1: bitstring);
+        event Rin_1(idDGI,sess,y1);
+        new nr: bitstring;
+        new kr: bitstring;
+        event Rout_1(idDGI,sess,y1,enc((nr,y1,kr),k_51));
+        out(cr, enc((nr,y1,kr),k_51));
+        in(cr, y2: bitstring);
+        event Rin_2(idDGI,sess,y1,enc((nr,y1,kr),k_51),y2);
+        let ((=y1,=nr,ykt: bitstring)) = dec(y2,k_51) in
+        event Rtest_1(idDGI,sess,y1,enc((nr,y1,kr),k_51),y2);
+        event Rout_2(idDGI,sess,y1,enc((nr,y1,kr),k_51),y2,enc(read,hashKey(ykt,kr)));
+        out(cr, enc(read,hashKey(ykt,kr)));
+        in(cr, y4: bitstring);
+        event Rin_3(idDGI,sess,y1,enc((nr,y1,kr),k_51),y2,enc(read,hashKey(ykt,kr)),y4);
+        let ((ydgi: bitstring,ysign: bitstring)) = dec(y4,hashKey(ykt,kr)) in
+        if (checksign(ysign,spk(skP)) = ydgi) then
+        event Rtest_2(idDGI,sess,y1,enc((nr,y1,kr),k_51),y2,enc(read,hashKey(ykt,kr)),y4);
+        new randR: bitstring;
+        event Rout_3(idDGI,sess,y1,enc((nr,y1,kr),k_51),y2,enc(read,hashKey(ykt,kr)),y4,enc((init,randR),hashKey(ykt,kr)));
+        out(cr, enc((init,randR),hashKey(ykt,kr)));
+        in(cr, y3: bitstring);
+        event Rin_4(idDGI,sess,y1,enc((nr,y1,kr),k_51),y2,enc(read,hashKey(ykt,kr)),y4,enc((init,randR),hashKey(ykt,kr)),y3);
+        let (m_52: bitstring) = dec(y3,hashKey(ykt,kr)) in
+        if (checksign(m_52,spk(skP)) = getmess(m_52)) then
+        event Rtest_3(idDGI,sess,y1,enc((nr,y1,kr),k_51),y2,enc(read,hashKey(ykt,kr)),y4,enc((init,randR),hashKey(ykt,kr)),y3);
+        event Rout_4(idDGI,sess,y1,enc((nr,y1,kr),k_51),y2,enc(read,hashKey(ykt,kr)),y4,enc((init,randR),hashKey(ykt,kr)),y3,ok);
+        out(cr, ok)
+      ))
+)
+.
+process SYSTEM
