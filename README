@@ -69,8 +69,6 @@ automatically should be of the form: 'choice[u,uh]' where 'u' is the real
 message outputted by the protocol and 'uh' is the idealization of any concrete
 message outputted here (by using the constant 'hole' instead of holes).
 
-Finally, 
-
 See the folder 'examples/' to see some examples of such files.
 
 [1] Submitted paper
