@@ -1,5 +1,8 @@
 #!/bin/sh
 
+echo "It is better to use the Makefile in src/."
+echo ""
+
 cd src
 
 ocamlyacc parser.mly
