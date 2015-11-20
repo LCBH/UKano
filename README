@@ -51,8 +51,9 @@ if the corresponding 'else' branches are the same. You can also use most
 of syntactical sugars allowed by ProVerif (e.g., modular definitions
 through definitions of functions and call, etc.).
 Finally, to check anonymity as well, identity names to be revealed
-(and only them) must have 'id' as prefix (e.g.,  id-name). 
+(and only them) must have 'id' as prefix (e.g.,  idName). 
 
+Improve precision:
 Note that, currently, UKano does not detect safe conditionals and consider
 all conditiionals unsafe by default. Thus, in case some queries in the 
 file checking well-authentication cannot be proved, you should remove them
@@ -67,6 +68,8 @@ automatically should be of the form: 'choice[u,uh]' where 'u' is the real
 message outputted by the protocol and 'uh' is the idealization of any concrete
 message outputted here (by using the constant 'hole' instead of holes).
 
-See the folder 'examples/' for see some examples of such files.
+Finally, 
+
+See the folder 'examples/' to see some examples of such files.
 
 [1] Submitted paper
