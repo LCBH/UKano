@@ -306,14 +306,24 @@ let pushNames proto =
 	 let otherNames = List.filter (fun n -> not(List.mem n needNames)) accNames in
 	 addNames needNames (Output(tc,tm,pushN otherNames p, occ))
        else Output(tc,tm,pushN accNames p, occ)
-    | Let (patx,t,pt,pe,occ) -> (* is there a needed name in accNames ? *)
-       let needNames = List.filter (fun name -> Terms.occurs_f name t) accNames in
+    | Let (patx,t,pt,pe,occ) -> (* is there a needed name in accNames ? Here, we should
+                                   avoid to interleave creation of names and Let/If constructs
+                                   (to avoid conflicting with display.ml hack for FO).
+                                   We thus check for all next Let/Test. *)
+       let rec accTermsTests acc = function
+	 | Let (_,t',pt',_,_) -> accTermsTests (t' :: acc) pt'
+         | Test (t',pt',_,_) -> accTermsTests (t' :: acc) pt'
+	 | _ -> acc in
+       let nextTermsTests = accTermsTests [t] pt in
+       let needNames = List.filter (fun name ->
+				    List.exists (fun term -> Terms.occurs_f name term) nextTermsTests
+				   ) accNames in
        if needNames <> []
        then 
 	 let otherNames = List.filter (fun n -> not(List.mem n needNames)) accNames in
 	 addNames needNames (Let (patx,t,pushN otherNames pt, pushN otherNames pe, occ))
        else Let (patx,t,pushN accNames pt, pushN accNames pe, occ)
-    | Test (t,pt,pe,occ)-> (* is there a needed name in accNames ? *)
+    | Test (t,pt,pe,occ) -> (* is there a needed name in accNames ? *)
        let needNames = List.filter (fun name -> Terms.occurs_f name t) accNames in
        if needNames <> []
        then 
