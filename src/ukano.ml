@@ -1,15 +1,14 @@
 (*************************************************************
  *                                                           *
- *  UKANO: UnlinKability and ANOnymity verifier              *
+ *  UKano: UnlinKability and ANOnymity verifier              *
  *                                                           *
  *  Lucca Hirschi                                            *
- *                                                           *
- *  Copyright (C) 2015                                       *
+ *  http://projects.lsv.ens-cachan.fr/ukano/                 *
+ *  Copyright (C) 2015-2016                                  *
  *                                                           *
  *************************************************************)
 
 (*
-
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation; either version 2 of the License, or
@@ -25,14 +24,13 @@
     Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
  *)
-(* This module provides functions from the UnlinKability and ANOnymity
-   verifier built on top of ProVerif as described in the following paper:
-      L. Hirschi, D. Baelde and S. Delaune.
-      A Method for Verifying Privacy-Type Properties : The Unbounded Case.
-      In IEEE Symposium on Security and Privacy (Oakland), 2016. To appear.
-   A copy can be found at http://projects.lsv.ens-cachan.fr/ukano/ *)
+(** This module provides functions from the UnlinKability and ANOnymity
+    verifier built on top of ProVerif as described in the following paper:
+    [1] L. Hirschi, D. Baelde and S. Delaune.
+        A Method for Verifying Privacy-Type Properties : The Unbounded Case.
+        In IEEE Symposium on Security and Privacy (Oakland), 2016. To appear.
+    A copy can be found at http://projects.lsv.ens-cachan.fr/ukano/ *)
 
-(* [1]: Submitted paper *)
 
 open Types
 open Pervasives

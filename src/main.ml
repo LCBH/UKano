@@ -27,7 +27,6 @@
 *)
 open Types
 open Parsing_helper
-open Ukano
 
 type out_pos =
     Spass
@@ -51,7 +50,7 @@ let out_file = ref ""
 
 let out_n = ref 0
 
-(* This is only for debugging purpose. TODO: remove this *)
+(* This is only for debugging purpose. *)
 let log s = Display.Text.print_string s;Display.Text.newline()
 
 let up_out = function
@@ -322,7 +321,7 @@ let interface_for_merging_process p =
 let first_file = ref true
 
 let anal_file s =
-  if !Param.trad_ukano && (s = "help" or s="") then begin Printf.printf "Error, you should enter a filename.\n%s\n" (Ukano.helpMess); exit(0); end;
+  if !Param.trad_ukano && (s = "help" || s="") then begin Printf.printf "Error, you should enter a filename.\n%s\n" (Ukano.helpMess); exit(0); end;
   if not (!first_file) then
     Parsing_helper.user_error "Error: You can analyze a single ProVerif file for each run of ProVerif.\nPlease rerun ProVerif with your second file.\n";
   first_file := false;
@@ -381,7 +380,7 @@ let anal_file s =
 	    Pitransl.move_new p0
 	  else p0 in
 	  
-	(* Effet de bord: orient les égalités --> réductions *)
+	(* Compute reductions rules from equations *)
 	TermsEq.record_eqs_with_destr();
 	
 	(* Check if destructors are deterministic *)
@@ -510,6 +509,8 @@ let anal_file s =
 	  end
 	  else if !Param.trad_ukano
 	  then begin
+	      (* BEGIN UKANO *)
+	      (* Compute filename for the two produced ProVerif files *)
 	      let fileNameC1, fileNameC2 =
 		try let splitDot = (Str.split (Str.regexp_string ".") s) in
 		    let prefix =
@@ -519,8 +520,10 @@ let anal_file s =
 		    let prefixRel = if prefix.[0] = '/' then "."^prefix else prefix in
 		    (prefixRel^"_FOpa.pi", prefixRel^"_WAuth.pi")
 		with _ -> ("OUTPUT_FOpa.pi","OUTPUT_WAuth.pi") in
+	      (* Compute and create the two ProVerif files checking the two conditions *)
 	      Ukano.transC1 p s fileNameC1;
 	      Ukano.transC2 p s fileNameC2;
+	      (* END UKANO *)
 	    end else begin
 	      
 	      if !Param.html_output then
