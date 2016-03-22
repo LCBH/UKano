@@ -38,7 +38,11 @@ open Pervasives
 let pp s= Printf.printf "%s" s
 
 (* For debugging purpose *)
-let log s = Printf.printf "> %s\n" s
+let log s = Printf.printf "> %s\n%!" s
+let debug = ref false
+
+(* For enabling new theory *)
+let newCases = Param.newCases	
 
 let splitTheoryString = "==PROTOCOL=="
 
@@ -65,6 +69,9 @@ type proto = {
     comNames : funsymb list;	(* common names of all agents (created before the first !)  *)
     idNames : funsymb list;	(* identity names *)
     idNamesANO : funsymb list;	(* subset of identity names to be revealed for anonymity *)
+    idNamesShared : funsymb list; (* identity names shared by Ini and Res *)
+    idNamesIni : funsymb list;	  (* identity names of ini *)
+    idNamesRes : funsymb list;	  (* identity names of res *)
     sessNames : funsymb list;	(* session names *)
     ini : process;		(* (open) process of the initiator *)
     res : process;		(* (open) process of the responder *)
@@ -79,9 +86,28 @@ let makeOcc () = Terms.new_occurrence ()
 (* Parsing Protocols                                        *)
 (************************************************************)
 
+let rec remove_dups lst= match lst with
+  | [] -> []
+  | h::t -> h::(remove_dups (List.filter (fun x -> x<>h) t))
+
 (** Extract the protocol structure from a process and rise NotInClass if
     not of the expected form. *)
 let extractProto process = 
+  (* Compute free names of roles *)
+  let rec freeNames = function
+    | Nil -> []
+    | Input (_,_,p,_)  -> freeNames p
+    | Output (_,tm,p,_) ->
+       let newNames = Terms.list_f tm in
+       newNames @ (freeNames p)
+    | Let (pat,t,pt,pe,_) -> 
+       let newNames = (Terms.list_f_pat pat) @ (Terms.list_f t) in
+       newNames @ (freeNames pe) @ (freeNames pt)
+    | Test (tm,pt,pe,_) ->
+       let newNames = Terms.list_f tm in
+       newNames @ (freeNames pe) @ (freeNames pt)
+    | Restr (_, _, p, _) -> freeNames p
+    | p -> errorClass ("Only Nul,Input,Output,Test, Let and creation of names are allowed in roles.") p in
   (* Accumulate all names from all starting creation of names and return the
      list of name plus the continuation of the protocol *)
   let rec getNames acc = function
@@ -168,10 +194,26 @@ let extractProto process =
 	     let idNamesANO = List.filter 
 				(fun s -> (String.length s.f_name) >= 2 && (s.f_name.[0] = 'i') && (s.f_name.[1] = 'd'))
 				idNames in
+	     let freeNamesIni, freeNamesRes = (freeNames iniPclean), (freeNames resPclean) in
+	     let idNamesIni =  List.filter (fun n -> List.mem n idNames) (remove_dups freeNamesIni) in
+	     let idNamesRes =  List.filter (fun n -> List.mem n idNames) (remove_dups (freeNamesRes)) in
+	     let idNamesShared = List.filter (fun n -> List.mem n idNamesRes) idNamesIni in
+	     let isNewCase = ref false in
+	     if List.length idNamesShared = 0
+	     then begin isNewCase := true; log "Warning: No identity name is shared between initiator and responder. This may cause false negative."; end;
+	     if  List.length idNamesIni = 0
+	     then begin isNewCase := true; log "Warning: Initiator does not use any identity name. This may cause false negative."; end;
+	     if List.length idNamesRes = 0
+	     then begin isNewCase := true; log "Warning: Responder does not use any identity name. This may cause false negative."; end;
+	     if !isNewCase && !newCases
+	     then log "==> This is why we are going to use a new functionality in beta to deal with the new kind of scenario you gave as input.";
 	     {
 	       comNames = comNames;
 	       idNames = idNames;
 	       idNamesANO = idNamesANO;
+	       idNamesShared =idNamesShared ;
+	       idNamesIni = idNamesIni;
+	       idNamesRes = idNamesRes;
 	       sessNames = sessName :: (List.rev sessNames) @ (List.rev iniN) @ (List.rev resN);
 	       ini = iniPclean;
 	       res = resPclean;
@@ -192,9 +234,15 @@ let displayProtocol proto =
   pp  "\n   Identity Names: ";
   List.iter (fun s -> Display.Text.display_function_name s; pp ", ") proto.idNames;
   pp  "\n   Session Names:  ";   
-  List.iter (fun s -> Display.Text.display_function_name s; pp ", ") proto.idNamesANO;
-  pp  "\n   Session Names to be revealed for ANO:  ";   
   List.iter (fun s -> Display.Text.display_function_name s; pp ", ") proto.sessNames;
+  pp  "\n   Session Names to be revealed for ANO:  ";   
+  List.iter (fun s -> Display.Text.display_function_name s; pp ", ") proto.idNamesANO;
+  pp  "\n   Shared identity names:  ";   
+  List.iter (fun s -> Display.Text.display_function_name s; pp ", ") proto.idNamesShared;
+  pp  "\n   Identity names of initiator:  ";   
+  List.iter (fun s -> Display.Text.display_function_name s; pp ", ") proto.idNamesIni;
+  pp  "\n   Identity names of responder:  ";   
+  List.iter (fun s -> Display.Text.display_function_name s; pp ", ") proto.idNamesRes;
   let sep = "      >   " in
   pp  "\n   Initiator:\n";
   Display.Text.display_process sep proto.ini;
@@ -395,11 +443,11 @@ let makeEvent name args =
   FunApp (funSymbEvent, args)
 				      
 (** Display a whole ProVerif file checking the first condition except for the theory (to be appended). *)      
-let transC2 p inNameFile nameOutFile = 
-  let proto = cleanChoice (extractProto p) in
+let transC2 proto p inNameFile nameOutFile = 
+  let proto = cleanChoice proto in
   let (sessName,idName) =
     try (List.hd proto.sessNames, List.hd proto.idNames) (* 2 funSymb *)
-    with _ -> failwith "The protocol shoulv have at least one identity name and one session name." in
+    with _ -> failwith "The protocol should have at least one identity name and one session name." in
   let (sessTerm,idTerm) = FunApp (sessName, []), FunApp (idName, []) in
   let listEvents = ref [] in
   let iniPrefix, resPrefix = "I", "R" in
@@ -467,8 +515,10 @@ let transC2 p inNameFile nameOutFile =
     goThrough [] [] [] proc in
 
   (* Generate a string for a query *)
-  let generateQuery nb nbIn isInitiator =
-    let prefix = "query k:bitstring, n1:bitstring, n2:bitstring,\n" in
+  let generateQuery isShared nb nbIn isInitiator =
+    let prefix = if isShared
+		 then "query k:bitstring, n1:bitstring, n2:bitstring,\n"
+		 else "query k1:bitstring, k2:bitstring, n1:bitstring, n2:bitstring,\n" in
     let nbArgs = if isInitiator	(* number of arguments to declare for this query *)
 		 then 2*nbIn
 		 else 2*nbIn-1 in
@@ -476,7 +526,10 @@ let transC2 p inNameFile nameOutFile =
     let listArgs nb = 		(* generate a list of messages to give as arguments to events *)
       List.map (fun n -> Printf.sprintf "m%d" n) (List.rev (range nb)) in      
     let allListArgs nb role = 
-      "k" :: (if role==iniPrefix then "n1" else "n2") :: (listArgs nb) in
+      if isShared
+      then "k" :: (if role==iniPrefix then "n1" else "n2") :: (listArgs nb)
+      else (if role==iniPrefix then "k1" else "k2") ::
+	     (if role==iniPrefix then "n1" else "n2") :: (listArgs nb) in
     let listArgsDec = listArgs nbArgs in      
     let prefixArgs = "      "^
 		       (String.concat ", "
@@ -517,8 +570,13 @@ let transC2 p inNameFile nameOutFile =
 		      ini = iniEvents;
 		      res = resEvents;
 		    } in
-  let allQueries = (List.map (fun (nb,nbIn) -> generateQuery nb nbIn true) iniTests) @ 
-		     (List.map (fun (nb,nbIn) -> generateQuery nb nbIn false) resTests) in
+  let isShared = if not(!newCases)
+		 then true
+		 else List.length proto.idNamesShared > 0 in
+  if not(isShared)
+  then log "Warning: We create events using a new functionality in beta to deal with the new kind of scenario you gave as input.";
+  let allQueries = (List.map (fun (nb,nbIn) -> generateQuery isShared nb nbIn true) iniTests) @ 
+		     (List.map (fun (nb,nbIn) -> generateQuery isShared nb nbIn false) resTests) in
 
   let displayEventsDec listEvents =
     let rec nBit = function
@@ -533,6 +591,7 @@ let transC2 p inNameFile nameOutFile =
   let theoryStr = theoryStr inNameFile in
   
   (* -- 3. -- Print evrything using a HACK TO REDIRECT STDOUT *)
+  let old_descr = Unix.dup Unix.stdout in
   let newstdout = open_out nameOutFile in
   print_newline ();		(* for flushing stdout *)
   Unix.dup2 (Unix.descr_of_out_channel newstdout) Unix.stdout;
@@ -549,7 +608,9 @@ let transC2 p inNameFile nameOutFile =
   pp "let SYSTEM =\n";
   let toDisplay = pushNames protoEvents in
   displayProtocolProcess toDisplay;
-  pp ".\nprocess SYSTEM\n"
+  Printf.printf ".\nprocess SYSTEM\n%!";
+  close_out newstdout;
+  Unix.dup2 old_descr Unix.stdout
 (* END OF REDIRECTION *)
 
 
@@ -608,10 +669,8 @@ let debugFunSymb f =
     f.f_options
     
 (** Display a whole ProVerif file checking the first condition except for the theory (to be appended). *)      
-let transC1 p inNameFile nameOutFile = 
-  let proto = extractProto p in
-
-  (* -- 1. -- Build nonce versions on the right *)
+let transC1 proto p inNameFile nameOutFile = 
+    (* -- 1. -- Build nonce versions on the right *)
   let nonTransparentSymbList = ["enc"; "aenc"; "dec"; "adec"; "h"; "hash"; "xor"] in
   let isName funSymb = match funSymb.f_cat with Name _ -> true | _ -> false in
   let isPrivate funSymb = funSymb.f_private in
@@ -759,11 +818,12 @@ let transC1 p inNameFile nameOutFile =
   let theoryStr = theoryStr inNameFile in
 
   (* -- 4. -- Print evrything using a HACK TO REDIRECT STDOUT *)
+  let old_descr = Unix.dup Unix.stdout in
   let newstdout = open_out nameOutFile in
   print_newline ();		(* for flushing stdout *)
   Unix.dup2 (Unix.descr_of_out_channel newstdout) Unix.stdout;
   (* Print (=write in the file) the complete ProVerif file *)
-(*  pp "\n\n(* == THEORY == *)\n"; *)
+  (*  pp "\n\n(* == THEORY == *)\n"; *)
   pp "\n(********   This file has been automatically generated using the tool UKano ********)\n\n";
   pp theoryStr;
   pp " *)\n";
@@ -771,11 +831,24 @@ let transC1 p inNameFile nameOutFile =
   pp "let SYSTEM =\n";
   let toDisplay = pushNames cond1Proto in
   displayProtocolProcess toDisplay;
-  pp ".\nprocess SYSTEM\n"
+  Printf.printf ".\nprocess SYSTEM\n%!";
+  close_out newstdout;
+  Unix.dup2 old_descr Unix.stdout
 (* END OF REDIRECTION *)
 
 
-
+(** [transC2 p inNameFile outNameFileC1 outNameFileC2] writes in the files [outNameFileC_] complete ProVerif files checking respectively
+frame opacity and well-authentication for the process [p] and the theory contained in [inNameFile]. *)
+let transBoth  p inNameFile nameOutFileFO nameOutFileWA = 
+  let proto1 = extractProto p in
+  let proto2 = { proto1 with
+		 ini = proto1.ini;
+		 res = proto1.res } in
+  if !debug then
+    displayProtocol proto1;
+  transC1 proto1 p inNameFile nameOutFileFO;
+  transC2 proto2 p inNameFile nameOutFileWA
+  
 (* To implement later on: *)
 (** Check Frame Opacity (outptuis are relation-free). *)
 let checkC1 p = failwith "Not Implemented"

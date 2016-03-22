@@ -214,3 +214,5 @@ val elim_true : Types.fact list ref
 
 (* ukano translator *)
 val trad_ukano : bool ref
+(* beta mode for ukano translator for new senarios *)
+val newCases : bool ref

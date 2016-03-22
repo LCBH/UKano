@@ -37,13 +37,9 @@ val helpMess : string
 (** If the inputted process is not in the "2-agents protocol class" (see [1]). *)
 exception NotInClass of string
 
-(** [transC1 p inNameFile outNameFile] writes in the file [outNameFile] a complete ProVerif file checking frame opacity for
-    the process [p] and the theory contained in [inNameFile]. *)
-val transC1 : Types.process -> string -> string -> unit
-
-(** [transC2 p inNameFile outNameFile] writes in the file [outNameFile] a complete ProVerif file checking well-authentication for
-    the process [p] and the theory contained in [inNameFile]. *)
-val transC2 : Types.process -> string -> string -> unit
+(** [transC2 p inNameFile outNameFileC1 outNameFileC2] writes in the files [outNameFileC_] complete ProVerif files checking respectively
+frame opacity and well-authentication for the process [p] and the theory contained in [inNameFile]. *)
+val transBoth : Types.process -> string -> string -> string -> unit
 
 (** Display a representation of the 2-agents protocol associated to a given process. *)
 val displayProcessProtocol : Types.process -> unit

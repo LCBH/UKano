@@ -113,6 +113,10 @@ val occurs_f : funsymb -> term -> bool
 val occurs_f_pat : funsymb -> pattern -> bool
 val occurs_f_fact : funsymb -> fact -> bool
 
+(* [list_f t] returns a list of function symbols in [t] *)
+val list_f : term -> funsymb list
+val list_f_pat : pattern -> funsymb list
+
 (* Syntactic equality *)
 val equal_terms : term -> term -> bool
 val equals_term_pair : 'a * term -> 'a * term -> bool

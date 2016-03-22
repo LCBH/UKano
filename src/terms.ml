@@ -317,6 +317,27 @@ let is_failure = function
   | FunApp(f,[]) when f.f_cat = Failure -> true
   | _ -> false
 
+let rec remove_dups  = function
+  | [] -> []
+  | h::t -> h::(remove_dups (List.filter (fun x -> x<>h) t))
+		 
+let rec list_f t =
+  let isName funSymb = match funSymb.f_cat with Name _ -> true | _ -> false in
+  let rec aux = function
+    | Var _ -> []
+    | FunApp(f',l) ->
+       if isName f'
+       then f' :: (List.concat (List.map aux l))
+       else List.concat (List.map aux l) in
+  remove_dups (aux t)
+      
+let rec list_f_pat p =
+  let rec aux = function
+    | PatVar _ -> []
+    | PatTuple (_,l) -> List.concat (List.map aux l)
+    | PatEqual t -> list_f t in
+  remove_dups (aux p)
+
 (* Equality tests *)
 
 let rec equal_terms t1 t2 = match (t1,t2) with

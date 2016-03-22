@@ -21,7 +21,7 @@ FILE_WA=$NAME$WA_SU
 
 echo ""
 echo "## Loading your file and translating...                                          "
-$PRO -ukano $FILE
+$PRO -ukano -beta $FILE
 
 echo "Created files: $FILE_FO, $FILE_WA."
 

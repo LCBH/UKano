@@ -521,8 +521,7 @@ let anal_file s =
 		    (prefixRel^"_FOpa.pi", prefixRel^"_WAuth.pi")
 		with _ -> ("OUTPUT_FOpa.pi","OUTPUT_WAuth.pi") in
 	      (* Compute and create the two ProVerif files checking the two conditions *)
-	      Ukano.transC1 p s fileNameC1;
-	      Ukano.transC2 p s fileNameC2;
+	      Ukano.transBoth p s fileNameC1 fileNameC2;
 	      (* END UKANO *)
 	    end else begin
 	      
@@ -815,7 +814,11 @@ let _ =
 		Param.trad_ukano := true;
 		in_kind :=PiType),
       "Use Proverif to check UnlinKability and ANOnymity as explained in our paper. This mode only accepts pitype files. Type './proverif -ukano help' for more details.";
-    (* todo ref/hyperref *)
+      "-beta",
+      Arg.Unit (fun () -> 
+		Param.newCases := true),
+      "Enable beta mode to deal with new senarios.";
+      (* todo ref/hyperref *)
     ]
     anal_file "Proverif. Cryptographic protocol verifier, by Bruno Blanchet and Vincent Cheval";
   if !gc then Gc.print_stat stdout
