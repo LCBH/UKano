@@ -26,7 +26,11 @@
 
  *)
 (* This module provides functions from the UnlinKability and ANOnymity
-   verifier built on top of ProVerif as described in [1]. *)
+   verifier built on top of ProVerif as described in the following paper:
+      L. Hirschi, D. Baelde and S. Delaune.
+      A Method for Verifying Privacy-Type Properties : The Unbounded Case.
+      In IEEE Symposium on Security and Privacy (Oakland), 2016. To appear.
+   A copy can be found at http://projects.lsv.ens-cachan.fr/ukano/ *)
 
 (* [1]: Submitted paper *)
 

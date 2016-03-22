@@ -1,9 +1,11 @@
-This is a modified version of the ProVerif tool including automatic verification
-of anonymity and unlinkability of 2-agents protocols.
-See http://www.lsv.ens-cachan.fr/tools/ukano.php for more details.
+This is a modified version of the ProVerif tool including automatic
+verification of anonymity and unlinkability of 2-agents protocols.
+See http://projects.lsv.ens-cachan.fr/ukano/ for more details and the
+underlying theory.
 
+The file README contains the README file of UKano.
 
-Origial: README of ProVerif.
+Original: README of ProVerif.
 Protocol verifier, copyright INRIA-CNRS, by Bruno Blanchet 
 and Vincent Cheval, 2000-2015.
 
