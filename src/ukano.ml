@@ -173,7 +173,7 @@ let extractProto process =
     | Let (patx,t,pt,pe,occ) -> Let (patx,t,removeRestr pt, removeRestr pe, occ)
     | Test (t,pt,pe,occ)-> Test(t,removeRestr pt, removeRestr pe,occ)
     | Restr (_,_,p,_) -> removeRestr p
-    | p -> errorClass ("Critical error, should never happen.") p in
+    | p -> errorClass ("Critical error, should never happen [1].") p in
   (* We now match the whole system against its expected form *)
   match (getNames [] process) with
   | (comNames, Repl (idProc,_)) ->
@@ -396,9 +396,9 @@ let pushNames proto =
 	 let otherNames = List.filter (fun n -> not(List.mem n needNames)) accNames in
 	 addNames needNames (Par (pushN otherNames p1, p2))
        else Par (pushN accNames p1, p2) 
-    | Par (_,_) as p -> errorClass ("[UKANO] [pushN] [PAR] Critical error, should never happen.") p
+    | Par (_,_) as p -> errorClass ("[UKANO] [pushN] [PAR] Critical error, should never happen [2].") p
     | Restr (_,_,_,_) -> failwith "WHAT RESTR"
-    | p -> errorClass ("[UKANO] [pushN]Critical error, should never happen.") p in
+    | p -> errorClass ("[UKANO] [pushN]Critical error, should never happen [6].") p in
   {
     proto with
     ini = pushN sessNames proto.ini;
@@ -423,7 +423,7 @@ let cleanChoice proto =
     | Let (patx,t,pt,pe,occ) -> Let (patx,t,rmProc pt, rmProc pe, occ)
     | Test (t,pt,pe,occ)-> Test(t,rmProc pt, rmProc pe,occ)
     | Restr (_,_,p,_) -> rmProc p
-    | p -> errorClass ("Critical error, should never happen.") p in
+    | p -> errorClass ("Critical error, should never happen [4].") p in
   { proto with
     ini = rmProc proto.ini;
     res = rmProc proto.res;
@@ -445,6 +445,7 @@ let makeEvent name args =
 (** Display a whole ProVerif file checking the first condition except for the theory (to be appended). *)      
 let transC2 proto p inNameFile nameOutFile = 
   let proto = cleanChoice proto in
+
   let (sessName,idName) =
     try (List.hd proto.sessNames, List.hd proto.idNames) (* 2 funSymb *)
     with _ -> failwith "The protocol should have at least one identity name and one session name." in
@@ -457,7 +458,7 @@ let transC2 proto p inNameFile nameOutFile =
     let newArgs = idTerm :: sessTerm :: args in
     let event = makeEvent name newArgs in
     listEvents := (name, List.length newArgs) :: !listEvents;
-    Event (event, p, makeOcc())in
+    Event (event, p, makeOcc()) in
 
   (* add all events to a role *)
   let addEventsRole proc prefixName isIni =
@@ -511,7 +512,7 @@ let transC2 proto p inNameFile nameOutFile =
 	     let subProcEv = addEvent nameEv argsEv subProc in
 	     (Test(t,subProcEv,pe,occ), lTest, nbOut))
       | Nil -> (Nil, List.rev listTest, List.length listOut)
-      | _ -> failwith "Critical error: transC2 is applied on a protocol that does not satisfy the syntactical restrictions. Should never happen." in
+      | _ -> failwith "Critical error: transC2 is applied on a protocol that does not satisfy the syntactical restrictions. Should never happen [7]." in
     goThrough [] [] [] proc in
 
   (* Generate a string for a query *)
@@ -521,7 +522,7 @@ let transC2 proto p inNameFile nameOutFile =
 		 else "query k1:bitstring, k2:bitstring, n1:bitstring, n2:bitstring,\n" in
     let nbArgs = if isInitiator	(* number of arguments to declare for this query *)
 		 then 2*nbIn
-		 else 2*nbIn-1 in
+		 else max (2*nbIn-1) 0 in
     let rec range = function | 0 -> [] | n -> n :: range (n-1) in
     let listArgs nb = 		(* generate a list of messages to give as arguments to events *)
       List.map (fun n -> Printf.sprintf "m%d" n) (List.rev (range nb)) in      
@@ -549,7 +550,7 @@ let transC2 proto p inNameFile nameOutFile =
 	   (Printf.sprintf "event(%s(%s))" (nameEvent outRole n' "out") (String.concat "," (allListArgs n outRole)))
 	 ::
 	   produceEvents (n-1) in
-    let listEvents = produceEvents (if isInitiator then 2*nbIn else 2*nbIn-1) in
+    let listEvents = produceEvents (if isInitiator then 2*nbIn else max (2*nbIn-1) 0) in
     let thisRole = if isInitiator then fst roles else snd roles in
     let lastEvent = Printf.sprintf "event(%s(%s))" 
 				   (nameEvent thisRole nb "test")
@@ -562,7 +563,7 @@ let transC2 proto p inNameFile nameOutFile =
     else prefix^prefixArgs^strImplications^
 	   (repeat ")" (List.length listEvents+1))^"."
   in
-  
+
   (* -- 1. -- COMPUTING EVENTS VERSION AND QUERIES *)
   let iniEvents,iniTests,iniNbOut = addEventsRole proto.ini iniPrefix true in
   let resEvents,resTests,resNbOut = addEventsRole proto.res resPrefix false in
@@ -686,14 +687,22 @@ let transC1 proto p inNameFile nameOutFile =
     | FunApp (f, listT)
 	 when isTuple f
       -> FunApp (f, List.map guessIdeal listT) (* tuple *)
-    | term -> begin
-	log "Warning: some idealized messages are missing and it is unclear how to guess them. The idealization of : ";
-	Printf.printf "     ";
-	Display.Text.display_term term;
-	Printf.printf "\n";
-	log "will be a hole.\n";
-	hole;
-      end in
+    | term -> if !newCases then begin
+		  log "Warning: some idealized messages you gave do not use 'hole' and are extended. The idealization of : ";
+		  Printf.printf "     ";
+		  Display.Text.display_term term;
+		  Printf.printf "\n";
+		  log "will be itself.\n";
+		  term
+		end
+	      else begin
+		  log "Warning: some idealized messages are missing and it is unclear how to guess them. The idealization of : ";
+		  Printf.printf "     ";
+		  Display.Text.display_term term;
+		  Printf.printf "\n";
+		  log "will be a hole.\n";
+		  hole;
+		end in
   let countNonces = ref 0 in
   let listNames = ref [] in
   let createNonce () = 
@@ -714,7 +723,7 @@ let transC1 proto p inNameFile nameOutFile =
   let rec noncesTerm = function
     | FunApp (f, tList) when f.f_name = "hole" -> createNonce()
     | FunApp (f, tList) -> FunApp (f, List.map noncesTerm tList)
-    | Var _ -> errorClass ("Critical error, should never happen.") p in
+    | t -> if !newCases then t else errorClass ("Critical error, should never happen [3].") p in
   (* idealized process (some idealized output may miss) -> nonce process *)
   let rec noncesProc = function
     | Nil -> Nil
@@ -733,7 +742,7 @@ let transC1 proto p inNameFile nameOutFile =
        Output(tc, tmChoice , noncesProc p, occ)
     | Let (patx,t,pt,pe,occ) -> Let (patx,t, noncesProc pt, noncesProc pe, occ)
     | Test (t,pt,pe,occ)-> Test(t, noncesProc pt, noncesProc pe,occ)
-    | p -> errorClass ("Critical error, should never happen.") p in
+    | p -> errorClass ("Critical error, should never happen [5].") p in
   let noncesProto = 
     { proto with
       ini = noncesProc proto.ini;

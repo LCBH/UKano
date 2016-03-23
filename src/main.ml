@@ -655,8 +655,8 @@ let anal_file s =
 	if !Param.has_choice then
 	  begin
 	    if (!Pisyntax.query_list != [])
-	    || (Pisyntax.get_noninterf_queries() != [])
-	    || (Pisyntax.get_weaksecret_queries() != [])
+	       || (Pisyntax.get_noninterf_queries() != [])
+	       || (Pisyntax.get_weaksecret_queries() != [])
 	    then Parsing_helper.user_error "Queries are incompatible with choice\n";
 	    if (!Param.key_compromise != 0) then
 	      Parsing_helper.user_error "Key compromise is incompatible with choice\n";
@@ -820,5 +820,5 @@ let _ =
       "Enable beta mode to deal with new senarios.";
       (* todo ref/hyperref *)
     ]
-    anal_file "Proverif. Cryptographic protocol verifier, by Bruno Blanchet and Vincent Cheval";
+    anal_file "Proverif 1.91. Cryptographic protocol verifier, by Bruno Blanchet and Vincent Cheval";
   if !gc then Gc.print_stat stdout
