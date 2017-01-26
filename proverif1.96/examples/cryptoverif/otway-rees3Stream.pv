@@ -1,0 +1,204 @@
+(*************************************************************
+ *                                                           *
+ *  Cryptographic protocol verifier                          *
+ *                                                           *
+ *  Bruno Blanchet, Vincent Cheval, and Marc Sylvestre       *
+ *                                                           *
+ *  Copyright (C) INRIA, CNRS 2000-2016                      *
+ *                                                           *
+ *************************************************************)
+
+(*
+
+    This program is free software; you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation; either version 2 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details (in file LICENSE).
+
+    You should have received a copy of the GNU General Public License
+    along with this program; if not, write to the Free Software
+    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+*)
+(* Version with possibly dishonest participants.
+   Using two series of function symbols to prevent repeated applications
+   of the same cryptographic rule.
+*)
+
+set traceDisplay = long.
+
+param N.
+param N2.
+param N3.
+
+type nonce [large,fixed].
+type host [bounded].
+type mkey [bounded].
+type mkeyseed [fixed].
+type key [fixed].
+type keyseed [fixed].
+type seed [fixed].
+type macs [fixed].
+type maxenc [bounded].
+type maxmac [bounded].
+
+(* A function f(x1...xn) is declared [data] when:
+   - it is injective
+   - the values of x1...xn are computable in polynomial time from f(x1...xn) *)
+
+fun concat1(nonce, nonce, host, host):maxenc [data].
+fun concat2(nonce, key):maxenc [data].
+
+(*CV ONLY
+forall y:nonce,z:nonce,t:host,u:host, y2:nonce,z2:key; concat1(y,z,t,u) <> concat2(y2,z2).
+*)
+
+(* Shared-key encryption (CPA Stream cipher) *)
+
+proba Penc.
+
+expand IND_CPA_sym_enc(keyseed, key, maxenc, maxmac, seed, kgen, enc, dec, injbot, Z, Penc).
+
+(*CV ONLY
+   The function Z returns for each bitstring, a bitstring
+   of the same length, consisting only of zeroes. 
+const Zconcat1:maxenc.
+const Zconcat2:maxenc.
+forall y:nonce,z:nonce,t:host,u:host; 
+	Z(concat1(y,z,t,u)) = Zconcat1.
+forall y:nonce,z:key; 
+	Z(concat2(y,z)) = Zconcat2.
+*)
+
+(* Mac *)
+
+proba Pmac.
+
+expand UF_CMA_mac(mkeyseed, mkey, maxmac, macs, mkgen, mac, check, Pmac).
+
+(* Queries *)
+
+(*CV ONLY
+query secret1 keyA.
+query secret1 keyB.
+
+query secret keyA.
+query secret keyB.
+*)
+
+channel c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11, c12, c13,
+	start, finish.
+
+const A : host.
+const B : host.
+
+event endA(host, host, nonce, key).
+event endB(host, host, nonce, key).
+event beginA(host, host, nonce).
+event beginB(host, host, nonce).
+
+(*CV ONLY
+query x:host, y:host, n:nonce, k:key; 
+	event endA(x,y,n,k) ==> beginB(x,y,n).
+query x:host, y:host, n:nonce, k:key; 
+	event endB(x,y,n,k) ==> beginA(x,y,n).
+query x:host, y:host, n:nonce, k:key; 
+	event inj:endA(x,y,n,k) ==> inj:beginB(x,y,n).
+query x:host, y:host, n:nonce, k:key; 
+	event inj:endB(x,y,n,k) ==> inj:beginA(x,y,n).
+*)
+query x:host, y:host, n:nonce, k:key; 
+	event(endA(x,y,n,k)) ==> event(beginB(x,y,n)).
+query x:host, y:host, n:nonce, k:key; 
+	event(endB(x,y,n,k)) ==> event(beginA(x,y,n)).
+query x:host, y:host, n:nonce, k:key; 
+	inj-event(endA(x,y,n,k)) ==> inj-event(beginB(x,y,n)).
+query x:host, y:host, n:nonce, k:key; 
+	inj-event(endB(x,y,n,k)) ==> inj-event(beginA(x,y,n)).
+
+
+let processA(Kas:key, mKas:mkey) = 
+	in(c1, hb: host);
+	new M : nonce;
+	new Na : nonce;
+	new s1 : seed;
+	let ea1 = enc(concat1(Na, M, A, hb), Kas, s1) in
+	event beginA(A, hb, M);
+	out(c2, (M, A, hb, ea1, mac(ea1, mKas)));
+	in(c3, (=M, ea2: maxmac, ma2: macs));
+	if check(ea2, mKas, ma2) then
+	let injbot(concat2(=Na, k)) = dec(ea2, Kas) in
+	if hb = B then
+	(
+	event endA(A, hb, M, k);
+	let keyA:key = k
+	)
+	else
+	out(c11, k).
+
+let processB(Kbs:key, mKbs:mkey) =
+	in(c4, (M: nonce, ha: host, =B, ea:maxmac, ma:macs));
+	new Nb : nonce;
+	new s2 : seed;
+	let e2 = enc(concat1(Nb, M, ha, B), Kbs, s2) in
+	event beginB(ha, B, M);
+	out(c5, (M, ha, B, ea, ma, e2, mac(e2, mKbs)));
+	in(c6, (=M, ea2: maxmac, ma2: macs, eb2: maxmac, mb2: macs));
+	if check(eb2, mKbs, mb2) then
+	let injbot(concat2(=Nb, k)) = dec(eb2, Kbs) in
+	out(c7, (M, ea2, ma2));
+	in(finish, ());
+	if ha = A then
+	(
+	event endB(ha, B, M, k);
+	let keyB:key = k
+	)
+	else
+	out(c12, k).
+
+table keys(host, key, mkey).
+
+let processK(Kas:key, Kbs:key, mKas:mkey, mKbs:mkey) =
+	in(c8, (Khost: host, Kkey: key, Kmkey: mkey));
+	if Khost = A then
+	  insert keys(Khost, Kas, mKas)
+        else if Khost = B then
+	  insert keys(Khost, Kbs, mKbs)
+        else
+          insert keys(Khost, Kkey, Kmkey). 
+
+let processS = 
+	in(c9, (M: nonce, ha: host, hb: host, ea1: maxmac, ma1: macs, eb1: maxmac, mb1: macs));
+	get keys(h, kas, mkas) suchthat h = ha in
+	get keys(h, kbs, mkbs) suchthat h = hb in
+	if check(ea1, mkas, ma1) then
+	let injbot(concat1(Na, =M, =ha, =hb)) = dec(ea1, kas) in
+	if check(eb1, mkbs, mb1) then
+	let injbot(concat1(Nb, =M, =ha, =hb)) = dec(eb1, kbs) in
+	new k: key;
+	new s3: seed;
+	new s4: seed;
+	let e1 = enc(concat2(Na, k), kas, s3) in
+	let e2 = enc(concat2(Nb, k), kbs, s4) in
+	out(c10, (M, e1, mac(e1, mkas), e2, mac(e2, mkbs))).
+
+process 
+	in(start, ());
+	new rKas: keyseed;
+	let Kas = kgen(rKas) in
+	new rmKas: mkeyseed;
+	let mKas = mkgen(rmKas) in
+	new rKbs: keyseed;
+	let Kbs = kgen(rKbs) in
+	new rmKbs: mkeyseed;
+	let mKbs = mkgen(rmKbs) in
+	out(c13, ());
+	((! iA<=N processA(Kas, mKas)) |
+	 (! iB<=N processB(Kbs, mKbs)) | 
+	 (! iS<=N processS) |
+	 (! iK<=N2 processK(Kas, Kbs, mKas, mKbs)))

@@ -1,0 +1,141 @@
+(* This library is designed for maximal compatibility with CryptoVerif.
+It contains ProVerif definitions for cryptographic primitives under the
+same name as their corresponding CryptoVerif definitions---even though
+the ProVerif assumption is very often stronger than the more realistic
+CryptoVerif assumption. *)
+
+type bitstringbot.
+
+(* ProVerif cannot distinguish IND-CPA, IND-CPA and INT-CTXT, and
+IND-CCA2 and INT-PTXT symmetric encryption schemes. The definition
+used by ProVerif corresponds best to the strongest property, that is,
+IND-CPA and INT-CTXT. *)
+
+def IND_CPA_sym_enc(keyseed, key, cleartext, ciphertext, seed, kgen, enc, dec, injbot, Z, Penc) { 
+
+fun enc(cleartext, key, seed): ciphertext.
+fun kgen(keyseed):key.
+fun injbot(cleartext):bitstringbot [data].
+reduc forall m:cleartext, r:keyseed, r2:seed; 
+	dec(enc(m, kgen(r), r2), kgen(r)) = injbot(m).
+
+fun Z(cleartext):cleartext.
+
+(* Encryption leaks Z(m), typically the length of m *) 
+reduc forall m:cleartext, r:seed, k:key;  
+        leak(enc(m, k, r)) = Z(m).
+(* Note: providing a good definition of Z in ProVerif is a problem *)
+
+(* Test equality of keys *)
+reduc forall x:cleartext, x':cleartext, r:seed, r':seed, y:key;  
+        keyeq(enc(x,y,r),enc(x',y,r')) = true.
+
+}
+
+def IND_CPA_INT_CTXT_sym_enc(keyseed, key, cleartext, ciphertext, seed, kgen, enc, dec, injbot, Z, Penc, Pencctxt) { 
+
+expand IND_CPA_sym_enc(keyseed, key, cleartext, ciphertext, seed, kgen, enc, dec, injbot, Z, Penc).
+
+}
+
+def IND_CCA2_INT_PTXT_sym_enc(keyseed, key, cleartext, ciphertext, seed, kgen, enc, dec, injbot, Z, Penc, Pencptxt) { 
+
+expand IND_CPA_sym_enc(keyseed, key, cleartext, ciphertext, seed, kgen, enc, dec, injbot, Z, Penc).
+
+}
+
+(* ProVerif cannot distinguish a PRP block cipher from a SPRP block cipher.
+The definition used by ProVerif corresponds best to a SPRP block cipher *)
+
+def SPRP_cipher(keyseed, key, blocksize, kgen, enc, dec, Penc) {
+
+fun enc(blocksize, key): blocksize.
+fun kgen(keyseed):key.
+fun dec(blocksize, key): blocksize.
+
+equation forall m:blocksize, r:keyseed; 
+	dec(enc(m, kgen(r)), kgen(r)) = m.
+equation forall m:blocksize, r:keyseed; 
+	enc(dec(m, kgen(r)), kgen(r)) = m.
+
+}
+
+def PRP_cipher(keyseed, key, blocksize, kgen, enc, dec, Penc) {
+
+expand SPRP_cipher(keyseed, key, blocksize, kgen, enc, dec, Penc).
+
+}
+
+(* MACs 
+   These are very strong in ProVerif (essentially random oracles) 
+*)
+
+def UF_CMA_mac(mkeyseed, mkey, macinput, macres, mkgen, mac, check, Pmac) {
+
+fun mac(macinput, mkey):macres.
+fun mkgen(mkeyseed):mkey.
+
+reduc forall m:macinput, r:mkeyseed; 
+      check(m, mkgen(r), mac(m, mkgen(r))) = true.
+
+}
+
+def SUF_CMA_mac(mkeyseed, mkey, macinput, macres, mkgen, mac, check, Pmac) {
+
+expand UF_CMA_mac(mkeyseed, mkey, macinput, macres, mkgen, mac, check, Pmac).
+
+}
+
+(* Public-key encryption *)
+
+def IND_CCA2_public_key_enc(keyseed, pkey, skey, cleartext, ciphertext, seed, skgen, pkgen, enc, dec, injbot, Z, Penc, Penccoll) {
+
+fun enc(cleartext, pkey, seed): ciphertext.
+fun skgen(keyseed):skey.
+fun pkgen(keyseed):pkey.
+
+fun injbot(cleartext):bitstringbot [data].
+
+reduc forall m:cleartext, r:keyseed, r2:seed; 
+	dec(enc(m, pkgen(r), r2), skgen(r)) = injbot(m).
+
+(* Test equality of keys *)
+reduc forall x:cleartext, x':cleartext, r:seed, r':seed, y:pkey;  
+        keyeq(enc(x,y,r),enc(x',y,r')) = true.
+
+}
+
+(* Signatures *)
+
+def UF_CMA_signature(keyseed, pkey, skey, signinput, signature, seed, skgen, pkgen, sign, check, Psign, Psigncoll) {
+
+fun sign(signinput, skey, seed): signature.
+fun skgen(keyseed):skey.
+fun pkgen(keyseed):pkey.
+
+reduc forall m:signinput, r:keyseed, r2:seed; 
+	check(m, pkgen(r), sign(m, skgen(r), r2)) = true.
+
+}
+
+def SUF_CMA_signature(keyseed, pkey, skey, signinput, signature, seed, skgen, pkgen, sign, check, Psign, Psigncoll) {
+
+expand UF_CMA_signature(keyseed, pkey, skey, signinput, signature, seed, skgen, pkgen, sign, check, Psign, Psigncoll).
+
+}
+
+(* Hash functions *)
+
+def ROM_hash(hashinput, hashoutput, hash, hashoracle, qH) {
+
+fun hash(hashinput):hashoutput.
+
+let hashoracle = 0.
+
+}
+
+def CollisionResistant_hash(key, hashinput, hashoutput, hash, Phash) {
+
+fun hash(key, hashinput):hashoutput.
+
+}
