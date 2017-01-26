@@ -978,10 +978,15 @@ let simplify_rule_constra_normal next_stage r =
   assert (!Terms.current_bound_vars == []);
   simplify_rule_constra next_stage r
 
+let weaksecr_simplify next_stage repeat_next_stage ((hyp, concl, hist, constra) as r) =
+  next_stage r
+let noninterfer_simplify next_stage repeat_next_stage ((hyp, concl, hist, constra) as r) =
+  next_stage r
+	     
 let rec normal_rule r = 
   assert (!Terms.current_bound_vars == []);
   decompose_hyp_tuples2 (simp_eq_rule 
-    (elim_not (Weaksecr.simplify (Noninterf.simplify 
+    (elim_not (weaksecr_simplify (noninterfer_simplify 
     (decompose_concl_tuples (elim_taut (elim_any_x2 
     (simplify_rule_constra_normal (elem_simplif (elem_simplif2
     (elim_redundant_hyp (fun r -> add_rule (limit_depth_rule r)) normal_rule) 

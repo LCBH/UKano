@@ -32,6 +32,12 @@
     A copy can be found at http://projects.lsv.ens-cachan.fr/ukano/ *)
 
 
+(* Helping message *)
+let helpMess = 			(* TODO *)
+  ("Only typed ProVerif files are accepted (the option '-in pitype' is enabled by default). See the folder './examples/' for examples\n"^
+     "of files in the correct format. They can be used to bootsrap your own file. For more details, see the README file at the root of\n"^
+       "the project.\n")
+
 open Types
 open Pervasives
 
@@ -45,12 +51,6 @@ let debug = ref false
 let newCases = Param.newCases	
 
 let splitTheoryString = "==PROTOCOL=="
-
-(* Helping message *)
-let helpMess = 
-  (  "Only typed ProVerif files are accepted (the option '-in pitype' is enabled by default). See the folder './examples/' for examples\n"^
-     "of files in the correct format. They can be used to bootsrap your own file. For more details, see the README file at the root of\n"^
-     "the project.\n")
 
 (* Raised when the inputted process is not a 2-agents protocol as defined
    in [1], the associated string is the reason/explanation. *)
@@ -857,13 +857,3 @@ let transBoth  p inNameFile nameOutFileFO nameOutFileWA =
     displayProtocol proto1;
   transC1 proto1 p inNameFile nameOutFileFO;
   transC2 proto2 p inNameFile nameOutFileWA
-  
-(* To implement later on: *)
-(** Check Frame Opacity (outptuis are relation-free). *)
-let checkC1 p = failwith "Not Implemented"
-
-(** Check Well-Authentication (tests do not leak information about agents). *)
-let checkC2 p = failwith "Not Implemented"
-
-(** Check UK & ANO *)
-let check p =  checkC1 p && checkC2 p

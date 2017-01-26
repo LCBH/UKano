@@ -43,7 +43,7 @@
 
 # If you want to fix the name of the executable, set the variable
 # EXEC, for instance, if you want to obtain a program named my_prog:
-EXEC = proverif
+EXEC = ukano
 
 # If you need special libraries provided with the Caml system,
 # (graphics, arbitrary precision numbers, regular expression on strings, ...),
@@ -68,13 +68,11 @@ EXEC = proverif
 #
 # The Caml sources (including camlyacc and camllex source files)
 
-SOURCES_parse = parser.mly lexer.mll piparser.mly pilexer.mll pitparser.mly pitlexer.mll
-SOURCES_b = $(shell ocamldep -sort $(wildcard *.ml))
-# To build proverif, we need to remove proveriftotex.ml from SOURCES::
-SOURCES = $(filter-out proveriftotex.ml,$(SOURCES_b))
-# The executable file to generate (default a.out under Unix)
+SOURCES_parse = parser.mly lexer.mll pitparser.mly pitlexer.mll
+SOURCES = $(shell ocamldep -sort $(wildcard *.ml))
 
-EXEC = proverif
+# The executable file to generate (default a.out under Unix)
+EXEC = ukano
 
 
 ########################## Advanced user's variables #####################
@@ -125,8 +123,6 @@ WITHDBM =dbm.cma -cclib -lmldbm -cclib -lndbm
 all: 
 	ocamlyacc parser.mly
 	ocamllex lexer.mll
-	ocamlyacc piparser.mly
-	ocamllex pilexer.mll
 	ocamlyacc pitparser.mly
 	ocamllex pitlexer.mll
 	make build

@@ -1305,97 +1305,6 @@ let transl_attacker phase =
     end
 
 
-(* Weak secrets *)
-
-let weak_memo = Param.memo (fun t -> 
-  { f_name = "@weaksecretcst"; 
-    f_type = [], t;
-    f_private = true;
-    f_options = 0;
-    f_cat = Eq [];
-    f_initial_cat = Eq []
-  })
-
-let weaksecretcst t = 
-  weak_memo (Param.get_type t)
-
-let att_guess_fact t1 t2 =
-  Pred(Param.get_pred (AttackerGuess(Terms.get_term_type t1)), [t1;t2])
-
-(* [rules_for_red_guess] does not need the rewrite rules f(...fail...) -> fail
-   for categories Eq and Tuple in [red_rules]. Indeed, clauses
-   that come from these rewrite rules are useless:
-       1/ if we use twice the same of these rewrite rules, we get
-       att(u1,u1') & ... & att(fail_ti, fail_ti) & ... & att(un,un') -> att(fail, fail)
-       which is subsumed by att(fail, fail)
-       2/ if we use two distinct such rewrite rules, we get
-       att(u1,u1') & ... & att(fail_ti, ui') & ... & att(uj, fail_tj) & ... & att(un,un') -> att(fail, fail)
-       which is subsumed by att(fail, fail)
-       3/ if we use one such rewrite rule and another rewrite rule, we get
-       att(u1,M1) & ... & att(fail_ti, Mi) & ... & att(un, Mn) -> att(fail, M')
-       which is subsumed by att(fail_ti, x) -> bad (recall that bad subsumes all conclusions)
-       Mi are messages, they are not fail nor may-fail variables. *)
-
-let rules_for_red_guess f red_rules =
-  List.iter (fun red1 ->
-    List.iter (fun red2 ->
-      let (hyp1, concl1, side_c1) = Terms.copy_red red1 in
-      let (hyp2, concl2, side_c2) = Terms.copy_red red2 in
-      add_rule (List.map2 att_guess_fact hyp1 hyp2)
-	(att_guess_fact concl1 concl2) 
-	((List.map (fun (t1,t2) -> [Neq(t1,t2)]) side_c1) @ (List.map (function (t1,t2) -> [Neq(t1,t2)]) side_c2))
-	(Apply(f, Param.get_pred (AttackerGuess(snd f.f_type))))
-	) red_rules
-      ) red_rules
-
-
-let weak_secret_clauses w =
-  add_rule [] (att_guess_fact (FunApp(w, [])) (FunApp(weaksecretcst (snd w.f_type), []))) [] WeakSecr;
-
-  (* rules_for_function_guess for each function, including tuples *)
-  Hashtbl.iter (Terms.clauses_for_function rules_for_red_guess) Param.fun_decls;
-  Hashtbl.iter (Terms.clauses_for_function rules_for_red_guess) Terms.tuple_table;
-
-  Weaksecr.attrulenum :=
-     List.map (fun t -> 
-       let att_guess = Param.get_pred (AttackerGuess(t)) in
-       
-       let x = Terms.new_var_def t
-       and fail = Terms.get_fail_term t in
-       add_rule [Pred(att_guess, [x; fail])] (Pred(Param.bad_pred, [])) [] (Rfail(att_guess));
-       add_rule [Pred(att_guess, [fail; x])] (Pred(Param.bad_pred, [])) [] (Rfail(att_guess));
-
-       let v = Terms.new_var_def t in
-       let hyp = [att_fact (!Param.max_used_phase) v] in
-       let concl = Pred(att_guess, [v; v]) in
-       let r = (t, Rule(!nrule, PhaseChange, hyp, concl, [])) in
-       add_rule hyp concl [] PhaseChange;
-
-       let v1 = Terms.new_var_def t in
-       let v2 = Terms.new_var_def t in
-       let v3 = Terms.new_var_def t in
-       add_rule [Pred(att_guess, [v1; v2]); Pred(att_guess, [v1; v3])]
-	 (Pred(Param.bad_pred, [])) [[Neq(v2,v3)]] (TestEq(att_guess));
-
-       let v1 = Terms.new_var_def t in
-       let v2 = Terms.new_var_def t in
-       let v3 = Terms.new_var_def t in
-       add_rule [Pred(att_guess, [v2; v1]); Pred(att_guess, [v3; v1])]
-	 (Pred(Param.bad_pred, [])) [[Neq(v2,v3)]] (TestEq(att_guess));
-
-       (* adjust the selection function *)
-       let v1 = Terms.new_var Param.def_var_name t in
-       let v2 = Terms.new_var Param.def_var_name t in
-	(* Selfun.add_no_unif (att_guess, [FAny v1; FVar v2])
-	  (Selfun.never_select_weight+30);
-	Selfun.add_no_unif (att_guess, [FVar v1; FAny v2])
-	  (Selfun.never_select_weight+20); *)
-       Selfun.add_no_unif (att_guess, [FVar v1; FVar v2])
-	 (Selfun.never_select_weight+10);
-       
-       r) (if Param.get_ignore_types() then [Param.any_type] else !Param.all_types)
-
-
 (* Handle key_compromise *)
 
 let comp_output_rule prev_input out_fact =
@@ -1571,13 +1480,6 @@ let transl p =
 	) (if Param.get_ignore_types() then [Param.any_type] else !Param.all_types);
 
 
-  begin
-    (* Weak secrets *)
-    match !Param.weaksecret with
-      None -> ()
-    | Some w -> weak_secret_clauses w
-  end;
-
   (* Remove subsumed clauses and tautologies among attacker clauses, 
      to avoid displaying many useless clauses. *)
 
@@ -1659,10 +1561,10 @@ let transl p =
 	end;
 	Rules.add_not(Pred(p,l))
     | _ -> Parsing_helper.user_error "The only allowed facts in \"not\" declarations are attacker, mess, table, and user-defined predicates.\n"
-	  ) (if !Param.typed_frontend then Pitsyntax.get_not() else Pisyntax.get_not());
+	  ) (Pitsyntax.get_not());
   
   List.iter (function (f,n) ->
-    Selfun.add_no_unif f n) (if !Param.typed_frontend then Pitsyntax.get_nounif() else Pisyntax.get_nounif());
+    Selfun.add_no_unif f n) (Pitsyntax.get_nounif());
 
   List.rev (!red_rules)
 

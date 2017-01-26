@@ -329,11 +329,12 @@ let selection_fun ((hyp,concl,hist,constra) as rule) =
       end
     else r
   in
-  let r =
-    if r = -1 then Noninterf.selfun rule else r
+  r
+  (*  let r =
+    if false && r = -1 then  Noninterf.selfun rule else r
   in
-  if r = -1 then Weaksecr.selfun rule else r
-
+  if false && r = -1 then  Weaksecr.selfun rule else r *)
+	 
 let guess_no_unif rulequeue =
   (* If no "nounif" instruction is given, first guess them by "selection_fun_weight" *)
   if (!no_unif_set = []) || (!Param.select_fun == Param.Term)

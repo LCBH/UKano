@@ -40,16 +40,6 @@ exception NotInClass of string
 (** [transC2 p inNameFile outNameFileC1 outNameFileC2] writes in the files [outNameFileC_] complete ProVerif files checking respectively
 frame opacity and well-authentication for the process [p] and the theory contained in [inNameFile]. *)
 val transBoth : Types.process -> string -> string -> string -> unit
-
+								 
 (** Display a representation of the 2-agents protocol associated to a given process. *)
 val displayProcessProtocol : Types.process -> unit
-
-(* To implement later on: *)
-(** Check frame opacity (outptuts are relation-free). *)
-val checkC1 : Types.process -> bool
-
-(** Check well-authentication (tests do not leak information about agents). *)
-val checkC2 : Types.process -> bool
-
-(** Check UK & ANO *)
-val check : Types.process -> bool

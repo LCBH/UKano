@@ -397,5 +397,5 @@ let elim_true = ref []
 
 
 (* ukano translator *)
-let trad_ukano = ref false
-let newCases = ref false
+let trad_ukano = ref true
+let newCases = ref true
