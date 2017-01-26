@@ -1,0 +1,34 @@
+# Executable
+ukano
+proverif
+
+# Ocaml specific
+*.annot
+*.cmo
+*.cma
+*.cmi
+*.a
+*.o
+*.cmx
+*.cmxs
+*.cmxa
+.depend
+
+# ocamlbuild working directory
+_build/
+
+# ocamlbuild targets
+*.byte
+*.native
+
+# oasis generated files
+setup.data
+setup.log
+
+# ocaml lexer/parser
+lexer.ml
+parser.ml
+parser.mli
+pitlexer.ml
+pitparser.ml
+pitparser.mli
