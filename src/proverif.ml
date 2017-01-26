@@ -36,6 +36,7 @@ let read_process_lines command =
 	   
 let launchProverif pathProverif pathFile =
   let command = sprintf "%s -in pitype %s" pathProverif pathFile in
+  log command;
   read_process_lines command
 		     
 let verifyBoth pathProverif sFO sWA =

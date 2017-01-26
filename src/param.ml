@@ -59,7 +59,7 @@ let active_attacker = ref true
 
 let key_compromise = ref 0
 
-let typed_frontend = ref false
+let typed_frontend = ref true
 type ignore_t =
     NotSet
   | Ignore
