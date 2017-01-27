@@ -45,7 +45,7 @@ let title s =
   Printf.sprintf "\n%s%s\n%s\n" headerp (header s) headerp
 
 let result s =
-  Printf.sprintf "======> %s" s
+  Printf.sprintf "------> %s" s
 		   
 (* Helper function to make the display more readable: we abbreviate names with
    just a constant symbol. *)

@@ -50,7 +50,7 @@ let SYSTEM =
 new skP : bitstring;
 ( !
   new idDGI : bitstring;
-  new k_51 : bitstring;
+  new k_48 : bitstring;
      !
       new sess : bitstring;
       ((
@@ -64,9 +64,9 @@ new skP : bitstring;
             let (mergeOut: bitstring) = 
                 choice[ 
                     let catchRealMess:bitstring = (
-                        let ((xnr: bitstring,=nt,xkr: bitstring)) = dec(x1,k_51) in
-                        if (enc(dec(x1,k_51),k_51) = x1) then
-                           enc((nt,xnr,kt),k_51)  ) in
+                        let ((xnr: bitstring,=nt,xkr: bitstring)) = dec(x1,k_48) in
+                        if (enc(dec(x1,k_48),k_48) = x1) then
+                           enc((nt,xnr,kt),k_48)  ) in
                     catchRealMess
                     else n5
                 , n5] in
@@ -77,9 +77,9 @@ new skP : bitstring;
             let (mergeOut: bitstring) = 
                 choice[ 
                     let catchRealMess:bitstring = (
-                        let ((xnr: bitstring,=nt,xkr: bitstring)) = dec(x1,k_51) in
+                        let ((xnr: bitstring,=nt,xkr: bitstring)) = dec(x1,k_48) in
                         let ((=init,xrandR: bitstring)) = dec(x2,hashKey(kt,xkr)) in
-                        if (enc(dec(x1,k_51),k_51) = x1) then
+                        if (enc(dec(x1,k_48),k_48) = x1) then
                            enc(sign((randT,xrandR),skP),hashKey(kt,xkr))  ) in
                     catchRealMess
                     else n6

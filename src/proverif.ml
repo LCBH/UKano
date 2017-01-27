@@ -100,10 +100,10 @@ let verifyBoth pathProverif sFO sWA namesIdAno =
       if okFO
       then begin
 	  establishedFO := true;
-	  pp "\n===> Frame Opacity has been established.";
+	  pp (Display.result "Frame Opacity has been established.");
 	end
       else (if noFO
-	    then pp "\n===> Frame Opacity could not be established."
+	    then pp (Display.result "Frame Opacity could not be established.")
 	    else ppError "Proverif's output could not be parsed. Please pursue manually (launch ProVerif on the generated files).")
     end;
 
@@ -126,12 +126,12 @@ let verifyBoth pathProverif sFO sWA namesIdAno =
       else (if okWA
 	    then begin
 		establishedWA := true;
-		pp "\n===> Well Authentication has been established.";
+		pp (Display.result "Well Authentication has been established.");
 	      end
 	    else begin
-		pp (sprintf "\n===> Well Authentication has been established for %d over %d tests.
-			     Please verify that the following queries correspond to safe conditionals."
-			    (List.length subOk) (List.length subResults));
+		pp (Display.result (sprintf "Well Authentication has been established for %d over %d tests.
+					     Please verify that the following queries correspond to safe conditionals."
+					    (List.length subOk) (List.length subResults)));
 		List.iter (fun l -> pp ("Well-Athentication could not be established for : "^l)) subNo;
 	      end);
     end;
@@ -140,18 +140,19 @@ let verifyBoth pathProverif sFO sWA namesIdAno =
   if !establishedFO && (!establishedWA || !establishedWAPart)
   then begin
       if not(!establishedWA)
-      then pp "===> Frame Opacity and Well-Authentication have been established (providing the conditionals listed above are safe)."
-      else pp "===> Frame Opacity and Well-Authentication have been established.";
+      then pp "Frame Opacity and Well-Authentication have been established (providing the conditionals listed above are safe)."
+      else pp "Frame Opacity and Well-Authentication have been established.";
       if List.length namesIdAno == 0
-      then pp "===========> Therefore, the input protocol ensures Unlinkability."
+      then pp (Display.result "Therefore, the input protocol ensures Unlinkability.")
       else begin
-	  Printf.printf "===========> Therefore, the input protocol ensures Unlinkability and Anonymity w.r.t. identity names: (";
+	  Printf.printf "%s" (Display.result "Therefore, the input protocol ensures Unlinkability and Anonymity w.r.t. identity names: (");
 	  List.iter (fun s -> Display.Text.display_function_name s; printf ", ") namesIdAno;
 	  pp ").";
 	end;
     end
-  else pp "===> Frame Opacity or Well-Authentication could not be established. This does not necessarily implies that the input protocol
-	   violates unlinkability or anonymity.\n\t1. Indeed, it may be the case that ProVerif could not established the conditions
-	   (due to over-approximations) while they actually hold --- in that case, please refer to the ProVerif's manual. \n\t2. Or the
-	   conditions do not hold. In that case, UKano cannot currently conclude on your protocol. If you think that is the case, please
-	   send your input protocol at lucca.hirschi@lsv.ens-cachan.fr so that we can investigate further and improve UKano."
+  else pp (Display.result
+	     "===> Frame Opacity or Well-Authentication could not be established. This does not necessarily implies that the input protocol
+	      violates unlinkability or anonymity.\n\t1. Indeed, it may be the case that ProVerif could not established the conditions
+	      (due to over-approximations) while they actually hold --- in that case, please refer to the ProVerif's manual. \n\t2. Or the
+	      conditions do not hold. In that case, UKano cannot currently conclude on your protocol. If you think that is the case, please
+	      send your input protocol at lucca.hirschi@lsv.ens-cachan.fr so that we can investigate further and improve UKano.")

@@ -31,18 +31,19 @@ open Pervasives
 (* Helping message *)
 let helpMess = 			(* TODO *)
   ("Your input model is not conform. It should be a valid typed ProVerif model ('proverif -in pitype <path>' should accept it).\nMoreover, it should comply with requirements
-    explained in the README. You can refer to the folder './examples/' for examples of files in the correct format.\n They can be used to bootstrap your own file."
-
-   let pp s= Printf.printf "%s" s
-		     
+    explained in the README. You can refer to the folder './examples/' for examples of files in the correct format.\n They can be used to bootstrap your own file.")
+     
+let pp s= Printf.printf "%s" s
+let email = " Please report this error with the input file to lucca.hirschi@lsv.ens-cachan.fr'."
+	      
 (* For debugging purpose *)
 let log s = Printf.printf "> %s\n%!" s
 let debug = ref false
 
 let splitTheoryString = "==PROTOCOL=="
 
-(* Raised when the inputted process is not a 2-agents protocol as defined
-   in [1], the associated string is the reason/explanation. *)
+(* Raised when the inputted process is not a 2-agents protocol as specified
+   in the README, the associated string is the reason/explanation. *)
 exception NotInClass of string
 
 let debProc p = 
@@ -53,7 +54,7 @@ let errorClass s p =
   Display.Text.display_process "   " p;
   raise (NotInClass s)
 
-(** Type of a 2-agents protocol as defined in [1] *)
+(** Type of a 2-agents protocol *)
 type proto = {
     comNames : funsymb list;	(* common names of all agents (created before the first !)  *)
     idNames : funsymb list;	(* identity names *)
@@ -75,6 +76,7 @@ let makeOcc () = Terms.new_occurrence ()
 (* Parsing Protocols                                        *)
 (************************************************************)
 
+(** Remove duplications in lists *)
 let rec remove_dups lst= match lst with
   | [] -> []
   | h::t -> h::(remove_dups (List.filter (fun x -> x<>h) t))
@@ -125,18 +127,19 @@ let extractProto process =
 	    | _ -> errorClass ("Else branches must be either Nil or Output.Nil.") pe);
 	   if laC
 	   then (match laE,pe with
-		 | Nil, Nil -> checkRole accN pt
-		 | (Output(t1,t2,Nil,_), Output(t1',t2',Nil,_)) when (t1=t1' && t2=t2') -> checkRole accN pt
+		 | Nil, Nil -> checkRole ~lastCondi:true ~lastElse:pe accN pt
+		 | (Output(t1,t2,Nil,_), Output(t1',t2',Nil,_)) when (t1=t1' && t2=t2') -> checkRole ~lastCondi:true ~lastElse:pe accN pt
 		 (* START: this should be removed (for back-compatibility) *)
-		 | Nil,_ -> checkRole accN pt
+		 | Nil,_ -> checkRole ~lastCondi:true ~lastElse:pe accN pt
 		 (* END *)
-		 | _ -> errorClass ("Two else branches from adjacent tests are not syntactical equal.") pe)
+		 | _ -> errorClass ("Two else branches from adjacent tests are not syntactically equal.") pe)
 	   else checkRole ~lastCondi:true ~lastElse:pe accN pt;
 	 end
     | Restr (nameSymb, _, p, _) ->
        accN := nameSymb :: !accN;
        checkRole ~lastInp:laI ~lastOut:laO ~lastCondi:laC ~lastElse:laE accN p
     | p -> errorClass ("Only Nul,Input,Output,Test, Let and creation of names are allowed in roles.") p in
+  (* The next functions are implicitely assuming that roles have been checked agains 'checkRole' *)
   (* true if fst observable action is an output *)
   let rec fstIsOut = function
     | Output(_,_,_,_) -> true
@@ -162,40 +165,41 @@ let extractProto process =
     | Let (patx,t,pt,pe,occ) -> Let (patx,t,removeRestr pt, removeRestr pe, occ)
     | Test (t,pt,pe,occ)-> Test(t,removeRestr pt, removeRestr pe,occ)
     | Restr (_,_,p,_) -> removeRestr p
-    | p -> errorClass ("Critical error, should never happen [1].") p in
+    | p -> errorClass ("Critical error, should never happen [1]." ^ email) p in
+
   (* We now match the whole system against its expected form *)
-  match (getNames [] process) with
+  match (getNames [] process) with (* this returns global names and the continuation (should be of the form \pM *)
   | (comNames, Repl (idProc,_)) ->
-     let idNames, idProc' = getNames [] idProc in
+     let idNames, idProc' = getNames [] idProc in (* those are the identity names *)
      (match idProc' with
       | Repl (sessProc,_) ->
-	 let sessNames, sessProc' = getNames [] sessProc in
+	 let sessNames, sessProc' = getNames [] sessProc in (* those are session names *)
 	 (match sessProc' with
 	  | Par (p1,p2) ->
 	     let ((iniP,iniN),(resP,resN)) = checkRoles p1 p2 in
 	     let iniPclean,resPclean = (removeRestr iniP, removeRestr resP) in
-	     let sessName = {    f_name = "sess";
-				 f_type = ([], typeBit);
-				 f_cat = Name {prev_inputs=None; prev_inputs_meaning=[]};
-				 f_initial_cat = Name {prev_inputs=None; prev_inputs_meaning=[]};
-				 f_private = true;
-				 f_options = 0;	} in
-	     let idNamesANO = List.filter 
+	     let sessName0 = { f_name = "sess";
+			       f_type = ([], typeBit);
+			       f_cat = Name {prev_inputs=None; prev_inputs_meaning=[]};
+			       f_initial_cat = Name {prev_inputs=None; prev_inputs_meaning=[]};
+			       f_private = true;
+			       f_options = 0;	} in
+	     let idNamesANO = List.filter (* id names for anonymity are prefixed with 'id' *)
 				(fun s -> (String.length s.f_name) >= 2 && (s.f_name.[0] = 'i') && (s.f_name.[1] = 'd'))
 				idNames in
 	     let freeNamesIni, freeNamesRes = (freeNames iniPclean), (freeNames resPclean) in
 	     let idNamesIni =  List.filter (fun n -> List.mem n idNames) (remove_dups freeNamesIni) in
 	     let idNamesRes =  List.filter (fun n -> List.mem n idNames) (remove_dups (freeNamesRes)) in
 	     let idNamesShared = List.filter (fun n -> List.mem n idNamesRes) idNamesIni in
-	     let isNewCase = ref false in
+	     let isShared = ref false in
 	     if List.length idNamesShared = 0
-	     then begin isNewCase := true; log "Warning: No identity name is shared between initiator and responder. This may cause false negative."; end;
+	     then log "Note: No identity name is shared between initiator and responder."
+	     else log "Note: Some identity names are shared between initiator and responder.";
 	     if  List.length idNamesIni = 0
-	     then begin isNewCase := true; log "Warning: Initiator does not use any identity name. This may cause false negative."; end;
+	     then log "Note: Initiator does not use any identity name.";
 	     if List.length idNamesRes = 0
-	     then begin isNewCase := true; log "Warning: Responder does not use any identity name. This may cause false negative."; end;
-	     if !isNewCase
-	     then log "==> This is why we are going to use a new functionality in beta to deal with the new kind of scenario you gave as input.";
+	     then log "Note: Responder does not use any identity name.";
+	     (* Finally, we build the protocol *)
 	     {
 	       comNames = comNames;
 	       idNames = idNames;
@@ -203,13 +207,13 @@ let extractProto process =
 	       idNamesShared =idNamesShared ;
 	       idNamesIni = idNamesIni;
 	       idNamesRes = idNamesRes;
-	       sessNames = sessName :: (List.rev sessNames) @ (List.rev iniN) @ (List.rev resN);
+	       sessNames = sessName0 :: (List.rev sessNames) @ (List.rev iniN) @ (List.rev resN);
 	       ini = iniPclean;
 	       res = resPclean;
 	     }
 	  | p -> errorClass ("After session names, we expect a parallel composition of two roles.") p)
       | p -> errorClass ("After the first replication and identity names, we expect a replication (for sessions).") p)
-  | (_,p) -> errorClass ("A replication (possibly after some creation of names) is expected at the begging of the process.") p
+  | (_,p) -> errorClass ("A replication (possibly after some creation of names) is expected at the beginning of the process.") p
 
 
 
@@ -229,7 +233,7 @@ let displayProtocol proto =
   noneOrList (fun s -> Display.Text.display_function_name s; pp ", ") proto.idNames;
   pp  "\n   Session names:  ";   
   noneOrList (fun s -> Display.Text.display_function_name s; pp ", ") proto.sessNames;
-  pp  "\n   Session names to be revealed for checking anonymity:  ";   
+  pp  "\n   Identity names to be revealed for checking anonymity (i.e., the ones starting with 'id'):  ";   
   noneOrList (fun s -> Display.Text.display_function_name s; pp ", ") proto.idNamesANO;
   pp  "\n   Shared (by initiator and responder) identity names:  ";   
   noneOrList (fun s -> Display.Text.display_function_name s; pp ", ") proto.idNamesShared;
@@ -277,7 +281,7 @@ let displayProtocolProcess proto =
   pp ")\n";
   if proto.idNamesANO <> [] 
   then begin
-  pp " | (!\n";
+      pp " | (!\n";
       (* Multiple identities whose idNamesANO are revealed *)
       List.iter 
 	(fun q -> Printf.printf "%snew %s : bitstring;\n" indent q.f_name)
@@ -307,7 +311,7 @@ let theoryStr inNameFile =
 	    (* for back-compatibility: *)
 	    let listSplit2 = (Str.split (Str.regexp_string "PROTOCOLS") inStr) in
 	    if List.length listSplit2 <= 1
-	    then failwith ""
+	    then failwith ("Should never happen [12]."^email)
 	    else List.hd listSplit2;
 	  end
 	else List.hd listSplit
@@ -328,11 +332,11 @@ let theoryStr inNameFile =
 (************************************************************)
 (* Push session names as far as possible                    *)
 (************************************************************)
-(* We suppose here that session names are not shared between agents
-   (as defined in the paper. *)
+(* We suppose here that session names are not shared between agents. *)
 let pushNames proto = 
   let sessNames = List.tl proto.sessNames in
   let sessNameEvent = List.hd proto.sessNames in
+  (* Add restriction of names for names in 'names' *)
   let addNames names continuationProc = 
     List.fold_right (fun name proc ->
 		     Restr(name, 
@@ -340,6 +344,7 @@ let pushNames proto =
 			   proc,makeOcc()))
 		    names
 		    continuationProc in
+  (* push all names as close as possible to their first use *)
   let rec pushN accNames = function
     | Nil -> Nil
     | Input (tc,patx,p,occ) -> Input(tc,patx,pushN accNames p, occ)
@@ -390,9 +395,9 @@ let pushNames proto =
 	 let otherNames = List.filter (fun n -> not(List.mem n needNames)) accNames in
 	 addNames needNames (Par (pushN otherNames p1, p2))
        else Par (pushN accNames p1, p2) 
-    | Par (_,_) as p -> errorClass ("[UKANO] [pushN] [PAR] Critical error, should never happen [2].") p
-    | Restr (_,_,_,_) -> failwith "WHAT RESTR"
-    | p -> errorClass ("[UKANO] [pushN]Critical error, should never happen [6].") p in
+    | Par (_,_) as p -> errorClass ("[UKANO] [pushN] [PAR] Critical error, should never happen [2]."^email) p
+    | Restr (_,_,_,_) as p -> errorClass ("[UKANO] [pushN] [Restr] Critial error, should never happen [14]."^email) p
+    | p -> errorClass ("[UKANO] [pushN] Critical error, should never happen [6]."^email) p in
   {
     proto with
     ini = pushN sessNames proto.ini;
@@ -417,7 +422,7 @@ let cleanChoice proto =
     | Let (patx,t,pt,pe,occ) -> Let (patx,t,rmProc pt, rmProc pe, occ)
     | Test (t,pt,pe,occ)-> Test(t,rmProc pt, rmProc pe,occ)
     | Restr (_,_,p,_) -> rmProc p
-    | p -> errorClass ("Critical error, should never happen [4].") p in
+    | p -> errorClass ("Critical error, should never happen [4]."^email) p in
   { proto with
     ini = rmProc proto.ini;
     res = rmProc proto.res;
@@ -506,7 +511,7 @@ let transC2 proto p inNameFile nameOutFile =
 	     let subProcEv = addEvent nameEv argsEv subProc in
 	     (Test(t,subProcEv,pe,occ), lTest, nbOut))
       | Nil -> (Nil, List.rev listTest, List.length listOut)
-      | _ -> failwith "Critical error: transC2 is applied on a protocol that does not satisfy the syntactical restrictions. Should never happen [7]." in
+      | _ -> failwith ("Critical error: transC2 is applied on a protocol that does not satisfy the syntactical restrictions. Should never happen [7]."^email) in
     goThrough [] [] [] proc in
 
   (* Generate a string for a query *)
@@ -715,7 +720,7 @@ let transC1 proto p inNameFile nameOutFile =
   let rec noncesTerm = function
     | FunApp (f, tList) when f.f_name = "hole" -> createNonce()
     | FunApp (f, tList) -> FunApp (f, List.map noncesTerm tList)
-    | t -> if true then t else errorClass ("Critical error, should never happen [3].") p in (* TODO *)
+    | t -> if true then t else errorClass ("Critical error, should never happen [3]."^email) p in (* TODO *)
   (* idealized process (some idealized output may miss) -> nonce process *)
   let rec noncesProc = function
     | Nil -> Nil
@@ -734,7 +739,7 @@ let transC1 proto p inNameFile nameOutFile =
        Output(tc, tmChoice , noncesProc p, occ)
     | Let (patx,t,pt,pe,occ) -> Let (patx,t, noncesProc pt, noncesProc pe, occ)
     | Test (t,pt,pe,occ)-> Test(t, noncesProc pt, noncesProc pe,occ)
-    | p -> errorClass ("Critical error, should never happen [5].") p in
+    | p -> errorClass ("Critical error, should never happen [5]."^email) p in
   let noncesProto = 
     { proto with
       ini = noncesProc proto.ini;
@@ -807,7 +812,7 @@ let transC1 proto p inNameFile nameOutFile =
        Par(cleanTest accTest ((patx,t)::accLet) pt,
 	   cleanTest accTest accLet pe)
     | Test (t,pt,pe,occ)-> Par(cleanTest (t::accTest) accLet pt, cleanTest accTest accLet pe)
-    | p -> errorClass ("Critical error, should never happen.") p in
+    | p -> errorClass ("Critical error, should never happen."^email) p in
   let cond1Proto = 
     { noncesProto with
       sessNames = proto.sessNames @ (List.rev !listNames);
@@ -855,15 +860,18 @@ let transBoth  p inNameFile nameOutFileFO nameOutFileWA =
 		 ini = proto1.ini;
 		 res = proto1.res } in  
   if not(!Param.shortOutput)
-  then displayProtocol proto1;
+  then begin
+      pp "2-Party protocol extracted from yout input model:\n";
+      displayProtocol proto1;
+    end;
 
   pp (Display.header "Generation of the model encoding frame opacity");  
   transC1 proto1 p inNameFile nameOutFileFO;
-  pp (Printf.sprintf "===> A ProVerif model encoding the frame opacity condition has been written in %s.\n" nameOutFileFO);
+  pp (Display.result (Printf.sprintf "A ProVerif model encoding the frame opacity condition has been written in %s.\n" nameOutFileFO));
   printHelp nameOutFileFO;
   pp (Display.header "Generation of the model encoding well-authentication");  
   pp "\n";
   transC2 proto2 p inNameFile nameOutFileWA;
-  pp (Printf.sprintf "===> A ProVerif model encoding the well-authentication condition has been written in %s.\n" nameOutFileWA);  
+  pp (Display.result (Printf.sprintf "A ProVerif model encoding the well-authentication condition has been written in %s.\n" nameOutFileWA));
   printHelp nameOutFileWA;
   proto1.idNamesANO
