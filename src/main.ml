@@ -1,10 +1,12 @@
 (*************************************************************
  *                                                           *
- *  UKano                                                    *
+ *  UKano: UnlinKability and ANOnymity verifier              *
  *                                                           *
  *  Lucca Hirschi                                            *
- *                                                           *
+ *  http://projects.lsv.ens-cachan.fr/ukano/                 *
  *  Copyright (C) Lucca Hirschi 2015-2017                    *
+ *  Copyright (C) Bruno Blanchet, Vincent Cheval,            *
+ *                INRIA, CNRS 2000-2015                      *
  *                                                           *
  *************************************************************)
 
@@ -85,14 +87,18 @@ let anal_file s =
   (* Check if destructors are deterministic *)
   Destructor.check_deterministic !Pitsyntax.destructors_check_deterministic;
   
-  (* Display the original processes *)
+  (* Simplification of the orginal process *)
   let p = Simplify.prepare_process p0 in
   Pitsyntax.set_need_vars_in_names();
   incr Param.process_number;
-  print_string "Process:\n";
-  Display.Text.display_process_occ "" p;
-  Display.Text.newline();
 
+  (* Display the original processes *)
+  if false then begin
+      print_string "Process:\n";
+      Display.Text.display_process_occ "" p;
+      Display.Text.newline();
+    end;
+  
   
   (* Compute filename for the two produced ProVerif files *)
   let fileNameC1, fileNameC2 =
@@ -105,9 +111,9 @@ let anal_file s =
 	(prefixRel^"_FOpa.pi", prefixRel^"_WAuth.pi")
     with _ -> ("OUTPUT_FOpa.pi","OUTPUT_WAuth.pi") in
   (* Compute and create the two ProVerif files checking the two conditions *)
-  Ukano.transBoth p s fileNameC1 fileNameC2;
+  let listIdNames = Ukano.transBoth p s fileNameC1 fileNameC2 in
   (* Verify the conditions using ProVerif *)
-  Proverif.verifyBoth (!pathProverif) fileNameC1 fileNameC2 []
+  Proverif.verifyBoth (!pathProverif) fileNameC1 fileNameC2 listIdNames
 
 
 (********************)
@@ -120,7 +126,9 @@ let _ =
       "--help",  Arg.Unit (fun () -> Printf.printf "%s\n" helpMess),
       "\t\tprint help message";
       "--proverif",  Arg.String (fun path -> pathProverif := path),
-      "\t\tpath of the ProVerif executable to use (optional, default: './proverif')"
+      "\t\tpath of the ProVerif executable to use (optional, default: './proverif')";
+      "--less-verbose",  Arg.Unit (fun () -> Param.shortOutput := true),
+      "\t\treduce the verbosity"
     ]
     anal_file welcomeMess;
   if !gc then Gc.print_stat stdout

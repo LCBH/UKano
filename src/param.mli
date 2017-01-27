@@ -25,6 +25,11 @@
     Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 *)
+
+(* UKANO *)
+(* print only necessary information *)
+val shortOutput : bool ref
+		    
 val lib_name : string ref
 
 val def_var_name : string
@@ -211,8 +216,3 @@ val max_used_phase : int ref
 val session1 : Types.funsymb
 val red_rules : (Types.fact list * Types.fact * Types.constraints list list * Types.label) list ref
 val elim_true : Types.fact list ref
-
-(* ukano translator *)
-val trad_ukano : bool ref
-(* beta mode for ukano translator for new senarios *)
-val newCases : bool ref

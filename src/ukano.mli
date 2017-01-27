@@ -4,7 +4,7 @@
  *                                                           *
  *  Lucca Hirschi                                            *
  *  http://projects.lsv.ens-cachan.fr/ukano/                 *
- *  Copyright (C) 2015-2016                                  *
+ *  Copyright (C) Lucca Hirschi 2015-2017                    *
  *                                                           *
  *************************************************************)
 
@@ -38,8 +38,9 @@ val helpMess : string
 exception NotInClass of string
 
 (** [transC2 p inNameFile outNameFileC1 outNameFileC2] writes in the files [outNameFileC_] complete ProVerif files checking respectively
-frame opacity and well-authentication for the process [p] and the theory contained in [inNameFile]. *)
-val transBoth : Types.process -> string -> string -> string -> unit
+frame opacity and well-authentication for the process [p] and the theory contained in [inNameFile]. Returns the list of string representations
+of identity names took into acount for anonymity.*)
+val transBoth : Types.process -> string -> string -> string -> Types.funsymb list
 								 
 (** Display a representation of the 2-agents protocol associated to a given process. *)
 val displayProcessProtocol : Types.process -> unit

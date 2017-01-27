@@ -28,6 +28,25 @@
 open Types
 open Pitypes
 
+let char = "="
+let rec repeat s0 c = function
+  | 0 -> s0
+  | n -> repeat (s0^c) c (n-1)
+  
+let header s =
+  let len = String.length s in
+  let lheader = repeat "" "=" (40 - (len+2)/2) in
+  let rheader = repeat "" "=" (80 - (len + 2 + String.length lheader)) in
+  "\n" ^ lheader ^ " " ^ s ^ " " ^ rheader
+		  
+let title s =
+  let len = String.length s in
+  let headerp = repeat "" "=" 80 in
+  Printf.sprintf "\n%s%s\n%s\n" headerp (header s) headerp
+
+let result s =
+  Printf.sprintf "======> %s" s
+		   
 (* Helper function to make the display more readable: we abbreviate names with
    just a constant symbol. *)
 

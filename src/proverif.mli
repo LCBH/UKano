@@ -9,4 +9,4 @@
  *************************************************************)
 
 (** [verifyBoth exeProVerif inNameFileFO inNameFileWA namesId] TODO *)
-val verifyBoth : string -> string -> string -> string list -> unit
+val verifyBoth : string -> string -> string -> Types.funsymb list -> unit

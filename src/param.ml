@@ -28,6 +28,9 @@
 open Types
 open Ptree
 
+(* UKANO *)
+let shortOutput = ref false
+		   
 let lib_name = ref ""
 
 let def_var_name = "v"
@@ -394,8 +397,3 @@ let session1 = { f_name = "session1";
 	         f_initial_cat = Eq [] }
 let red_rules = ref []
 let elim_true = ref []
-
-
-(* ukano translator *)
-let trad_ukano = ref true
-let newCases = ref true

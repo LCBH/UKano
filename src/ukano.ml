@@ -4,7 +4,7 @@
  *                                                           *
  *  Lucca Hirschi                                            *
  *  http://projects.lsv.ens-cachan.fr/ukano/                 *
- *  Copyright (C) 2015-2016                                  *
+ *  Copyright (C) Lucca Hirschi 2015-2017                    *
  *                                                           *
  *************************************************************)
 
@@ -24,31 +24,20 @@
     Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
  *)
-(** This module provides functions from the UnlinKability and ANOnymity
-    verifier built on top of ProVerif as described in the following paper:
-    [1] L. Hirschi, D. Baelde and S. Delaune.
-        A Method for Verifying Privacy-Type Properties : The Unbounded Case.
-        In IEEE Symposium on Security and Privacy (Oakland), 2016. To appear.
-    A copy can be found at http://projects.lsv.ens-cachan.fr/ukano/ *)
-
-
-(* Helping message *)
-let helpMess = 			(* TODO *)
-  ("Only typed ProVerif files are accepted (the option '-in pitype' is enabled by default). See the folder './examples/' for examples\n"^
-     "of files in the correct format. They can be used to bootsrap your own file. For more details, see the README file at the root of\n"^
-       "the project.\n")
 
 open Types
 open Pervasives
 
-let pp s= Printf.printf "%s" s
+(* Helping message *)
+let helpMess = 			(* TODO *)
+  ("Your input model is not conform. It should be a valid typed ProVerif model ('proverif -in pitype <path>' should accept it).\nMoreover, it should comply with requirements
+    explained in the README. You can refer to the folder './examples/' for examples of files in the correct format.\n They can be used to bootstrap your own file."
 
+   let pp s= Printf.printf "%s" s
+		     
 (* For debugging purpose *)
 let log s = Printf.printf "> %s\n%!" s
 let debug = ref false
-
-(* For enabling new theory *)
-let newCases = Param.newCases	
 
 let splitTheoryString = "==PROTOCOL=="
 
@@ -205,7 +194,7 @@ let extractProto process =
 	     then begin isNewCase := true; log "Warning: Initiator does not use any identity name. This may cause false negative."; end;
 	     if List.length idNamesRes = 0
 	     then begin isNewCase := true; log "Warning: Responder does not use any identity name. This may cause false negative."; end;
-	     if !isNewCase && !newCases
+	     if !isNewCase
 	     then log "==> This is why we are going to use a new functionality in beta to deal with the new kind of scenario you gave as input.";
 	     {
 	       comNames = comNames;
@@ -228,25 +217,30 @@ let extractProto process =
 (* Display functions                                        *)
 (************************************************************)
 
+let noneOrList f l =
+  if List.length l = 0
+  then pp "none"
+  else List.iter f l  
+
 let displayProtocol proto =
-  pp "{\n   Common Names: ";
-  List.iter (fun s -> Display.Text.display_function_name s; pp ", ") proto.comNames;
-  pp  "\n   Identity Names: ";
-  List.iter (fun s -> Display.Text.display_function_name s; pp ", ") proto.idNames;
-  pp  "\n   Session Names:  ";   
-  List.iter (fun s -> Display.Text.display_function_name s; pp ", ") proto.sessNames;
-  pp  "\n   Session Names to be revealed for ANO:  ";   
-  List.iter (fun s -> Display.Text.display_function_name s; pp ", ") proto.idNamesANO;
-  pp  "\n   Shared identity names:  ";   
-  List.iter (fun s -> Display.Text.display_function_name s; pp ", ") proto.idNamesShared;
+  pp "{\n   Global names: ";
+  noneOrList (fun s -> Display.Text.display_function_name s; pp ", ") proto.comNames;
+  pp  "\n   Identity names: ";
+  noneOrList (fun s -> Display.Text.display_function_name s; pp ", ") proto.idNames;
+  pp  "\n   Session names:  ";   
+  noneOrList (fun s -> Display.Text.display_function_name s; pp ", ") proto.sessNames;
+  pp  "\n   Session names to be revealed for checking anonymity:  ";   
+  noneOrList (fun s -> Display.Text.display_function_name s; pp ", ") proto.idNamesANO;
+  pp  "\n   Shared (by initiator and responder) identity names:  ";   
+  noneOrList (fun s -> Display.Text.display_function_name s; pp ", ") proto.idNamesShared;
   pp  "\n   Identity names of initiator:  ";   
-  List.iter (fun s -> Display.Text.display_function_name s; pp ", ") proto.idNamesIni;
+  noneOrList (fun s -> Display.Text.display_function_name s; pp ", ") proto.idNamesIni;
   pp  "\n   Identity names of responder:  ";   
-  List.iter (fun s -> Display.Text.display_function_name s; pp ", ") proto.idNamesRes;
+  noneOrList (fun s -> Display.Text.display_function_name s; pp ", ") proto.idNamesRes;
   let sep = "      >   " in
-  pp  "\n   Initiator:\n";
+  pp  "\n   Initiator role:\n";
   Display.Text.display_process sep proto.ini;
-  pp    "   Responder:\n";
+  pp    "   Responder role:\n";
   Display.Text.display_process sep proto.res;
   pp  "}\n"
       
@@ -571,9 +565,7 @@ let transC2 proto p inNameFile nameOutFile =
 		      ini = iniEvents;
 		      res = resEvents;
 		    } in
-  let isShared = if not(!newCases)
-		 then true
-		 else List.length proto.idNamesShared > 0 in
+  let isShared = List.length proto.idNamesShared > 0 in
   if not(isShared)
   then log "Warning: We create events using a new functionality in beta to deal with the new kind of scenario you gave as input.";
   let allQueries = (List.map (fun (nb,nbIn) -> generateQuery isShared nb nbIn true) iniTests) @ 
@@ -687,7 +679,7 @@ let transC1 proto p inNameFile nameOutFile =
     | FunApp (f, listT)
 	 when isTuple f
       -> FunApp (f, List.map guessIdeal listT) (* tuple *)
-    | term -> if !newCases then begin
+    | term -> if true then begin	       (* TODO!! *)
 		  log "Warning: some idealized messages you gave do not use 'hole' and are extended. The idealization of : ";
 		  Printf.printf "     ";
 		  Display.Text.display_term term;
@@ -723,7 +715,7 @@ let transC1 proto p inNameFile nameOutFile =
   let rec noncesTerm = function
     | FunApp (f, tList) when f.f_name = "hole" -> createNonce()
     | FunApp (f, tList) -> FunApp (f, List.map noncesTerm tList)
-    | t -> if !newCases then t else errorClass ("Critical error, should never happen [3].") p in
+    | t -> if true then t else errorClass ("Critical error, should never happen [3].") p in (* TODO *)
   (* idealized process (some idealized output may miss) -> nonce process *)
   let rec noncesProc = function
     | Nil -> Nil
@@ -846,14 +838,32 @@ let transC1 proto p inNameFile nameOutFile =
 (* END OF REDIRECTION *)
 
 
+let printHelp path =
+  pp (Printf.sprintf "If you want to manually verify the condition, launch 'proverif -in pitype %s'.\n" path)
+     
 (** [transC2 p inNameFile outNameFileC1 outNameFileC2] writes in the files [outNameFileC_] complete ProVerif files checking respectively
 frame opacity and well-authentication for the process [p] and the theory contained in [inNameFile]. *)
 let transBoth  p inNameFile nameOutFileFO nameOutFileWA = 
+  pp (Display.title "GENERATION OF MODELS ENCODING SUFFICIENT CONDITIONS");
+
+  if not(!Param.shortOutput)
+  then begin pp (Display.header "Parsing of the input model");
+	     pp "\n";
+       end;
   let proto1 = extractProto p in
   let proto2 = { proto1 with
 		 ini = proto1.ini;
-		 res = proto1.res } in
-  if !debug then
-    displayProtocol proto1;
+		 res = proto1.res } in  
+  if not(!Param.shortOutput)
+  then displayProtocol proto1;
+
+  pp (Display.header "Generation of the model encoding frame opacity");  
   transC1 proto1 p inNameFile nameOutFileFO;
-  transC2 proto2 p inNameFile nameOutFileWA
+  pp (Printf.sprintf "===> A ProVerif model encoding the frame opacity condition has been written in %s.\n" nameOutFileFO);
+  printHelp nameOutFileFO;
+  pp (Display.header "Generation of the model encoding well-authentication");  
+  pp "\n";
+  transC2 proto2 p inNameFile nameOutFileWA;
+  pp (Printf.sprintf "===> A ProVerif model encoding the well-authentication condition has been written in %s.\n" nameOutFileWA);  
+  printHelp nameOutFileWA;
+  proto1.idNamesANO

@@ -127,6 +127,10 @@ all:
 	ocamllex pitlexer.mll
 	make build
 
+short:
+	make build
+
+
 build: depend $(EXEC)
 
 opt : $(EXEC).opt

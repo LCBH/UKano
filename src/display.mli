@@ -27,6 +27,14 @@
 *)
 open Types
 
+(* Some pretty printing stuff *)
+(** Takes a string and decorate it with a header. *)
+val header : string -> string
+(** Takes a string and decorate it with a title header. *)
+val title : string -> string
+(** Takes a string and decorate it to highlight a result. *)
+val result : string -> string
+			 
 (* Return an abbreviated derivation and an association table where the names are abbreviated *)
 
 val abbreviate_derivation : fact_tree -> (term * term) list * fact_tree

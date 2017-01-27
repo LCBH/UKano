@@ -10,6 +10,11 @@ ukano:
 	$(MAKE) all -C $(UKANO)
 	cp $(UKANO)/ukano .
 
+ukano-short:
+	@echo "#### Building UKano ...."
+	$(MAKE) short -C $(UKANO)
+	cp $(UKANO)/ukano .
+
 proverif:
 	@echo "#### Building ProVerif ...."
 	$(MAKE) all -C $(PROVERIF)
