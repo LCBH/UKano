@@ -441,14 +441,14 @@ let makeEvent name args =
     } in
   FunApp (funSymbEvent, args)
 				      
-(** Display a whole ProVerif file checking the first condition except for the theory (to be appended). *)      
+(** Display a whole ProVerif file checking well-authentication except for the theory (to be appended). *)      
 let transC2 proto p inNameFile nameOutFile = 
   let proto = cleanChoice proto in
 
   let (sessName,idName) =
     try (List.hd proto.sessNames, List.hd proto.idNames) (* 2 funSymb *)
-    with _ -> failwith "The protocol should have at least one identity name and one session name." in
-  let (sessTerm,idTerm) = FunApp (sessName, []), FunApp (idName, []) in
+    with _ -> errorClass "The protocol should have at least one identity name and one session name." p in
+  let (sessTerm,idTerm) = FunApp (sessName, []), FunApp (idName, []) in (* argument of events describing session and identity *)
   let listEvents = ref [] in
   let iniPrefix, resPrefix = "I", "R" in
   let nameEvent prefixName nb actionName = Printf.sprintf "%s%s_%d" prefixName actionName nb in
@@ -469,7 +469,7 @@ let transC2 proto p inNameFile nameOutFile =
       if isIni
       then merge (List.rev listOut, List.rev listIn)
       else merge (List.rev listIn, List.rev listOut) in
-    let rec goThrough listTest listIn listOut = function
+    let rec goThrough listTest listIn listOut = function (* rec. function adding events *)
       | Input (tc,((PatVar bx) as patx),p,occ) -> (* bx: binder in types.mli *)
 	 let newListIn = (Var bx) :: listIn in
 	 let subProc,lTest,nbOut = goThrough listTest newListIn listOut p in
@@ -514,7 +514,7 @@ let transC2 proto p inNameFile nameOutFile =
       | _ -> failwith ("Critical error: transC2 is applied on a protocol that does not satisfy the syntactical restrictions. Should never happen [7]."^email) in
     goThrough [] [] [] proc in
 
-  (* Generate a string for a query *)
+  (* Generate a string for a query (depends on whether shared or not, number of actions before events, nb of in, role) *)
   let generateQuery isShared nb nbIn isInitiator =
     let prefix = if isShared
 		 then "query k:bitstring, n1:bitstring, n2:bitstring,\n"
@@ -525,7 +525,7 @@ let transC2 proto p inNameFile nameOutFile =
     let rec range = function | 0 -> [] | n -> n :: range (n-1) in
     let listArgs nb = 		(* generate a list of messages to give as arguments to events *)
       List.map (fun n -> Printf.sprintf "m%d" n) (List.rev (range nb)) in      
-    let allListArgs nb role = 
+    let allListArgs nb role = 	(* glue all arguments together for types of queries *)
       if isShared
       then "k" :: (if role==iniPrefix then "n1" else "n2") :: (listArgs nb)
       else (if role==iniPrefix then "k1" else "k2") ::
@@ -538,10 +538,10 @@ let transC2 proto p inNameFile nameOutFile =
     let dual (p1,p2) = p2,p1 in
     let roles = iniPrefix,resPrefix in
     let dualRoles = dual roles in
-    let rec produceEvents = function
+    let rec produceEvents = function (* produce the nested events in -> out -> in ... *)
       |	0 -> []
       | n  -> 
-	 let outRole, inRole = if (n mod 2) = 0 then dualRoles else roles in
+	 let outRole, inRole = if (n mod 2) = 0 then dualRoles else roles in (* involved roles depend on parity *)
 	 let n' = if (n mod 2) = 0 then n/2 else n/2+1 in
 	   (* if (n mod 2) = 0 then n-1 else n in *)
 	 (Printf.sprintf "event(%s(%s))" (nameEvent inRole n' "in") (String.concat "," (allListArgs n inRole)))
@@ -551,7 +551,7 @@ let transC2 proto p inNameFile nameOutFile =
 	   produceEvents (n-1) in
     let listEvents = produceEvents (if isInitiator then 2*nbIn else max (2*nbIn-1) 0) in
     let thisRole = if isInitiator then fst roles else snd roles in
-    let lastEvent = Printf.sprintf "event(%s(%s))" 
+    let lastEvent = Printf.sprintf "event(%s(%s))" (* the first event before the nested events in -> out ... *)
 				   (nameEvent thisRole nb "test")
 				   (String.concat "," (allListArgs nbArgs thisRole)) in
     let strImplications = String.concat "  ==>\n" 
@@ -564,18 +564,23 @@ let transC2 proto p inNameFile nameOutFile =
   in
 
   (* -- 1. -- COMPUTING EVENTS VERSION AND QUERIES *)
+  (* Adding events IN roles *)
   let iniEvents,iniTests,iniNbOut = addEventsRole proto.ini iniPrefix true in
   let resEvents,resTests,resNbOut = addEventsRole proto.res resPrefix false in
   let protoEvents = { proto with
 		      ini = iniEvents;
 		      res = resEvents;
 		    } in
+  let toDisplay = pushNames protoEvents in
   let isShared = List.length proto.idNamesShared > 0 in
   if not(isShared)
-  then log "Warning: We create events using a new functionality in beta to deal with the new kind of scenario you gave as input.";
+  then pp "> Note: Since no session name is shared, we create events accordingly.";
+
+  (* Generating queries *)
   let allQueries = (List.map (fun (nb,nbIn) -> generateQuery isShared nb nbIn true) iniTests) @ 
 		     (List.map (fun (nb,nbIn) -> generateQuery isShared nb nbIn false) resTests) in
 
+  (* Generating type declarations of events *)
   let displayEventsDec listEvents =
     let rec nBit = function
       | 0 -> []
@@ -588,7 +593,8 @@ let transC2 proto p inNameFile nameOutFile =
   (* -- 2. -- GET the theory part of inNameFile *)
   let theoryStr = theoryStr inNameFile in
   
-  (* -- 3. -- Print evrything using a HACK TO REDIRECT STDOUT *)
+  (* -- 3. -- Print everything using a HACK TO REDIRECT STDOUT *)
+  (* BEGINNING OF REDIRECTION *)
   let old_descr = Unix.dup Unix.stdout in
   let newstdout = open_out nameOutFile in
   print_newline ();		(* for flushing stdout *)
@@ -604,7 +610,6 @@ let transC2 proto p inNameFile nameOutFile =
   List.iter (fun s -> Printf.printf "%s\n" s) allQueries;
   pp "\n\n(* == PROTOCOL WITH EVENTS == *)\n";
   pp "let SYSTEM =\n";
-  let toDisplay = pushNames protoEvents in
   displayProtocolProcess toDisplay;
   Printf.printf ".\nprocess SYSTEM\n%!";
   close_out newstdout;
@@ -861,7 +866,7 @@ let transBoth  p inNameFile nameOutFileFO nameOutFileWA =
 		 res = proto1.res } in  
   if not(!Param.shortOutput)
   then begin
-      pp "2-Party protocol extracted from yout input model:\n";
+      pp "2-Party protocol extracted from yout input model ('choice[ul,ur]'\nspecifies that 'ul' is the real output and 'ur' is the idealization):\n";
       displayProtocol proto1;
     end;
 

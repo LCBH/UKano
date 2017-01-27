@@ -90,9 +90,9 @@ new skP : bitstring;
             let (mergeOut: bitstring) = 
                 choice[ 
                     let catchRealMess:bitstring = (
-                        let ((xnr: bitstring,=nt,xkr: bitstring)) = dec(x1,k_51) in
+                        let ((xnr: bitstring,=nt,xkr: bitstring)) = dec(x1,k_48) in
                         let ((=init,xrandR: bitstring)) = dec(x2,hashKey(kt,xkr)) in
-                        if (enc(dec(x1,k_51),k_51) = x1) then
+                        if (enc(dec(x1,k_48),k_48) = x1) then
                         if (dec(x3,hashKey(kt,xkr)) = read) then
                            enc((idDGI,sign(idDGI,skP)),hashKey(kt,xkr))  ) in
                     catchRealMess
@@ -109,14 +109,14 @@ new skP : bitstring;
         new nr: bitstring;
         new kr: bitstring;
         new n1: bitstring;
-        out(cr, choice[enc((nr,y1,kr),k_51),n1]);
+        out(cr, choice[enc((nr,y1,kr),k_48),n1]);
         in(cr, y2: bitstring);
         new randR: bitstring;
         new n2: bitstring;
         let (mergeOut: bitstring) = 
             choice[ 
                 let catchRealMess:bitstring = (
-                    let ((=y1,=nr,ykt: bitstring)) = dec(y2,k_51) in
+                    let ((=y1,=nr,ykt: bitstring)) = dec(y2,k_48) in
                        enc((init,randR),hashKey(ykt,kr))  ) in
                 catchRealMess
                 else n2
