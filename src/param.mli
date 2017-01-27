@@ -29,6 +29,8 @@
 (* UKANO *)
 (* print only necessary information *)
 val shortOutput : bool ref
+(* do we assume idealization is conform *)
+val ideaAssumed : bool ref
 		    
 val lib_name : string ref
 

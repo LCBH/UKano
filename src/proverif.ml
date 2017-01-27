@@ -26,22 +26,25 @@ let result = "RESULT"
 let okEquivalence = "RESULT Observational equivalence is true (bad not derivable)."
 let noEquivalence = "RESULT Observational equivalence cannot be proved (bad derivable)."
 let okQuery = "true"
-let noQuery = "false"
+let noQuery = "proved"
 
 let parseQueryAnswer s =
   let err _ = ppError "ProVerif was not found or ProVerif crashed. Please puruse manually (launch ProVerif on generated files)." in
   let regexpIs = Str.regexp_string "is" in
   let last = String.length s in
   try let isPresent = Str.search_backward regexpIs s last in (* last position of "is" *)
-      let isBeforeFalse _ =
+      let cannotBeforeProved _ =
 	try
-	  let falsePresent = Str.search_backward
+	  let cannotPresent = Str.search_backward
+			       (Str.regexp_string "cannot")
+			       s last in (* last position of "cannot" *)
+	  let provedPresent = Str.search_backward
 			       (Str.regexp_string noQuery)
-			       s last in (* last position of "true" *)
-	  if falsePresent > isPresent
-	  then false       (* 'false' after last 'is' -> NO *)
+			       s last in (* last position of "proved" *)
+	  if provedPresent > cannotPresent
+	  then false       (* 'proved' after cannot 'is' -> NO *)
 	  else err ()
-	with Not_found -> err () (* no 'true' nor 'false' *)
+	with Not_found -> err () (* no 'proved' or 'cannot' *)
       in
       try
 	let truePresent = Str.search_backward
@@ -49,8 +52,8 @@ let parseQueryAnswer s =
 			    s last in (* last position of "true" *)
 	if truePresent > isPresent
 	then true	   (* 'true' after last 'is' -> OK *)
-	else isBeforeFalse () (* no 'true' after the last 'is', maybe 'false ? *)
-      with Not_found ->  isBeforeFalse ()  (* no 'true', maybe 'false' ? *)
+	else cannotBeforeProved () (* no 'true' after the last 'is', maybe 'false ? *)
+      with Not_found -> cannotBeforeProved ()  (* no 'true', maybe 'false' ? *)
   with Not_found -> err ()	(* no 'is' *)
 
 
@@ -129,7 +132,10 @@ let verifyBoth pathProverif sFO sWA namesIdAno =
 		establishedWA := true;
 		pp (Display.result "Well Authentication has been established.");
 	      end
-	    else begin
+	    else if List.length subOk = 0 then begin
+		pp (Display.result (sprintf "Well Authentication could be established for none of the test. It may be the case that all tests are safe though."));
+	      end else begin
+		establishedWAPart := true;
 		pp (Display.result (sprintf "Well Authentication has been established for %d over %d tests.
 					     Please verify that the following queries correspond to safe conditionals."
 					    (List.length subOk) (List.length subResults)));
@@ -144,15 +150,15 @@ let verifyBoth pathProverif sFO sWA namesIdAno =
       then (if verbose then pp "Frame Opacity and Well-Authentication have been established (providing the conditionals listed above are safe).")
       else (if verbose then pp "Frame Opacity and Well-Authentication have been established.");
       if List.length namesIdAno == 0
-      then pp (Display.result "Therefore, the input protocol ensures Unlinkability.")
+      then pp (Display.result "RESULT: OK. Therefore, the input protocol ensures Unlinkability.")
       else begin
-	  Printf.printf "%s" (Display.result "Therefore, the input protocol ensures Unlinkability and Anonymity w.r.t. identity names: (");
+	  Printf.printf "%s" (Display.result "RESULT: OK. Therefore, the input protocol ensures Unlinkability and Anonymity w.r.t. identity names: (");
 	  List.iter (fun s -> Display.Text.display_function_name s; printf ", ") namesIdAno;
 	  pp ").";
 	end;
     end
   else pp (Display.result
-	     "===> Frame Opacity or Well-Authentication could not be established. This does not necessarily implies that the input protocol
+	     "===> RESULT: NO. Frame Opacity or Well-Authentication could not be established. This does not necessarily implies that the input protocol
 	      violates unlinkability or anonymity.\n\t1. Indeed, it may be the case that ProVerif could not established the conditions
 	      (due to over-approximations) while they actually hold --- in that case, please refer to the ProVerif's manual. \n\t2. Or the
 	      conditions do not hold. In that case, UKano cannot currently conclude on your protocol. If you think that is the case, please

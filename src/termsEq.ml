@@ -31,11 +31,11 @@ open Parsing_helper
 
 let equationsToRecord = ref false
 
-let equations_list = ref []
+let equations_list = ref []	  
 let register_equation eq_info l =
   equationsToRecord := true;
   equations_list := (l,eq_info) :: (!equations_list)
-
+			   
 let hasEquations() =
   !equations_list != []
 

@@ -30,6 +30,7 @@ open Ptree
 
 (* UKANO *)
 let shortOutput = ref false
+let ideaAssumed = ref false
 		   
 let lib_name = ref ""
 

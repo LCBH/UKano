@@ -42,3 +42,9 @@ val get_nounif : unit -> (fact_format * int) list
 val destructors_check_deterministic : funsymb list ref
 val set_need_vars_in_names : unit -> unit
 val reset_need_vars_in_names : unit -> unit
+
+(* UKano *)
+(* Register equations *)
+val funSymb_equation : string list ref
+
+

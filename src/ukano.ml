@@ -40,7 +40,9 @@ let email = " Please report this error with the input file to lucca.hirschi@lsv.
 let log s = Printf.printf "> %s\n%!" s
 let debug = ref false
 let verbose = ref false
-	     
+let ideaAssumed = ref false
+let isLastOutputByIni = ref false
+			    
 let splitTheoryString = "==PROTOCOL=="
 
 (* Raised when the inputted process is not a 2-agents protocol as specified
@@ -105,6 +107,7 @@ let extractProto process =
   let rec getNames acc = function
     | Restr (idName,_,p',_) -> getNames (idName::acc) p'
     | _ as p -> acc, p in
+  let numberIn = ref 0 in
   (* Check that a given role is of the expected form: optional arguments are used to make sure
      the role meets the alternation in/test*/out with same else branches in test*. *)
   let rec checkRole ?lastInp:(laI=false) ?lastOut:(laO=false)
@@ -112,6 +115,7 @@ let extractProto process =
     | Nil -> ()
     | Input (_,(PatVar bx),p,_) as proc ->
        if laI then errorClass ("Roles cannot perform two inputs in a row.") proc;
+       incr(numberIn);
        checkRole ~lastInp:true ~lastOut:false ~lastCondi:false accN p
     | Input (_,_,_,_) as proc -> 
        errorClass ("Roles cannot user patterns in input.") proc;
@@ -153,10 +157,15 @@ let extractProto process =
   let checkRoles p1 p2 =
     let namesP1, namesP2 = ref [], ref [] in
     checkRole namesP1 p1;
+    let numberInP1 = !numberIn in
+    numberIn := 0;
     checkRole namesP2 p2;
+    let numberInP2 = !numberIn in
     match (fstIsOut p1, fstIsOut p2) with
-    | true,false -> (p1,!namesP1),(p2,!namesP2)
-    | false,true -> (p2,!namesP2),(p1,!namesP1)
+    | true,false -> if numberInP1 >= numberInP2 then isLastOutputByIni:= true;
+		    (p1,!namesP1),(p2,!namesP2)
+    | false,true -> if numberInP2 <= numberInP1 then isLastOutputByIni:= true;
+		    (p2,!namesP2),(p1,!namesP1)
     | _ -> errorClass ("The two roles are not dual.") p1 in
   (* remove all restriction of names in roles *)
   let rec removeRestr = function
@@ -632,22 +641,23 @@ let transWA proto p inNameFile nameOutFile =
 (************************************************************)
 (* Handling nonce versions & checking Frame Opacity         *)
 (************************************************************)
-
+(** Some symbols we shall add *)
+(* CHECK: works like this, better would be to understand what are those flags for *)
 let choiceSymb = {
     f_name = "choice";
     f_type = ([typeBit;typeBit], typeBit);
     f_cat = Choice;
     f_initial_cat = Choice;
-    f_private = false;		(* TODO *)
-    f_options = 0;		(* TODO *)
+    f_private = false;		(* CHECK* *)
+    f_options = 0;		(* CHECK* *)
   }
 let letCatchSymb = {
     f_name = "";
     f_type = ([typeBit;typeBit;typeBit], typeBit);
     f_cat = LetCatch;
     f_initial_cat = LetCatch;
-    f_private = true;		(* TODO *)
-    f_options = 0;		(* TODO *)
+    f_private = true;		(* CHECK* *)
+    f_options = 0;		(* CHECK* *)
   }
 let hole =
   FunApp
@@ -656,7 +666,7 @@ let hole =
 	f_type = ([], typeBit);
 	f_cat = Tuple;
 	f_initial_cat = Tuple;	f_private = true;
-	f_options = 0;		(* TODO *)
+	f_options = 0;		(* CHECK* *)
       }
     , [])
 let mergeOut = {
@@ -667,12 +677,12 @@ let mergeOut = {
     link = NoLink;
   }
 		 
-let debugF_type (tl,t) = 
-  ""
+let debugF_type (tl,t) = ""
+
 let displayCat = function
   | Tuple -> "Tuple"
   | Name _ -> "Name"
-  | _ -> "todo"
+  | _ -> failwith ("Critial error [45]."^email)
 
 let debugFunSymb f = 
   Printf.printf 
@@ -685,12 +695,16 @@ let debugFunSymb f =
     
 (** Display a whole ProVerif file checking the first condition except for the theory (to be appended). *)      
 let transFO proto p inNameFile nameOutFile = 
-    (* -- 1. -- Build nonce versions on the right *)
-  let nonTransparentSymbList = ["enc"; "aenc"; "dec"; "adec"; "h"; "hash"; "xor"] in
+  (* -- 1. -- Build nonce versions on the right *)
+  (* TODO: extend this list: *)
+  let nonTransparentSymbList = ["enc"; "aenc"; "dec"; "adec"; "h"; "hash"; "xor"; "dh"; "exp"; "mac"] in
+  let isArity0 funSymb = match funSymb.f_type with | ([], _) -> true | _ -> false in
   let isName funSymb = match funSymb.f_cat with Name _ -> true | _ -> false in
   let isPrivate funSymb = funSymb.f_private in
-  let isConstant funSymb = isName funSymb && not(isPrivate funSymb) in
+  let isConstant funSymb = (isName funSymb && not(isPrivate funSymb)) ||
+			     (isArity0 funSymb) in
   let isTuple funSymb = match funSymb.f_cat with Tuple -> true | _ -> false in
+  (* Given a term, tries to guess an idealization *)
   let rec guessIdeal = function
     | FunApp (f, []) as t
 	 when isConstant f -> t	             (* public constants *)
@@ -701,27 +715,53 @@ let transFO proto p inNameFile nameOutFile =
     | FunApp (f, listT)
 	 when isTuple f
       -> FunApp (f, List.map guessIdeal listT) (* tuple *)
-    | term -> if true then begin	       (* TODO!! *)
-		  log "Warning: some idealized messages you gave do not use 'hole' and are extended. The idealization of : ";
-		  Printf.printf "     ";
-		  Display.Text.display_term term;
-		  Printf.printf "\n";
-		  log "will be itself.\n";
-		  term
-		end
-	      else begin
-		  log "Warning: some idealized messages are missing and it is unclear how to guess them. The idealization of : ";
-		  Printf.printf "     ";
-		  Display.Text.display_term term;
-		  Printf.printf "\n";
-		  log "will be a hole.\n";
-		  hole;
-		end in
+    | term -> (* if true then begin log "Warning: some idealized messages you gave do not use 'hole' and are extended. The idealization of : "; *)
+       (* 	  Printf.printf "     "; *)
+       (* 	  Display.Text.display_term term; *)
+       (* 	  Printf.printf "\n"; *)
+       (* 	  log "will be itself.\n"; *)
+       (* 	  term; end else*)
+       begin
+	 log "WARNING: no idealization was given for an output and UKano's heuristics failed to guess one. For the sake of soundness, we let the idealization of : ";
+	 Printf.printf "     ";
+	 Display.Text.display_term term;
+	 Printf.printf "   ";
+	 pp "be a hole (i.e., session name variable).\n";
+	 hole;
+       end in
+  (* Given a term, check that its corresponds to an idealization (including all functions not in E).
+   [insidehonest] desribes if this output is inside the honest execution (i.e., not in else nor at
+   the end of honest execution. *)
+  let checkIdeal inHonest t =
+    let rec checkSyntax  = function
+      | Var b -> true				 (* variable *)
+      | FunApp (f, []) when isConstant f -> true (* public constants *)
+      | FunApp (f, []) when f.f_name = "hole" -> true (* hole *)
+      | FunApp (f, []) when (isName f && List.mem f proto.sessNames)
+	-> true   (* session name *)
+      | FunApp (f, []) when isName f -> false   (* (identity and global) names *)
+      | FunApp (f, tl) ->
+	 (* For debugging purposes: *)
+	 (* List.iter (fun f -> Printf.printf "%s, " (\* Display.Text.display_function_name *\) f) !Pitsyntax.funSymb_equation; *)
+	 if List.exists (fun s -> f.f_name = s) !Pitsyntax.funSymb_equation (* if there is a match with a function in equation *)
+	 then false		(* function in E *)
+	 else List.for_all checkSyntax tl in (* ok, pursue *)
+    let rec checkOneName = function
+      | Var b -> false				 (* variable *)
+      | FunApp (f, []) when f.f_name = "hole" -> true (* hole *)
+      | FunApp (f, []) when isName f && List.mem f proto.sessNames
+	-> true   (* session name *)
+      | FunApp (f, []) when isName f -> false   (* (private) names *)
+      | FunApp (f, []) when isConstant f -> false (* public constants *)
+      | FunApp (f, tl) -> List.exists checkOneName tl in (* ok, pursue *)
+    (checkSyntax t) && (not(inHonest) || checkOneName t) in
+
   let countNonces = ref 0 in
   let listNames = ref [] in
+  (* Create the next new session name to fill in a hole *)
   let createNonce () = 
     incr(countNonces);
-    let nameName = Printf.sprintf "n%d" !countNonces in
+    let nameName = Printf.sprintf "hole_%d" !countNonces in
     let funSymb =
       {
 	f_name = nameName;
@@ -737,34 +777,55 @@ let transFO proto p inNameFile nameOutFile =
   let rec noncesTerm = function
     | FunApp (f, tList) when f.f_name = "hole" -> createNonce()
     | FunApp (f, tList) -> FunApp (f, List.map noncesTerm tList)
-    | t -> if true then t else errorClass ("Critical error, should never happen [3]."^email) p in (* TODO *)
-  (* idealized process (some idealized output may miss) -> nonce process *)
-  let rec noncesProc = function
+    | Var b -> Var b
+    | t -> errorClass ("Critical error, should never happen [3]."^email) p in
+  (* idealized process (some idealized output may miss) -> use heuristics from guessIdeal *)
+  let ideaChecked = ref false in	(* whether given idealizations have been checked  *)
+  (* [isIni] specifies whether the process is the initiator process or not *)
+  let rec noncesProc ?inElse:(inE=false) isIni = function
     | Nil -> Nil
-    | Input (tc,patx,p,occ) -> Input(tc,patx, noncesProc p, occ)
+    | Input (tc,patx,p,occ) -> Input(tc,patx, noncesProc isIni p, occ)
     | Output (tc,tm,p,occ) ->
+       let lastOutHonest = match p with
+	 | Nil -> if !isLastOutputByIni then isIni else not(isIni)
+	 | _ -> false in
+       let inHonest = not(inE) && not(lastOutHonest) in
        let (tmReal, tmIdeal) =
 	 match tm with
-	 | FunApp (funSymb, tm1 :: tm2 :: tl) when funSymb.f_cat = Choice -> (tm1, tm2) (* user already built idealization *)
-	 | _ -> (* For debugging purpose: pp "\n"; 
-                   (match tm with | FunApp (f, li) -> debugFunSymb f);
-                   pp "\n"; Display.Text.display_term tm;
-        	   pp " -> "; Display.Text.display_term (guessIdeal tm);  pp "\n"; *)
-	    (tm, guessIdeal tm) in (* he did not, we need to guess it *)
+	 | FunApp (funSymb, tm1 :: tm2 :: tl) when funSymb.f_cat = Choice ->
+	    if !ideaAssumed || checkIdeal inHonest tm2
+	    then begin ideaChecked := true; (tm1, tm2); end (* user already built idealization *)
+	    else begin pp "The following idealization you built is not conform (it uses functions in E): ";
+		       Display.Text.display_term tm2;
+		       pp ".\n";
+		       exit(2);
+		 end
+	 | _ -> let tmIdeal = guessIdeal tm in (* he did not, we need to guess it *)
+		if checkIdeal inHonest tmIdeal
+		then (tm, guessIdeal tm) 
+		else failwith ("Critial Error [458]."^email) in
+       (* if false then begin pp "\n";  *)  (* For debugging purpose: *)
+       (* 			(match tm with | FunApp (f, li) -> debugFunSymb f); *)
+       (* 			pp "\n"; Display.Text.display_term tm; *)
+       (* 			pp " -> "; Display.Text.display_term (guessIdeal tm);  pp "\n"; *)
+       (* 		  end; *)
        let tmNonce = noncesTerm tmIdeal in
        let tmChoice = FunApp (choiceSymb, [tmReal; tmNonce]) in
-       Output(tc, tmChoice , noncesProc p, occ)
-    | Let (patx,t,pt,pe,occ) -> Let (patx,t, noncesProc pt, noncesProc pe, occ)
-    | Test (t,pt,pe,occ)-> Test(t, noncesProc pt, noncesProc pe,occ)
+       Output(tc, tmChoice , noncesProc isIni p, occ)
+    | Let (patx,t,pt,pe,occ) -> Let (patx,t, noncesProc isIni pt, noncesProc ~inElse:true isIni pe, occ)
+    | Test (t,pt,pe,occ)-> Test(t, noncesProc isIni pt, noncesProc ~inElse:true isIni pe,occ)
     | p -> errorClass ("Critical error, should never happen [5]."^email) p in
   let noncesProto = 
     { proto with
-      ini = noncesProc proto.ini;
-      res = noncesProc proto.res;
+      ini = noncesProc true proto.ini;
+      res = noncesProc false proto.res;
       sessNames = proto.sessNames @ (List.rev !listNames);
     } in
-  
-  
+  if !verbose && !ideaChecked
+  then (if !ideaAssumed
+	then log "Remember that we do not check idealization (option '--idea-no-check'). You should check this yourself by inspecting the produced file."
+	else log "All idealizations (including the ones you gave as input) have been checked (i.e., only constants, holes and functions not in E) and at least one hole or a session name in each idealized output.");
+
   (* -- 2. -- Deal with conditionals (should not create false attacks for diff-equivalent) *)
   (* a) we push conditionals (Test and Let) and put them just before Output (when needed)
      b) we use a hack to be sure the 'Let' construct will never fail:
@@ -868,7 +929,7 @@ let printHelp path =
 frame opacity and well-authentication for the process [p] and the theory contained in [inNameFile]. *)
 let transBoth  p inNameFile nameOutFileFO nameOutFileWA = 
   verbose := not(!Param.shortOutput);
-  
+  ideaAssumed := !Param.ideaAssumed;
   if !verbose then pp (Display.title "GENERATION OF MODELS ENCODING SUFFICIENT CONDITIONS");
   
   if !verbose
@@ -881,13 +942,18 @@ let transBoth  p inNameFile nameOutFileFO nameOutFileWA =
 		 res = proto1.res } in  
   if !verbose
   then begin
-      pp "2-Party protocol extracted from yout input model ('choice[ul,ur]'\nspecifies that 'ul' is the real output and 'ur' is the idealization):\n";
+      pp (Printf.sprintf "2-Party protocol extracted from yout input model %s:\n"
+		  (if !Param.has_choice then "(choice[ul,ur]'\nspecifies that 'ul' is the real output and 'ur' is the idealization)" else ""));
       displayProtocol proto1;
+      if true
+      then pp (Printf.sprintf "Is Initiator the role that outputs the last message in the honest execution? --> %b\n" !isLastOutputByIni );
     end;
   
   if !verbose then pp (Display.header "Generation of the model encoding frame opacity");  
+  if !verbose then pp "\n";
   transFO proto1 p inNameFile nameOutFileFO;
   pp (Display.result (Printf.sprintf "A ProVerif model encoding the frame opacity condition has been written in %s." nameOutFileFO));
+  if !verbose then pp "\n";
   printHelp nameOutFileFO;
   if !verbose then begin
       pp (Display.header "Generation of the model encoding well-authentication");  

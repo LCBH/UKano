@@ -107,7 +107,7 @@ let anal_file s =
 	  if List.length splitDot = 1
 	  then List.hd splitDot
 	  else  String.concat "." (List.rev (List.tl (List.rev splitDot))) in
-	let prefixRel = if prefix.[0] = '/' then "."^prefix else prefix in
+	let prefixRel = if false && prefix.[0] = '/' then "."^prefix else prefix in
 	(prefixRel^"_FOpa.pi", prefixRel^"_WAuth.pi")
     with _ -> ("OUTPUT_FOpa.pi","OUTPUT_WAuth.pi") in
   (* Compute and create the two ProVerif files checking the two conditions *)
@@ -127,6 +127,8 @@ let _ =
       "\t\tprint help message";
       "--proverif",  Arg.String (fun path -> pathProverif := path),
       "\t\tpath of the ProVerif executable to use (optional, default: './proverif')";
+      "--idea-no-check",  Arg.Unit (fun () -> Param.ideaAssumed := true),
+      "\t\tassume the idealization is conform (requires manual checks)";
       "--less-verbose",  Arg.Unit (fun () -> Param.shortOutput := true),
       "\t\treduce the verbosity"
     ]

@@ -32,7 +32,7 @@ open Types
 
 (* Register equations *)
 val register_equation : eq_info -> (term * term) list -> unit
-
+							   
 (* returns true when at least one equation has been registered since last
    call to record_eqs *)
 val hasEquationsToRecord : unit -> bool

@@ -2266,7 +2266,24 @@ let rec set_max_used_phase = function
 	Param.max_used_phase := n;
       set_max_used_phase p
 
-      
+let funSymb_equation = ref []
+let rec registerT = function
+  | PFunApp ((s,_), lt) -> begin
+      funSymb_equation := s :: !funSymb_equation;
+      List.iter (fun (t,_) -> registerT t) lt;
+    end
+  | PTuple lt ->  List.iter (fun (t,_) -> registerT t) lt
+  | _ -> ()
+			    
+let rec registerEqu = function
+  | (_,(te,_),(tl,_)) :: li ->
+     begin
+       registerT te;
+       registerT tl;
+       registerEqu li;
+     end
+  | _ -> ()
+	   
 let parse_file s = 
   let (decl, proc, second_proc) = parse_with_lib s in
   (* ignoreTypes must be set before doing the rest of the work
@@ -2315,6 +2332,7 @@ let parse_file s =
           | "rejectNoSimplif", _ -> Param.boolean_param Param.reject_no_simplif p ext v
 	  | _,_ -> Param.common_parameters p ext v
 	end
+    | TEquation (el,_) -> registerEqu el
     | _ -> ()) decl;
   Param.default_set_ignore_types();
   initialize_env_and_fun_decl();
