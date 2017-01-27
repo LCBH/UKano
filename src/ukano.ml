@@ -39,7 +39,8 @@ let email = " Please report this error with the input file to lucca.hirschi@lsv.
 (* For debugging purpose *)
 let log s = Printf.printf "> %s\n%!" s
 let debug = ref false
-
+let verbose = ref false
+	     
 let splitTheoryString = "==PROTOCOL=="
 
 (* Raised when the inputted process is not a 2-agents protocol as specified
@@ -192,13 +193,15 @@ let extractProto process =
 	     let idNamesRes =  List.filter (fun n -> List.mem n idNames) (remove_dups (freeNamesRes)) in
 	     let idNamesShared = List.filter (fun n -> List.mem n idNamesRes) idNamesIni in
 	     let isShared = ref false in
-	     if List.length idNamesShared = 0
-	     then log "Note: No identity name is shared between initiator and responder."
-	     else log "Note: Some identity names are shared between initiator and responder.";
-	     if  List.length idNamesIni = 0
-	     then log "Note: Initiator does not use any identity name.";
-	     if List.length idNamesRes = 0
-	     then log "Note: Responder does not use any identity name.";
+	     if !verbose then begin
+		 if List.length idNamesShared = 0
+		 then log "Note: No identity name is shared between initiator and responder."
+		 else log "Note: Some identity names are shared between initiator and responder.";
+		 if  List.length idNamesIni = 0
+		 then log "Note: Initiator does not use any identity name.";
+		 if List.length idNamesRes = 0
+		 then log "Note: Responder does not use any identity name.";
+	       end;
 	     (* Finally, we build the protocol *)
 	     {
 	       comNames = comNames;
@@ -442,7 +445,7 @@ let makeEvent name args =
   FunApp (funSymbEvent, args)
 				      
 (** Display a whole ProVerif file checking well-authentication except for the theory (to be appended). *)      
-let transC2 proto p inNameFile nameOutFile = 
+let transWA proto p inNameFile nameOutFile = 
   let proto = cleanChoice proto in
 
   let (sessName,idName) =
@@ -496,6 +499,14 @@ let transC2 proto p inNameFile nameOutFile =
 	     let argsEv = makeArgs listIn listOut
 	     and nameEv = nameEvent prefixName (List.length newListTest) "test" in
 	     let subProcEv = addEvent nameEv argsEv subProc in
+	     if !verbose
+	     then begin
+		 pp (Printf.sprintf "Creation of event %s for consecutive tests ending with '(" nameEv);
+		 Display.Text.display_pattern pat;
+		 pp ") = ";
+		 Display.Text.display_term t;
+		 pp ")'.\n";
+	       end;
 	     (Let(pat,t,subProcEv,pe,occ), lTest, nbOut))
       | Test (t,pt,pe,occ) -> 
 	 (match pt with
@@ -511,7 +522,7 @@ let transC2 proto p inNameFile nameOutFile =
 	     let subProcEv = addEvent nameEv argsEv subProc in
 	     (Test(t,subProcEv,pe,occ), lTest, nbOut))
       | Nil -> (Nil, List.rev listTest, List.length listOut)
-      | _ -> failwith ("Critical error: transC2 is applied on a protocol that does not satisfy the syntactical restrictions. Should never happen [7]."^email) in
+      | _ -> failwith ("Critical error: transWA is applied on a protocol that does not satisfy the syntactical restrictions. Should never happen [7]."^email) in
     goThrough [] [] [] proc in
 
   (* Generate a string for a query (depends on whether shared or not, number of actions before events, nb of in, role) *)
@@ -573,7 +584,7 @@ let transC2 proto p inNameFile nameOutFile =
 		    } in
   let toDisplay = pushNames protoEvents in
   let isShared = List.length proto.idNamesShared > 0 in
-  if not(isShared)
+  if not(isShared) && !verbose
   then pp "> Note: Since no session name is shared, we create events accordingly.";
 
   (* Generating queries *)
@@ -612,6 +623,7 @@ let transC2 proto p inNameFile nameOutFile =
   pp "let SYSTEM =\n";
   displayProtocolProcess toDisplay;
   Printf.printf ".\nprocess SYSTEM\n%!";
+  flush_all ();
   close_out newstdout;
   Unix.dup2 old_descr Unix.stdout
 (* END OF REDIRECTION *)
@@ -672,7 +684,7 @@ let debugFunSymb f =
     f.f_options
     
 (** Display a whole ProVerif file checking the first condition except for the theory (to be appended). *)      
-let transC1 proto p inNameFile nameOutFile = 
+let transFO proto p inNameFile nameOutFile = 
     (* -- 1. -- Build nonce versions on the right *)
   let nonTransparentSymbList = ["enc"; "aenc"; "dec"; "adec"; "h"; "hash"; "xor"] in
   let isName funSymb = match funSymb.f_cat with Name _ -> true | _ -> false in
@@ -849,14 +861,17 @@ let transC1 proto p inNameFile nameOutFile =
 
 
 let printHelp path =
-  pp (Printf.sprintf "If you want to manually verify the condition, launch 'proverif -in pitype %s'.\n" path)
+  if !verbose
+  then pp (Printf.sprintf "If you want to manually verify the condition, launch 'proverif -in pitype %s'.\n" path)
      
-(** [transC2 p inNameFile outNameFileC1 outNameFileC2] writes in the files [outNameFileC_] complete ProVerif files checking respectively
+(** [transBoth p inNameFile outNameFileFO outNameFileWA] writes in the files [outNameFile*] complete ProVerif files checking respectively
 frame opacity and well-authentication for the process [p] and the theory contained in [inNameFile]. *)
 let transBoth  p inNameFile nameOutFileFO nameOutFileWA = 
-  pp (Display.title "GENERATION OF MODELS ENCODING SUFFICIENT CONDITIONS");
-
-  if not(!Param.shortOutput)
+  verbose := not(!Param.shortOutput);
+  
+  if !verbose then pp (Display.title "GENERATION OF MODELS ENCODING SUFFICIENT CONDITIONS");
+  
+  if !verbose
   then begin pp (Display.header "Parsing of the input model");
 	     pp "\n";
        end;
@@ -864,19 +879,21 @@ let transBoth  p inNameFile nameOutFileFO nameOutFileWA =
   let proto2 = { proto1 with
 		 ini = proto1.ini;
 		 res = proto1.res } in  
-  if not(!Param.shortOutput)
+  if !verbose
   then begin
       pp "2-Party protocol extracted from yout input model ('choice[ul,ur]'\nspecifies that 'ul' is the real output and 'ur' is the idealization):\n";
       displayProtocol proto1;
     end;
-
-  pp (Display.header "Generation of the model encoding frame opacity");  
-  transC1 proto1 p inNameFile nameOutFileFO;
-  pp (Display.result (Printf.sprintf "A ProVerif model encoding the frame opacity condition has been written in %s.\n" nameOutFileFO));
+  
+  if !verbose then pp (Display.header "Generation of the model encoding frame opacity");  
+  transFO proto1 p inNameFile nameOutFileFO;
+  pp (Display.result (Printf.sprintf "A ProVerif model encoding the frame opacity condition has been written in %s." nameOutFileFO));
   printHelp nameOutFileFO;
-  pp (Display.header "Generation of the model encoding well-authentication");  
-  pp "\n";
-  transC2 proto2 p inNameFile nameOutFileWA;
+  if !verbose then begin
+      pp (Display.header "Generation of the model encoding well-authentication");  
+      pp "\n";
+    end;
+  transWA proto2 p inNameFile nameOutFileWA;
   pp (Display.result (Printf.sprintf "A ProVerif model encoding the well-authentication condition has been written in %s.\n" nameOutFileWA));
   printHelp nameOutFileWA;
   proto1.idNamesANO

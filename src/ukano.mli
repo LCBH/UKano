@@ -37,7 +37,7 @@ val helpMess : string
 (** If the inputted process is not in the "2-agents protocol class" (see [1]). *)
 exception NotInClass of string
 
-(** [transC2 p inNameFile outNameFileC1 outNameFileC2] writes in the files [outNameFileC_] complete ProVerif files checking respectively
+(** [transBoth p inNameFile outNameFileFO outNameFileWA] writes in the files [outNameFile*] complete ProVerif files checking respectively
 frame opacity and well-authentication for the process [p] and the theory contained in [inNameFile]. Returns the list of string representations
 of identity names took into acount for anonymity.*)
 val transBoth : Types.process -> string -> string -> string -> Types.funsymb list

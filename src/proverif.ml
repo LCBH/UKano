@@ -13,7 +13,7 @@ open Printf
        
 (* This is only for printing purpose. *)
 let pp s = printf "%s\n" s
-let pps s = printf "%s" s
+let pps s = if not(!Param.shortOutput) then printf "%s" s
 let ppError s = printf "[ERROR] %s\n" s; exit(0)
 let flush _ = flush_all ()
 
@@ -75,48 +75,49 @@ let read_process_lines command =
 	   
 let launchProverif pathProverif pathFile =
   let command = sprintf "%s -in pitype %s" pathProverif pathFile in
-  pp ("$"^command);
+  if not(!Param.shortOutput) then pp ("$"^command);
   flush ();
   read_process_lines command
 
 		     
 let verifyBoth pathProverif sFO sWA namesIdAno =
+  let verbose = not(!Param.shortOutput) in
   let establishedFO = ref false in
   let establishedWA = ref false in
   let establishedWAPart = ref false in
   pps (Display.title "VERIFICATION OF CONDITIONS");
-  pp (Display.header "Verification of frame opacity");
-  pp (sprintf "We now launch Proverif (path: '%s') on '%s' to verify Frame Opacity ..." pathProverif sFO);
+  if verbose then pp (Display.header "Verification of frame opacity");
+  if verbose then pp (sprintf "We now launch Proverif (path: '%s') on '%s' to verify Frame Opacity ..." pathProverif sFO);
   let outputFO = launchProverif pathProverif sFO in
   if List.length outputFO = 0
   then ppError "ProVerif was not found or ProVerif crashed. Please puruse manually (launch ProVerif on generated files)."
   else begin
-      pp "[...]";
+      if verbose then pp "[...]";
       let regexpResult = Str.regexp_string result in
       let subResults = List.filter (fun l -> Str.string_match regexpResult l 0) outputFO in
-      List.iter (fun l -> pp l) subResults;
+      if verbose then List.iter (fun l -> pp l) subResults;
       let okFO = (List.length subResults == 1) && ((=) okEquivalence (List.hd subResults)) in
       let noFO = (List.length subResults == 1) && ((=) noEquivalence (List.hd subResults)) in
       if okFO
       then begin
 	  establishedFO := true;
-	  pp (Display.result "Frame Opacity has been established.");
+	  pp (Display.result "Frame Opacity has been established.")
 	end
       else (if noFO
 	    then pp (Display.result "Frame Opacity could not be established.")
 	    else ppError "Proverif's output could not be parsed. Please pursue manually (launch ProVerif on the generated files).")
     end;
 
-  pp (Display.header "Verification of well-authentication");
-  pp (sprintf "We now launch Proverif (path: '%s') on '%s' to verify Well-Authentication ..." pathProverif sWA);
+  if verbose then pp (Display.header "Verification of well-authentication");
+  if verbose then pp (sprintf "We now launch Proverif (path: '%s') on '%s' to verify Well-Authentication ..." pathProverif sWA);
   let outputWA = launchProverif pathProverif sWA in
   if List.length outputWA = 0
   then ppError "ProVerif was not found or ProVerif crashed. Please puruse manually (launch ProVerif on generated files)."
   else begin
-      pp "[...]";
+      if verbose then pp "[...]";
       let regexpResult = Str.regexp_string result in
       let subResults = List.filter (fun l -> Str.string_match regexpResult l 0) outputWA in
-      List.iter (fun l -> pp l) subResults;
+      if verbose then List.iter (fun l -> pp l) subResults;
       let subOk = List.filter (fun l -> parseQueryAnswer l) subResults in
       let subNo = List.filter (fun l -> not(parseQueryAnswer l)) subResults in
       let okWA = (List.length subResults == List.length subOk) in
@@ -140,8 +141,8 @@ let verifyBoth pathProverif sFO sWA namesIdAno =
   if !establishedFO && (!establishedWA || !establishedWAPart)
   then begin
       if not(!establishedWA)
-      then pp "Frame Opacity and Well-Authentication have been established (providing the conditionals listed above are safe)."
-      else pp "Frame Opacity and Well-Authentication have been established.";
+      then (if verbose then pp "Frame Opacity and Well-Authentication have been established (providing the conditionals listed above are safe).")
+      else (if verbose then pp "Frame Opacity and Well-Authentication have been established.");
       if List.length namesIdAno == 0
       then pp (Display.result "Therefore, the input protocol ensures Unlinkability.")
       else begin
