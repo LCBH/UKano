@@ -8,5 +8,5 @@
  *                                                           *
  *************************************************************)
 
-(** [verifyBoth exeProVerif inNameFileFO inNameFileWA] TODO *)
-val verifyBoth : string -> string -> string -> unit
+(** [verifyBoth exeProVerif inNameFileFO inNameFileWA namesId] TODO *)
+val verifyBoth : string -> string -> string -> string list -> unit

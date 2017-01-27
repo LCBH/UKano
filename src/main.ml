@@ -107,7 +107,7 @@ let anal_file s =
   (* Compute and create the two ProVerif files checking the two conditions *)
   Ukano.transBoth p s fileNameC1 fileNameC2;
   (* Verify the conditions using ProVerif *)
-  Proverif.verifyBoth (!pathProverif) fileNameC1 fileNameC2
+  Proverif.verifyBoth (!pathProverif) fileNameC1 fileNameC2 []
 
 
 (********************)
