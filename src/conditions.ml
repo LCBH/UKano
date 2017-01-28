@@ -708,8 +708,7 @@ let transFO proto p inNameFile nameOutFile =
   let isArity0 funSymb = match funSymb.f_type with | ([], _) -> true | _ -> false in
   let isName funSymb = match funSymb.f_cat with Name _ -> true | _ -> false in
   let isPrivate funSymb = funSymb.f_private in
-  let isConstant funSymb = (isName funSymb && not(isPrivate funSymb)) ||
-			     (isArity0 funSymb) in
+  let isConstant funSymb = (isName funSymb) || (isArity0 funSymb) in
   let isTuple funSymb = match funSymb.f_cat with Tuple -> true | _ -> false in
   (* Given a term, tries to guess an idealization *)
   let rec guessIdeal = function
