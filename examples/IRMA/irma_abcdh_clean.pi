@@ -10,7 +10,7 @@
 IDEMIX (from [1] A formal Model of Identity Mixer Mixer (Modersheim + IBM Zurich)
              [2] A secure channel for attribute-based credentials (Alpar, Hoepman (Netherlands)))
 [1]
-  - users that have each a master secret never revealed to otehr parties
+  - users that have each a master secret never revealed to other parties
   - users are known to organizations under pseudonyms bound to sessions
   - organizations make statements abouth users by issuing credentials bound to the master secret of that user
 [2]
@@ -97,6 +97,8 @@ otherwise forall O:bitstring, U:bitstring, Attr:bitstring, R:bitstring;
 reduc forall O:bitstring, xU:bitstring, Attr:bitstring, R:bitstring, O2:bitstring, Attr2:bitstring;
         getPublicSD(SD(cred(skS(O), xU, Attr), O2, xU, R, Attr2)) = (O2,R,Attr2).
 
+(* For defining idealizations *)
+free hole:bitstring.
 
 (****************)
 (* ==PROTOCOL== *)
@@ -106,26 +108,24 @@ let verifier(u:bitstring, Overifier:bitstring, Oprover:bitstring, credV:bitstrin
     new xv:bitstring;
     new NEWu:bitstring;
     out(c, choice[(exp(g,xv), SD(credV, Overifier, MS(u), f1(exp(g,xv)), movieTheater)),
-      	          (exp(g,xv), SD(cred(skS(OrgaCheckAge),MS(NEWu),movieTheater), Overifier, MS(NEWu), f1(exp(g,xv)), movieTheater))
+      	          (xv, SD(cred(skS(OrgaCheckAge),MS(NEWu),movieTheater), Overifier, MS(NEWu), f1(xv), movieTheater))
                  ]); 
     in(c,x:bitstring);
     let (xhc:bitstring,xsc:bitstring) = x in
     let (=accept) = verifySD(xsc) in
     let (=empty, =f1((exp(g,xv),xhc)), =empty) = getPublicSD(xsc) in
     out(c, choice[senc((c1,OK), f2(exp(xhc,xv))),
-                  senc((c1,OK), f2(exp(xhc,xv)))
+                  hole
 		 ]);
     in(c, y:bitstring);
     new n:bitstring;
     let (=c2, =OK) = sdec(y, f2( exp(xhc,xv))) in
-    out(c, choice[senc((n,requestIsOver18), f2(exp(xhc,xv))),
-                  senc((n,requestIsOver18), f2(exp(xhc,xv)))
-                 ]);
+    out(c, senc((n,requestIsOver18), f2(exp(xhc,xv))));
     in(c, z:bitstring);
     let (=isOver18, xsv:bitstring) = sdec(z,f2( exp(xhc,xv))) in
     let (=accept) = verifySD(xsv) in
     let (=Oprover, =f3((n, exp(xhc,xv))), =isOver18) = getPublicSD(xsv) in   	
-    out(c, choice[OK,OK]).
+    out(c, OK).
     
 let prover(u:bitstring, Overifier:bitstring, Oprover:bitstring, credP:bitstring) =
     in(c,x:bitstring);
@@ -135,18 +135,17 @@ let prover(u:bitstring, Overifier:bitstring, Oprover:bitstring, credP:bitstring)
     let (=accept) = verifySD(xsv) in
     let (=Overifier, =f1(xhv), =movieTheater) = getPublicSD(xsv) in
     out(c, choice[(exp(g, xc), SD(credP, empty, MS(u), f1((xhv, exp(g, xc))), empty)),
-      	          (exp(g, xc), SD(cred(skS(OrgaAge),MS(NEWu),isOver18), empty, MS(NEWu), f1((xhv,exp(g, xc))), empty))
+      	          (xc, SD(cred(skS(OrgaAge),MS(NEWu),isOver18), empty, MS(NEWu), f1((hole,xc)), empty))
                  ]);
+(* TODO: in the baove idealization: hole was 'xhv' but thats a let variable. Check if FO holds with that idealization. *)
     in(c, y:bitstring);
     let (=c1, =OK) = sdec(y, f2(exp(xhv,xc))) in
-    out(c, choice[senc((c2,OK), f2(exp(xhv,xc))),
-                  senc((c2,OK), f2(exp(xhv,xc)))
-		 ]);
+    out(c, senc((c2,OK), f2(exp(xhv,xc))));
     in(c, z:bitstring);
     new NEWn:bitstring;
     let (xn:bitstring, =requestIsOver18) = sdec(z,f2(exp(xhv,xc))) in
     out(c, choice[senc((isOver18, SD(credP, Oprover, MS(u), f3((xn, exp(xhv,xc))), isOver18)),f2(exp(xhv,xc))),
-                  senc((isOver18, SD(cred(skS(OrgaAge),MS(NEWu),isOver18), Oprover, MS(NEWu), f3((NEWn, exp(xhv,xc))), isOver18)),f2(exp(xhv,xc)))
+                  senc((isOver18, SD(cred(skS(OrgaAge),MS(NEWu),isOver18), Oprover, MS(NEWu), f3((NEWn, xc)), isOver18)),f2(xc))
 		  ]).
 
 let SYSTEM =
@@ -171,4 +170,5 @@ process SYSTEM
 (* RMQ:
 For the sake of readability, I replaced 'bitstring' by 'b'. To compile this file into a well formed
 Proverif file, type:
-     ./replace.sh irma_abcdh.pi  > irma_abcdh.pi; ukano -ukano -beta irma_abcdh.pi  
+     ./replace.sh irma_abcdh.ORIG  > irma_abcdh_clean.pi; ukano  irma_abcdh_clean.pi  
+*)
