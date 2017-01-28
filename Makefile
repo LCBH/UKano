@@ -24,7 +24,7 @@ proverif:
 #### CLEAN ####
 
 GEN_FILES=$(shell find -type f -name '*FOpa.pi' -o  -name '*WAuth.pi')
-clean: clean-ukano
+clean: clean-ukano clean-proverif
 clean-ukano:
 	@echo "#### Cleaning UKano ...."
 	$(MAKE) clean -C $(UKANO_S)
