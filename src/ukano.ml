@@ -729,12 +729,11 @@ let transFO proto p inNameFile nameOutFile =
 	 pp "be a hole (i.e., session name variable).\n";
 	 hole;
        end in
-  (* Given a term, check that its corresponds to an idealization (including all functions not in E).
-   [insidehonest] desribes if this output is inside the honest execution (i.e., not in else nor at
-   the end of honest execution. *)
-  let checkIdeal inHonest t =
+  (* Given a term, check that its corresponds to a conform idealization.
+   [insidehonest] describes if this output is inside the honest execution (i.e., not in else nor at
+   the end of honest execution). *)
+  let checkIdeal inHonest listVarIn t =
     let rec checkSyntax  = function
-      | Var b -> true				 (* variable *)
       | FunApp (f, []) when isConstant f -> true (* public constants *)
       | FunApp (f, []) when f.f_name = "hole" -> true (* hole *)
       | FunApp (f, []) when (isName f && List.mem f proto.sessNames)
@@ -745,7 +744,9 @@ let transFO proto p inNameFile nameOutFile =
 	 (* List.iter (fun f -> Printf.printf "%s, " (\* Display.Text.display_function_name *\) f) !Pitsyntax.funSymb_equation; *)
 	 if List.exists (fun s -> f.f_name = s) !Pitsyntax.funSymb_equation (* if there is a match with a function in equation *)
 	 then false		(* function in E *)
-	 else List.for_all checkSyntax tl in (* ok, pursue *)
+	 else List.for_all checkSyntax tl (* ok, pursue *)
+      | Var b when List.mem b.sname listVarIn -> true  (* variable of input *)
+      | Var b -> false	in	              	       (* variable of let *)
     let rec checkOneName = function
       | Var b -> false				 (* variable *)
       | FunApp (f, []) when f.f_name = "hole" -> true (* hole *)
@@ -782,9 +783,13 @@ let transFO proto p inNameFile nameOutFile =
   (* idealized process (some idealized output may miss) -> use heuristics from guessIdeal *)
   let ideaChecked = ref false in	(* whether given idealizations have been checked  *)
   (* [isIni] specifies whether the process is the initiator process or not *)
-  let rec noncesProc ?inElse:(inE=false) isIni = function
+  let rec noncesProc ?inElse:(inE=false) isIni listVarIn = function
     | Nil -> Nil
-    | Input (tc,patx,p,occ) -> Input(tc,patx, noncesProc isIni p, occ)
+    | Input (tc,patx,p,occ) ->
+       let nameVar = match patx with
+	 | PatVar binder -> binder.sname
+	 | _ -> failwith ("Critical error."^email) in
+       Input(tc,patx, noncesProc isIni (nameVar :: listVarIn) p, occ)
     | Output (tc,tm,p,occ) ->
        let lastOutHonest = match p with
 	 | Nil -> if !isLastOutputByIni then isIni else not(isIni)
@@ -793,15 +798,15 @@ let transFO proto p inNameFile nameOutFile =
        let (tmReal, tmIdeal) =
 	 match tm with
 	 | FunApp (funSymb, tm1 :: tm2 :: tl) when funSymb.f_cat = Choice ->
-	    if !ideaAssumed || checkIdeal inHonest tm2
+	    if !ideaAssumed || checkIdeal inHonest listVarIn tm2
 	    then begin ideaChecked := true; (tm1, tm2); end (* user already built idealization *)
-	    else begin pp "The following idealization you built is not conform (it uses functions in E): ";
+	    else begin pp "[ERROR] The following idealization you built is not conform: ";
 		       Display.Text.display_term tm2;
 		       pp ".\n";
 		       exit(2);
 		 end
 	 | _ -> let tmIdeal = guessIdeal tm in (* he did not, we need to guess it *)
-		if checkIdeal inHonest tmIdeal
+		if checkIdeal inHonest listVarIn tmIdeal
 		then (tm, guessIdeal tm) 
 		else failwith ("Critial Error [458]."^email) in
        (* if false then begin pp "\n";  *)  (* For debugging purpose: *)
@@ -811,14 +816,14 @@ let transFO proto p inNameFile nameOutFile =
        (* 		  end; *)
        let tmNonce = noncesTerm tmIdeal in
        let tmChoice = FunApp (choiceSymb, [tmReal; tmNonce]) in
-       Output(tc, tmChoice , noncesProc isIni p, occ)
-    | Let (patx,t,pt,pe,occ) -> Let (patx,t, noncesProc isIni pt, noncesProc ~inElse:true isIni pe, occ)
-    | Test (t,pt,pe,occ)-> Test(t, noncesProc isIni pt, noncesProc ~inElse:true isIni pe,occ)
+       Output(tc, tmChoice , noncesProc isIni listVarIn p, occ)
+    | Let (patx,t,pt,pe,occ) -> Let (patx,t, noncesProc isIni listVarIn pt, noncesProc ~inElse:true isIni listVarIn pe, occ)
+    | Test (t,pt,pe,occ)-> Test(t, noncesProc isIni listVarIn pt, noncesProc ~inElse:true isIni listVarIn pe,occ)
     | p -> errorClass ("Critical error, should never happen [5]."^email) p in
   let noncesProto = 
     { proto with
-      ini = noncesProc true proto.ini;
-      res = noncesProc false proto.res;
+      ini = noncesProc true [] proto.ini;
+      res = noncesProc false [] proto.res;
       sessNames = proto.sessNames @ (List.rev !listNames);
     } in
   if !verbose && !ideaChecked
@@ -945,7 +950,7 @@ let transBoth  p inNameFile nameOutFileFO nameOutFileWA =
       pp (Printf.sprintf "2-Party protocol extracted from yout input model %s:\n"
 		  (if !Param.has_choice then "(choice[ul,ur]'\nspecifies that 'ul' is the real output and 'ur' is the idealization)" else ""));
       displayProtocol proto1;
-      if true
+      if false			(* debug *)
       then pp (Printf.sprintf "Is Initiator the role that outputs the last message in the honest execution? --> %b\n" !isLastOutputByIni );
     end;
   
