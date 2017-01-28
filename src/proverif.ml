@@ -117,8 +117,8 @@ let verifyBoth pathProverif sFO sWA namesIdAno =
 	  let regexpResult = Str.regexp_string result in
 	  let subResults = List.filter (fun l -> Str.string_match regexpResult l 0) outputFO in
 	  if verbose then List.iter (fun l -> pp l) subResults;
-	  let okFO = (List.length subResults > 1) && ((=) okEquivalence (lastL subResults)) in
-	  let noFO = (List.length subResults > 1) && ((=) noEquivalence (lastL subResults)) in
+	  let okFO = (List.length subResults > 0) && ((=) okEquivalence (lastL subResults)) in
+	  let noFO = (List.length subResults > 0) && ((=) noEquivalence (lastL subResults)) in
 	  if okFO
 	  then begin
 	      establishedFO := true;

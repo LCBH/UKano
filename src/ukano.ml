@@ -701,7 +701,8 @@ let debugFunSymb f =
     
 (** Display a whole ProVerif file checking the first condition except for the theory (to be appended). *)      
 let transFO proto p inNameFile nameOutFile = 
-  (* -- 1. -- Build nonce versions on the right *)
+
+  (* -- 1. -- Build idealized versions of outputson the right and check conformity *)
   (* TODO: extend this list: *)
   let nonTransparentSymbList = ["enc"; "aenc"; "dec"; "adec"; "h"; "hash"; "xor"; "dh"; "exp"; "mac"] in
   let isArity0 funSymb = match funSymb.f_type with | ([], _) -> true | _ -> false in
@@ -834,21 +835,21 @@ let transFO proto p inNameFile nameOutFile =
     } in
   if !verbose && !ideaChecked
   then (if !ideaAssumed
-	then log "Remember that we do not check idealization (option '--idea-no-check'). You should check this yourself by inspecting the produced file."
-	else log "All idealizations (including the ones you gave as input) have been checked (i.e., only constants, holes and functions not in E) and at least one hole or a session name in each idealized output.");
+	then log "Remember that we do not check that idealizations are conform (option '--idea-no-check'). You should check this yourself by inspecting the produced file."
+	else log "All idealizations (including the ones you gave as input) have been checked (i.e., only constants, session nammes, holes, variables bind by inputs and functions not in E) and at least one hole or a session name in each idealized output (except in else branches and last honest output).");
 
-  (* -- 2. -- Deal with conditionals (should not create false attacks for diff-equivalent) *)
+  (* -- 2. -- Deal with conditionals (should not create false attacks for diff-equivalence) *)
   (* a) we push conditionals (Test and Let) and put them just before Output (when needed)
      b) we use a hack to be sure the 'Let' construct will never fail:
              let yn = dec(x,k) in
-             out(c, choice[yn,n4]
+             out(c, choice[yn,idealization]
         will be translated to
              let mergeOut = let yn = dec(x,k) in
-                              choice[yn,n4]
-                            else n4 in
+                              choice[yn,iealization]
+                            else iedalization in
              out(c, mergeOut).
         Function cleanTest cannot produce nested let (it is actually syntactic sugar
-        and have no internal representation. We thus use a flag using a special funsymb
+        and have no internal representation). We thus use a flag using a special funsymb
         letCatch with a specific f_cat to warn the display function that it is needed to
         put all following let/test construct INSIDE the first let mergeOut = [put here]. *)
   
@@ -902,7 +903,7 @@ let transFO proto p inNameFile nameOutFile =
 	   cleanTest accTest accLet pe)
     | Test (t,pt,pe,occ)-> Par(cleanTest (t::accTest) accLet pt, cleanTest accTest accLet pe)
     | p -> errorClass ("Critical error, should never happen."^email) p in
-  let cond1Proto = 
+  let condFOProto = 
     { noncesProto with
       sessNames = proto.sessNames @ (List.rev !listNames);
       ini = cleanTest [] [] noncesProto.ini;
@@ -922,9 +923,9 @@ let transFO proto p inNameFile nameOutFile =
   pp "\n(********   This file has been automatically generated using the tool UKano. It encodes the frame opacity condition. ********)\n\n";
   pp theoryStr;
   pp " *)\n";
-  pp "\n\n(* == PROTOCOL WITH NONCE VERSIONS == *)\n";
+  pp "\n\n(* == PROTOCOL WITH IDEALIZATION == *)\n";
   pp "let SYSTEM =\n";
-  let toDisplay = pushNames cond1Proto in
+  let toDisplay = pushNames condFOProto in
   displayProtocolProcess toDisplay;
   Printf.printf ".\nprocess SYSTEM\n%!";
   close_out newstdout;
