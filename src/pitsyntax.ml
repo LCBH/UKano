@@ -1,10 +1,12 @@
 (*************************************************************
  *                                                           *
- *  Cryptographic protocol verifier                          *
+ *  UKano: UnlinKability and ANOnymity verifier              *
  *                                                           *
- *  Bruno Blanchet and Vincent Cheval                        *
- *                                                           *
- *  Copyright (C) INRIA, CNRS 2000-2015                      *
+ *  Lucca Hirschi                                            *
+ *  http://projects.lsv.ens-cachan.fr/ukano/                 *
+ *  Copyright (C) Lucca Hirschi 2015-2017                    *
+ *  Copyright (C) Bruno Blanchet, Vincent Cheval,            *
+ *                INRIA, CNRS 2000-2015                      *
  *                                                           *
  *************************************************************)
 
