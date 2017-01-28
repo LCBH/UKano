@@ -4,7 +4,7 @@
  *                                                           *
  *  Lucca Hirschi                                            *
  *  http://projects.lsv.ens-cachan.fr/ukano/                 *
- *  Copyright (C) 2015-2016                                  *
+ *  Copyright (C) Lucca Hirschi 2015-2017                    *
  *                                                           *
  *************************************************************)
 
@@ -24,36 +24,29 @@
     Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
  *)
-(** This module provides functions from the UnlinKability and ANOnymity
-    verifier built on top of ProVerif as described in the following paper:
-    [1] L. Hirschi, D. Baelde and S. Delaune.
-        A Method for Verifying Privacy-Type Properties : The Unbounded Case.
-        In IEEE Symposium on Security and Privacy (Oakland), 2016. To appear.
-    A copy can be found at http://projects.lsv.ens-cachan.fr/ukano/ *)
-
-
-(* Helping message *)
-let helpMess = 			(* TODO *)
-  ("Only typed ProVerif files are accepted (the option '-in pitype' is enabled by default). See the folder './examples/' for examples\n"^
-     "of files in the correct format. They can be used to bootsrap your own file. For more details, see the README file at the root of\n"^
-       "the project.\n")
 
 open Types
 open Pervasives
 
-let pp s= Printf.printf "%s" s
+(* flags *)
+let ideaAssumed = ref false
+let isLastOutputByIni = ref false
 
 (* For debugging purpose *)
+let email = " Please report this error with the input file to lucca.hirschi@lsv.ens-cachan.fr'."
+let pp s= Printf.printf "%s" s
 let log s = Printf.printf "> %s\n%!" s
 let debug = ref false
-
-(* For enabling new theory *)
-let newCases = Param.newCases	
-
+let verbose = ref false
+(* Helping message *)
+let helpMess =
+  ("Your input model is not conform. It should be a valid typed ProVerif model ('proverif -in pitype <path>' should accept it).\nMoreover, it should comply with requirements
+    explained in the README. You can refer to the folder './examples/' for examples of files in the correct format.\n They can be used to bootstrap your own file.")
+			    
 let splitTheoryString = "==PROTOCOL=="
 
-(* Raised when the inputted process is not a 2-agents protocol as defined
-   in [1], the associated string is the reason/explanation. *)
+(* Raised when the inputted process is not a 2-agents protocol as specified
+   in the README, the associated string is the reason/explanation. *)
 exception NotInClass of string
 
 let debProc p = 
@@ -64,7 +57,7 @@ let errorClass s p =
   Display.Text.display_process "   " p;
   raise (NotInClass s)
 
-(** Type of a 2-agents protocol as defined in [1] *)
+(** Type of a 2-agents protocol *)
 type proto = {
     comNames : funsymb list;	(* common names of all agents (created before the first !)  *)
     idNames : funsymb list;	(* identity names *)
@@ -86,6 +79,7 @@ let makeOcc () = Terms.new_occurrence ()
 (* Parsing Protocols                                        *)
 (************************************************************)
 
+(** Remove duplications in lists *)
 let rec remove_dups lst= match lst with
   | [] -> []
   | h::t -> h::(remove_dups (List.filter (fun x -> x<>h) t))
@@ -113,6 +107,7 @@ let extractProto process =
   let rec getNames acc = function
     | Restr (idName,_,p',_) -> getNames (idName::acc) p'
     | _ as p -> acc, p in
+  let numberIn = ref 0 in
   (* Check that a given role is of the expected form: optional arguments are used to make sure
      the role meets the alternation in/test*/out with same else branches in test*. *)
   let rec checkRole ?lastInp:(laI=false) ?lastOut:(laO=false)
@@ -120,6 +115,7 @@ let extractProto process =
     | Nil -> ()
     | Input (_,(PatVar bx),p,_) as proc ->
        if laI then errorClass ("Roles cannot perform two inputs in a row.") proc;
+       incr(numberIn);
        checkRole ~lastInp:true ~lastOut:false ~lastCondi:false accN p
     | Input (_,_,_,_) as proc -> 
        errorClass ("Roles cannot user patterns in input.") proc;
@@ -136,18 +132,19 @@ let extractProto process =
 	    | _ -> errorClass ("Else branches must be either Nil or Output.Nil.") pe);
 	   if laC
 	   then (match laE,pe with
-		 | Nil, Nil -> checkRole accN pt
-		 | (Output(t1,t2,Nil,_), Output(t1',t2',Nil,_)) when (t1=t1' && t2=t2') -> checkRole accN pt
+		 | Nil, Nil -> checkRole ~lastCondi:true ~lastElse:pe accN pt
+		 | (Output(t1,t2,Nil,_), Output(t1',t2',Nil,_)) when (t1=t1' && t2=t2') -> checkRole ~lastCondi:true ~lastElse:pe accN pt
 		 (* START: this should be removed (for back-compatibility) *)
-		 | Nil,_ -> checkRole accN pt
+		 | Nil,_ -> checkRole ~lastCondi:true ~lastElse:pe accN pt
 		 (* END *)
-		 | _ -> errorClass ("Two else branches from adjacent tests are not syntactical equal.") pe)
+		 | _ -> errorClass ("Two else branches from adjacent tests are not syntactically equal.") pe)
 	   else checkRole ~lastCondi:true ~lastElse:pe accN pt;
 	 end
     | Restr (nameSymb, _, p, _) ->
        accN := nameSymb :: !accN;
        checkRole ~lastInp:laI ~lastOut:laO ~lastCondi:laC ~lastElse:laE accN p
     | p -> errorClass ("Only Nul,Input,Output,Test, Let and creation of names are allowed in roles.") p in
+  (* The next functions are implicitely assuming that roles have been checked agains 'checkRole' *)
   (* true if fst observable action is an output *)
   let rec fstIsOut = function
     | Output(_,_,_,_) -> true
@@ -160,10 +157,15 @@ let extractProto process =
   let checkRoles p1 p2 =
     let namesP1, namesP2 = ref [], ref [] in
     checkRole namesP1 p1;
+    let numberInP1 = !numberIn in
+    numberIn := 0;
     checkRole namesP2 p2;
+    let numberInP2 = !numberIn in
     match (fstIsOut p1, fstIsOut p2) with
-    | true,false -> (p1,!namesP1),(p2,!namesP2)
-    | false,true -> (p2,!namesP2),(p1,!namesP1)
+    | true,false -> if numberInP1 >= numberInP2 then isLastOutputByIni:= true;
+		    (p1,!namesP1),(p2,!namesP2)
+    | false,true -> if numberInP2 <= numberInP1 then isLastOutputByIni:= true;
+		    (p2,!namesP2),(p1,!namesP1)
     | _ -> errorClass ("The two roles are not dual.") p1 in
   (* remove all restriction of names in roles *)
   let rec removeRestr = function
@@ -173,40 +175,43 @@ let extractProto process =
     | Let (patx,t,pt,pe,occ) -> Let (patx,t,removeRestr pt, removeRestr pe, occ)
     | Test (t,pt,pe,occ)-> Test(t,removeRestr pt, removeRestr pe,occ)
     | Restr (_,_,p,_) -> removeRestr p
-    | p -> errorClass ("Critical error, should never happen [1].") p in
+    | p -> errorClass ("Critical error, should never happen [1]." ^ email) p in
+
   (* We now match the whole system against its expected form *)
-  match (getNames [] process) with
+  match (getNames [] process) with (* this returns global names and the continuation (should be of the form \pM *)
   | (comNames, Repl (idProc,_)) ->
-     let idNames, idProc' = getNames [] idProc in
+     let idNames, idProc' = getNames [] idProc in (* those are the identity names *)
      (match idProc' with
       | Repl (sessProc,_) ->
-	 let sessNames, sessProc' = getNames [] sessProc in
+	 let sessNames, sessProc' = getNames [] sessProc in (* those are session names *)
 	 (match sessProc' with
 	  | Par (p1,p2) ->
 	     let ((iniP,iniN),(resP,resN)) = checkRoles p1 p2 in
 	     let iniPclean,resPclean = (removeRestr iniP, removeRestr resP) in
-	     let sessName = {    f_name = "sess";
-				 f_type = ([], typeBit);
-				 f_cat = Name {prev_inputs=None; prev_inputs_meaning=[]};
-				 f_initial_cat = Name {prev_inputs=None; prev_inputs_meaning=[]};
-				 f_private = true;
-				 f_options = 0;	} in
-	     let idNamesANO = List.filter 
+	     let sessName0 = { f_name = "sess";
+			       f_type = ([], typeBit);
+			       f_cat = Name {prev_inputs=None; prev_inputs_meaning=[]};
+			       f_initial_cat = Name {prev_inputs=None; prev_inputs_meaning=[]};
+			       f_private = true;
+			       f_options = 0;	} in
+	     let idNamesANO = List.filter (* id names for anonymity are prefixed with 'id' *)
 				(fun s -> (String.length s.f_name) >= 2 && (s.f_name.[0] = 'i') && (s.f_name.[1] = 'd'))
 				idNames in
 	     let freeNamesIni, freeNamesRes = (freeNames iniPclean), (freeNames resPclean) in
 	     let idNamesIni =  List.filter (fun n -> List.mem n idNames) (remove_dups freeNamesIni) in
 	     let idNamesRes =  List.filter (fun n -> List.mem n idNames) (remove_dups (freeNamesRes)) in
 	     let idNamesShared = List.filter (fun n -> List.mem n idNamesRes) idNamesIni in
-	     let isNewCase = ref false in
-	     if List.length idNamesShared = 0
-	     then begin isNewCase := true; log "Warning: No identity name is shared between initiator and responder. This may cause false negative."; end;
-	     if  List.length idNamesIni = 0
-	     then begin isNewCase := true; log "Warning: Initiator does not use any identity name. This may cause false negative."; end;
-	     if List.length idNamesRes = 0
-	     then begin isNewCase := true; log "Warning: Responder does not use any identity name. This may cause false negative."; end;
-	     if !isNewCase && !newCases
-	     then log "==> This is why we are going to use a new functionality in beta to deal with the new kind of scenario you gave as input.";
+	     let isShared = ref false in
+	     if !verbose then begin
+		 if List.length idNamesShared = 0
+		 then log "Note: No identity name is shared between initiator and responder."
+		 else log "Note: Some identity names are shared between initiator and responder.";
+		 if  List.length idNamesIni = 0
+		 then log "Note: Initiator does not use any identity name.";
+		 if List.length idNamesRes = 0
+		 then log "Note: Responder does not use any identity name.";
+	       end;
+	     (* Finally, we build the protocol *)
 	     {
 	       comNames = comNames;
 	       idNames = idNames;
@@ -214,13 +219,13 @@ let extractProto process =
 	       idNamesShared =idNamesShared ;
 	       idNamesIni = idNamesIni;
 	       idNamesRes = idNamesRes;
-	       sessNames = sessName :: (List.rev sessNames) @ (List.rev iniN) @ (List.rev resN);
+	       sessNames = sessName0 :: (List.rev sessNames) @ (List.rev iniN) @ (List.rev resN);
 	       ini = iniPclean;
 	       res = resPclean;
 	     }
 	  | p -> errorClass ("After session names, we expect a parallel composition of two roles.") p)
       | p -> errorClass ("After the first replication and identity names, we expect a replication (for sessions).") p)
-  | (_,p) -> errorClass ("A replication (possibly after some creation of names) is expected at the begging of the process.") p
+  | (_,p) -> errorClass ("A replication (possibly after some creation of names) is expected at the beginning of the process.") p
 
 
 
@@ -228,25 +233,30 @@ let extractProto process =
 (* Display functions                                        *)
 (************************************************************)
 
+let noneOrList f l =
+  if List.length l = 0
+  then pp "none"
+  else List.iter f l  
+
 let displayProtocol proto =
-  pp "{\n   Common Names: ";
-  List.iter (fun s -> Display.Text.display_function_name s; pp ", ") proto.comNames;
-  pp  "\n   Identity Names: ";
-  List.iter (fun s -> Display.Text.display_function_name s; pp ", ") proto.idNames;
-  pp  "\n   Session Names:  ";   
-  List.iter (fun s -> Display.Text.display_function_name s; pp ", ") proto.sessNames;
-  pp  "\n   Session Names to be revealed for ANO:  ";   
-  List.iter (fun s -> Display.Text.display_function_name s; pp ", ") proto.idNamesANO;
-  pp  "\n   Shared identity names:  ";   
-  List.iter (fun s -> Display.Text.display_function_name s; pp ", ") proto.idNamesShared;
+  pp "{\n   Global names: ";
+  noneOrList (fun s -> Display.Text.display_function_name s; pp ", ") proto.comNames;
+  pp  "\n   Identity names: ";
+  noneOrList (fun s -> Display.Text.display_function_name s; pp ", ") proto.idNames;
+  pp  "\n   Session names:  ";   
+  noneOrList (fun s -> Display.Text.display_function_name s; pp ", ") proto.sessNames;
+  pp  "\n   Identity names to be revealed for checking anonymity (i.e., the ones starting with 'id'):  ";   
+  noneOrList (fun s -> Display.Text.display_function_name s; pp ", ") proto.idNamesANO;
+  pp  "\n   Shared (by initiator and responder) identity names:  ";   
+  noneOrList (fun s -> Display.Text.display_function_name s; pp ", ") proto.idNamesShared;
   pp  "\n   Identity names of initiator:  ";   
-  List.iter (fun s -> Display.Text.display_function_name s; pp ", ") proto.idNamesIni;
+  noneOrList (fun s -> Display.Text.display_function_name s; pp ", ") proto.idNamesIni;
   pp  "\n   Identity names of responder:  ";   
-  List.iter (fun s -> Display.Text.display_function_name s; pp ", ") proto.idNamesRes;
+  noneOrList (fun s -> Display.Text.display_function_name s; pp ", ") proto.idNamesRes;
   let sep = "      >   " in
-  pp  "\n   Initiator:\n";
+  pp  "\n   Initiator role:\n";
   Display.Text.display_process sep proto.ini;
-  pp    "   Responder:\n";
+  pp    "   Responder role:\n";
   Display.Text.display_process sep proto.res;
   pp  "}\n"
       
@@ -283,7 +293,7 @@ let displayProtocolProcess proto =
   pp ")\n";
   if proto.idNamesANO <> [] 
   then begin
-  pp " | (!\n";
+      pp " | (!\n";
       (* Multiple identities whose idNamesANO are revealed *)
       List.iter 
 	(fun q -> Printf.printf "%snew %s : bitstring;\n" indent q.f_name)
@@ -313,7 +323,7 @@ let theoryStr inNameFile =
 	    (* for back-compatibility: *)
 	    let listSplit2 = (Str.split (Str.regexp_string "PROTOCOLS") inStr) in
 	    if List.length listSplit2 <= 1
-	    then failwith ""
+	    then failwith ("Should never happen [12]."^email)
 	    else List.hd listSplit2;
 	  end
 	else List.hd listSplit
@@ -334,11 +344,11 @@ let theoryStr inNameFile =
 (************************************************************)
 (* Push session names as far as possible                    *)
 (************************************************************)
-(* We suppose here that session names are not shared between agents
-   (as defined in the paper. *)
+(* We suppose here that session names are not shared between agents. *)
 let pushNames proto = 
   let sessNames = List.tl proto.sessNames in
   let sessNameEvent = List.hd proto.sessNames in
+  (* Add restriction of names for names in 'names' *)
   let addNames names continuationProc = 
     List.fold_right (fun name proc ->
 		     Restr(name, 
@@ -346,6 +356,7 @@ let pushNames proto =
 			   proc,makeOcc()))
 		    names
 		    continuationProc in
+  (* push all names as close as possible to their first use *)
   let rec pushN accNames = function
     | Nil -> Nil
     | Input (tc,patx,p,occ) -> Input(tc,patx,pushN accNames p, occ)
@@ -396,9 +407,9 @@ let pushNames proto =
 	 let otherNames = List.filter (fun n -> not(List.mem n needNames)) accNames in
 	 addNames needNames (Par (pushN otherNames p1, p2))
        else Par (pushN accNames p1, p2) 
-    | Par (_,_) as p -> errorClass ("[UKANO] [pushN] [PAR] Critical error, should never happen [2].") p
-    | Restr (_,_,_,_) -> failwith "WHAT RESTR"
-    | p -> errorClass ("[UKANO] [pushN]Critical error, should never happen [6].") p in
+    | Par (_,_) as p -> errorClass ("[UKANO] [pushN] [PAR] Critical error, should never happen [2]."^email) p
+    | Restr (_,_,_,_) as p -> errorClass ("[UKANO] [pushN] [Restr] Critial error, should never happen [14]."^email) p
+    | p -> errorClass ("[UKANO] [pushN] Critical error, should never happen [6]."^email) p in
   {
     proto with
     ini = pushN sessNames proto.ini;
@@ -423,7 +434,7 @@ let cleanChoice proto =
     | Let (patx,t,pt,pe,occ) -> Let (patx,t,rmProc pt, rmProc pe, occ)
     | Test (t,pt,pe,occ)-> Test(t,rmProc pt, rmProc pe,occ)
     | Restr (_,_,p,_) -> rmProc p
-    | p -> errorClass ("Critical error, should never happen [4].") p in
+    | p -> errorClass ("Critical error, should never happen [4]."^email) p in
   { proto with
     ini = rmProc proto.ini;
     res = rmProc proto.res;
@@ -442,14 +453,14 @@ let makeEvent name args =
     } in
   FunApp (funSymbEvent, args)
 				      
-(** Display a whole ProVerif file checking the first condition except for the theory (to be appended). *)      
-let transC2 proto p inNameFile nameOutFile = 
+(** Display a whole ProVerif file checking well-authentication except for the theory (to be appended). *)      
+let transWA proto p inNameFile nameOutFile = 
   let proto = cleanChoice proto in
 
   let (sessName,idName) =
     try (List.hd proto.sessNames, List.hd proto.idNames) (* 2 funSymb *)
-    with _ -> failwith "The protocol should have at least one identity name and one session name." in
-  let (sessTerm,idTerm) = FunApp (sessName, []), FunApp (idName, []) in
+    with _ -> errorClass "The protocol should have at least one identity name and one session name." p in
+  let (sessTerm,idTerm) = FunApp (sessName, []), FunApp (idName, []) in (* argument of events describing session and identity *)
   let listEvents = ref [] in
   let iniPrefix, resPrefix = "I", "R" in
   let nameEvent prefixName nb actionName = Printf.sprintf "%s%s_%d" prefixName actionName nb in
@@ -470,7 +481,7 @@ let transC2 proto p inNameFile nameOutFile =
       if isIni
       then merge (List.rev listOut, List.rev listIn)
       else merge (List.rev listIn, List.rev listOut) in
-    let rec goThrough listTest listIn listOut = function
+    let rec goThrough listTest listIn listOut = function (* rec. function adding events *)
       | Input (tc,((PatVar bx) as patx),p,occ) -> (* bx: binder in types.mli *)
 	 let newListIn = (Var bx) :: listIn in
 	 let subProc,lTest,nbOut = goThrough listTest newListIn listOut p in
@@ -497,6 +508,14 @@ let transC2 proto p inNameFile nameOutFile =
 	     let argsEv = makeArgs listIn listOut
 	     and nameEv = nameEvent prefixName (List.length newListTest) "test" in
 	     let subProcEv = addEvent nameEv argsEv subProc in
+	     if !verbose
+	     then begin
+		 pp (Printf.sprintf "Creation of event %s for consecutive tests ending with 'let (" nameEv);
+		 Display.Text.display_pattern pat;
+		 pp ") = ";
+		 Display.Text.display_term t;
+		 pp ")'.\n";
+	       end;
 	     (Let(pat,t,subProcEv,pe,occ), lTest, nbOut))
       | Test (t,pt,pe,occ) -> 
 	 (match pt with
@@ -510,12 +529,18 @@ let transC2 proto p inNameFile nameOutFile =
 	     let argsEv = makeArgs listIn listOut
 	     and nameEv = nameEvent prefixName (List.length newListTest) "test" in
 	     let subProcEv = addEvent nameEv argsEv subProc in
+	     if !verbose
+	     then begin
+		 pp (Printf.sprintf "Creation of event %s for consecutive tests ending with 'if (" nameEv);
+		 Display.Text.display_term t;
+		 pp ")'.\n";
+	       end;
 	     (Test(t,subProcEv,pe,occ), lTest, nbOut))
       | Nil -> (Nil, List.rev listTest, List.length listOut)
-      | _ -> failwith "Critical error: transC2 is applied on a protocol that does not satisfy the syntactical restrictions. Should never happen [7]." in
+      | _ -> failwith ("Critical error: transWA is applied on a protocol that does not satisfy the syntactical restrictions. Should never happen [7]."^email) in
     goThrough [] [] [] proc in
 
-  (* Generate a string for a query *)
+  (* Generate a string for a query (depends on whether shared or not, number of actions before events, nb of in, role) *)
   let generateQuery isShared nb nbIn isInitiator =
     let prefix = if isShared
 		 then "query k:bitstring, n1:bitstring, n2:bitstring,\n"
@@ -526,7 +551,7 @@ let transC2 proto p inNameFile nameOutFile =
     let rec range = function | 0 -> [] | n -> n :: range (n-1) in
     let listArgs nb = 		(* generate a list of messages to give as arguments to events *)
       List.map (fun n -> Printf.sprintf "m%d" n) (List.rev (range nb)) in      
-    let allListArgs nb role = 
+    let allListArgs nb role = 	(* glue all arguments together for types of queries *)
       if isShared
       then "k" :: (if role==iniPrefix then "n1" else "n2") :: (listArgs nb)
       else (if role==iniPrefix then "k1" else "k2") ::
@@ -539,10 +564,10 @@ let transC2 proto p inNameFile nameOutFile =
     let dual (p1,p2) = p2,p1 in
     let roles = iniPrefix,resPrefix in
     let dualRoles = dual roles in
-    let rec produceEvents = function
+    let rec produceEvents = function (* produce the nested events in -> out -> in ... *)
       |	0 -> []
       | n  -> 
-	 let outRole, inRole = if (n mod 2) = 0 then dualRoles else roles in
+	 let outRole, inRole = if (n mod 2) = 0 then dualRoles else roles in (* involved roles depend on parity *)
 	 let n' = if (n mod 2) = 0 then n/2 else n/2+1 in
 	   (* if (n mod 2) = 0 then n-1 else n in *)
 	 (Printf.sprintf "event(%s(%s))" (nameEvent inRole n' "in") (String.concat "," (allListArgs n inRole)))
@@ -552,7 +577,7 @@ let transC2 proto p inNameFile nameOutFile =
 	   produceEvents (n-1) in
     let listEvents = produceEvents (if isInitiator then 2*nbIn else max (2*nbIn-1) 0) in
     let thisRole = if isInitiator then fst roles else snd roles in
-    let lastEvent = Printf.sprintf "event(%s(%s))" 
+    let lastEvent = Printf.sprintf "event(%s(%s))" (* the first event before the nested events in -> out ... *)
 				   (nameEvent thisRole nb "test")
 				   (String.concat "," (allListArgs nbArgs thisRole)) in
     let strImplications = String.concat "  ==>\n" 
@@ -565,20 +590,23 @@ let transC2 proto p inNameFile nameOutFile =
   in
 
   (* -- 1. -- COMPUTING EVENTS VERSION AND QUERIES *)
+  (* Adding events IN roles *)
   let iniEvents,iniTests,iniNbOut = addEventsRole proto.ini iniPrefix true in
   let resEvents,resTests,resNbOut = addEventsRole proto.res resPrefix false in
   let protoEvents = { proto with
 		      ini = iniEvents;
 		      res = resEvents;
 		    } in
-  let isShared = if not(!newCases)
-		 then true
-		 else List.length proto.idNamesShared > 0 in
-  if not(isShared)
-  then log "Warning: We create events using a new functionality in beta to deal with the new kind of scenario you gave as input.";
+  let toDisplay = pushNames protoEvents in
+  let isShared = List.length proto.idNamesShared > 0 in
+  if not(isShared) && !verbose
+  then pp "> Note: Since no session name is shared, we create events accordingly.";
+
+  (* Generating queries *)
   let allQueries = (List.map (fun (nb,nbIn) -> generateQuery isShared nb nbIn true) iniTests) @ 
 		     (List.map (fun (nb,nbIn) -> generateQuery isShared nb nbIn false) resTests) in
 
+  (* Generating type declarations of events *)
   let displayEventsDec listEvents =
     let rec nBit = function
       | 0 -> []
@@ -591,14 +619,15 @@ let transC2 proto p inNameFile nameOutFile =
   (* -- 2. -- GET the theory part of inNameFile *)
   let theoryStr = theoryStr inNameFile in
   
-  (* -- 3. -- Print evrything using a HACK TO REDIRECT STDOUT *)
+  (* -- 3. -- Print everything using a HACK TO REDIRECT STDOUT *)
+  (* BEGINNING OF REDIRECTION *)
   let old_descr = Unix.dup Unix.stdout in
   let newstdout = open_out nameOutFile in
   print_newline ();		(* for flushing stdout *)
   Unix.dup2 (Unix.descr_of_out_channel newstdout) Unix.stdout;
   (* Print (=write in the file) the complete ProVerif file *)
 (*  pp "\n\n(* == THEORY == *)\n"; *)
-  pp "\n(********   This file has been automatically generated using the tool UKano ********)\n\n";
+  pp "\n(********   This file has been automatically generated using the tool UKano. It encodes the well-authentication condition. ********)\n\n";
   pp theoryStr;
   pp " *)\n";
   pp "\n\n(* == DECLARATIONS OF EVENTS == *)\n";
@@ -607,9 +636,9 @@ let transC2 proto p inNameFile nameOutFile =
   List.iter (fun s -> Printf.printf "%s\n" s) allQueries;
   pp "\n\n(* == PROTOCOL WITH EVENTS == *)\n";
   pp "let SYSTEM =\n";
-  let toDisplay = pushNames protoEvents in
   displayProtocolProcess toDisplay;
   Printf.printf ".\nprocess SYSTEM\n%!";
+  flush_all ();
   close_out newstdout;
   Unix.dup2 old_descr Unix.stdout
 (* END OF REDIRECTION *)
@@ -618,22 +647,23 @@ let transC2 proto p inNameFile nameOutFile =
 (************************************************************)
 (* Handling nonce versions & checking Frame Opacity         *)
 (************************************************************)
-
+(** Some symbols we shall add *)
+(* CHECK: works like this, better would be to understand what are those flags for *)
 let choiceSymb = {
     f_name = "choice";
     f_type = ([typeBit;typeBit], typeBit);
     f_cat = Choice;
     f_initial_cat = Choice;
-    f_private = false;		(* TODO *)
-    f_options = 0;		(* TODO *)
+    f_private = false;		(* CHECK* *)
+    f_options = 0;		(* CHECK* *)
   }
 let letCatchSymb = {
     f_name = "";
     f_type = ([typeBit;typeBit;typeBit], typeBit);
     f_cat = LetCatch;
     f_initial_cat = LetCatch;
-    f_private = true;		(* TODO *)
-    f_options = 0;		(* TODO *)
+    f_private = true;		(* CHECK* *)
+    f_options = 0;		(* CHECK* *)
   }
 let hole =
   FunApp
@@ -642,7 +672,7 @@ let hole =
 	f_type = ([], typeBit);
 	f_cat = Tuple;
 	f_initial_cat = Tuple;	f_private = true;
-	f_options = 0;		(* TODO *)
+	f_options = 0;		(* CHECK* *)
       }
     , [])
 let mergeOut = {
@@ -653,12 +683,12 @@ let mergeOut = {
     link = NoLink;
   }
 		 
-let debugF_type (tl,t) = 
-  ""
+let debugF_type (tl,t) = ""
+
 let displayCat = function
   | Tuple -> "Tuple"
   | Name _ -> "Name"
-  | _ -> "todo"
+  | _ -> failwith ("Critial error [45]."^email)
 
 let debugFunSymb f = 
   Printf.printf 
@@ -670,13 +700,18 @@ let debugFunSymb f =
     f.f_options
     
 (** Display a whole ProVerif file checking the first condition except for the theory (to be appended). *)      
-let transC1 proto p inNameFile nameOutFile = 
-    (* -- 1. -- Build nonce versions on the right *)
-  let nonTransparentSymbList = ["enc"; "aenc"; "dec"; "adec"; "h"; "hash"; "xor"] in
+let transFO proto p inNameFile nameOutFile = 
+
+  (* -- 1. -- Build idealized versions of outputson the right and check conformity *)
+  (* TODO: extend this list: *)
+  let nonTransparentSymbList = ["enc"; "aenc"; "dec"; "adec"; "h"; "hash"; "xor"; "dh"; "exp"; "mac"] in
+  let isArity0 funSymb = match funSymb.f_type with | ([], _) -> true | _ -> false in
   let isName funSymb = match funSymb.f_cat with Name _ -> true | _ -> false in
   let isPrivate funSymb = funSymb.f_private in
-  let isConstant funSymb = isName funSymb && not(isPrivate funSymb) in
+  let isConstant funSymb = (isName funSymb && not(isPrivate funSymb)) ||
+			     (isArity0 funSymb) in
   let isTuple funSymb = match funSymb.f_cat with Tuple -> true | _ -> false in
+  (* Given a term, tries to guess an idealization *)
   let rec guessIdeal = function
     | FunApp (f, []) as t
 	 when isConstant f -> t	             (* public constants *)
@@ -687,27 +722,54 @@ let transC1 proto p inNameFile nameOutFile =
     | FunApp (f, listT)
 	 when isTuple f
       -> FunApp (f, List.map guessIdeal listT) (* tuple *)
-    | term -> if !newCases then begin
-		  log "Warning: some idealized messages you gave do not use 'hole' and are extended. The idealization of : ";
-		  Printf.printf "     ";
-		  Display.Text.display_term term;
-		  Printf.printf "\n";
-		  log "will be itself.\n";
-		  term
-		end
-	      else begin
-		  log "Warning: some idealized messages are missing and it is unclear how to guess them. The idealization of : ";
-		  Printf.printf "     ";
-		  Display.Text.display_term term;
-		  Printf.printf "\n";
-		  log "will be a hole.\n";
-		  hole;
-		end in
+    | term -> (* if true then begin log "Warning: some idealized messages you gave do not use 'hole' and are extended. The idealization of : "; *)
+       (* 	  Printf.printf "     "; *)
+       (* 	  Display.Text.display_term term; *)
+       (* 	  Printf.printf "\n"; *)
+       (* 	  log "will be itself.\n"; *)
+       (* 	  term; end else*)
+       begin
+	 log "WARNING: no idealization was given for an output and UKano's heuristics failed to guess one. For the sake of soundness, we let the idealization of : ";
+	 Printf.printf "     ";
+	 Display.Text.display_term term;
+	 Printf.printf "   ";
+	 pp "be a hole (i.e., session name variable).\n";
+	 hole;
+       end in
+  (* Given a term, check that its corresponds to a conform idealization.
+   [insidehonest] describes if this output is inside the honest execution (i.e., not in else nor at
+   the end of honest execution). *)
+  let checkIdeal inHonest listVarIn t =
+    let rec checkSyntax  = function
+      | FunApp (f, []) when isConstant f -> true (* public constants *)
+      | FunApp (f, []) when f.f_name = "hole" -> true (* hole *)
+      | FunApp (f, []) when (isName f && List.mem f proto.sessNames)
+	-> true   (* session name *)
+      | FunApp (f, []) when isName f -> false   (* (identity and global) names *)
+      | FunApp (f, tl) ->
+	 (* For debugging purposes: *)
+	 (* List.iter (fun f -> Printf.printf "%s, " (\* Display.Text.display_function_name *\) f) !Pitsyntax.funSymb_equation; *)
+	 if List.exists (fun s -> f.f_name = s) !Pitsyntax.funSymb_equation (* if there is a match with a function in equation *)
+	 then false		(* function in E *)
+	 else List.for_all checkSyntax tl (* ok, pursue *)
+      | Var b when List.mem b.sname listVarIn -> true  (* variable of input *)
+      | Var b -> false	in	              	       (* variable of let *)
+    let rec checkOneName = function
+      | Var b -> false				 (* variable *)
+      | FunApp (f, []) when f.f_name = "hole" -> true (* hole *)
+      | FunApp (f, []) when isName f && List.mem f proto.sessNames
+	-> true   (* session name *)
+      | FunApp (f, []) when isName f -> false   (* (private) names *)
+      | FunApp (f, []) when isConstant f -> false (* public constants *)
+      | FunApp (f, tl) -> List.exists checkOneName tl in (* ok, pursue *)
+    (checkSyntax t) && (not(inHonest) || checkOneName t) in
+
   let countNonces = ref 0 in
   let listNames = ref [] in
+  (* Create the next new session name to fill in a hole *)
   let createNonce () = 
     incr(countNonces);
-    let nameName = Printf.sprintf "n%d" !countNonces in
+    let nameName = Printf.sprintf "hole_%d" !countNonces in
     let funSymb =
       {
 	f_name = nameName;
@@ -723,46 +785,71 @@ let transC1 proto p inNameFile nameOutFile =
   let rec noncesTerm = function
     | FunApp (f, tList) when f.f_name = "hole" -> createNonce()
     | FunApp (f, tList) -> FunApp (f, List.map noncesTerm tList)
-    | t -> if !newCases then t else errorClass ("Critical error, should never happen [3].") p in
-  (* idealized process (some idealized output may miss) -> nonce process *)
-  let rec noncesProc = function
+    | Var b -> Var b
+    | t -> errorClass ("Critical error, should never happen [3]."^email) p in
+  (* idealized process (some idealized output may miss) -> use heuristics from guessIdeal *)
+  let ideaChecked = ref false in	(* whether given idealizations have been checked  *)
+  (* [isIni] specifies whether the process is the initiator process or not *)
+  let rec noncesProc ?inElse:(inE=false) isIni listVarIn = function
     | Nil -> Nil
-    | Input (tc,patx,p,occ) -> Input(tc,patx, noncesProc p, occ)
+    | Input (tc,patx,p,occ) ->
+       let nameVar = match patx with
+	 | PatVar binder -> binder.sname
+	 | _ -> failwith ("Critical error."^email) in
+       Input(tc,patx, noncesProc isIni (nameVar :: listVarIn) p, occ)
     | Output (tc,tm,p,occ) ->
+       let lastOutHonest = match p with
+	 | Nil -> if !isLastOutputByIni then isIni else not(isIni)
+	 | _ -> false in
+       let inHonest = not(inE) && not(lastOutHonest) in
        let (tmReal, tmIdeal) =
 	 match tm with
-	 | FunApp (funSymb, tm1 :: tm2 :: tl) when funSymb.f_cat = Choice -> (tm1, tm2) (* user already built idealization *)
-	 | _ -> (* For debugging purpose: pp "\n"; 
-                   (match tm with | FunApp (f, li) -> debugFunSymb f);
-                   pp "\n"; Display.Text.display_term tm;
-        	   pp " -> "; Display.Text.display_term (guessIdeal tm);  pp "\n"; *)
-	    (tm, guessIdeal tm) in (* he did not, we need to guess it *)
+	 | FunApp (funSymb, tm1 :: tm2 :: tl) when funSymb.f_cat = Choice ->
+	    if !ideaAssumed || checkIdeal inHonest listVarIn tm2
+	    then begin ideaChecked := true; (tm1, tm2); end (* user already built idealization *)
+	    else begin pp "[ERROR] The following idealization you built is not conform: ";
+		       Display.Text.display_term tm2;
+		       pp ".\n";
+		       exit(2);
+		 end
+	 | _ -> let tmIdeal = guessIdeal tm in (* he did not, we need to guess it *)
+		if checkIdeal inHonest listVarIn tmIdeal
+		then (tm, guessIdeal tm) 
+		else failwith ("Critial Error [458]."^email) in
+       (* if false then begin pp "\n";  *)  (* For debugging purpose: *)
+       (* 			(match tm with | FunApp (f, li) -> debugFunSymb f); *)
+       (* 			pp "\n"; Display.Text.display_term tm; *)
+       (* 			pp " -> "; Display.Text.display_term (guessIdeal tm);  pp "\n"; *)
+       (* 		  end; *)
        let tmNonce = noncesTerm tmIdeal in
        let tmChoice = FunApp (choiceSymb, [tmReal; tmNonce]) in
-       Output(tc, tmChoice , noncesProc p, occ)
-    | Let (patx,t,pt,pe,occ) -> Let (patx,t, noncesProc pt, noncesProc pe, occ)
-    | Test (t,pt,pe,occ)-> Test(t, noncesProc pt, noncesProc pe,occ)
-    | p -> errorClass ("Critical error, should never happen [5].") p in
+       Output(tc, tmChoice , noncesProc isIni listVarIn p, occ)
+    | Let (patx,t,pt,pe,occ) -> Let (patx,t, noncesProc isIni listVarIn pt, noncesProc ~inElse:true isIni listVarIn pe, occ)
+    | Test (t,pt,pe,occ)-> Test(t, noncesProc isIni listVarIn pt, noncesProc ~inElse:true isIni listVarIn pe,occ)
+    | p -> errorClass ("Critical error, should never happen [5]."^email) p in
   let noncesProto = 
     { proto with
-      ini = noncesProc proto.ini;
-      res = noncesProc proto.res;
+      ini = noncesProc true [] proto.ini;
+      res = noncesProc false [] proto.res;
       sessNames = proto.sessNames @ (List.rev !listNames);
     } in
-  
-  
-  (* -- 2. -- Deal with conditionals (should not create false attacks for diff-equivalent) *)
+  if !verbose && !ideaChecked
+  then (if !ideaAssumed
+	then log "Remember that we do not check that idealizations are conform (option '--idea-no-check'). You should check this yourself by inspecting the produced file."
+	else log "All idealizations (including the ones you gave as input) have been checked (i.e., only constants, session nammes, holes, variables bind by inputs and functions not in E) and at least one hole or a session name in each idealized output (except in else branches and last honest output).");
+
+  (* -- 2. -- Deal with conditionals (should not create false attacks for diff-equivalence) *)
   (* a) we push conditionals (Test and Let) and put them just before Output (when needed)
      b) we use a hack to be sure the 'Let' construct will never fail:
              let yn = dec(x,k) in
-             out(c, choice[yn,n4]
+             out(c, choice[yn,idealization]
         will be translated to
              let mergeOut = let yn = dec(x,k) in
-                              choice[yn,n4]
-                            else n4 in
+                              choice[yn,iealization]
+                            else iedalization in
              out(c, mergeOut).
         Function cleanTest cannot produce nested let (it is actually syntactic sugar
-        and have no internal representation. We thus use a flag using a special funsymb
+        and have no internal representation). We thus use a flag using a special funsymb
         letCatch with a specific f_cat to warn the display function that it is needed to
         put all following let/test construct INSIDE the first let mergeOut = [put here]. *)
   
@@ -815,8 +902,8 @@ let transC1 proto p inNameFile nameOutFile =
        Par(cleanTest accTest ((patx,t)::accLet) pt,
 	   cleanTest accTest accLet pe)
     | Test (t,pt,pe,occ)-> Par(cleanTest (t::accTest) accLet pt, cleanTest accTest accLet pe)
-    | p -> errorClass ("Critical error, should never happen.") p in
-  let cond1Proto = 
+    | p -> errorClass ("Critical error, should never happen."^email) p in
+  let condFOProto = 
     { noncesProto with
       sessNames = proto.sessNames @ (List.rev !listNames);
       ini = cleanTest [] [] noncesProto.ini;
@@ -833,12 +920,12 @@ let transC1 proto p inNameFile nameOutFile =
   Unix.dup2 (Unix.descr_of_out_channel newstdout) Unix.stdout;
   (* Print (=write in the file) the complete ProVerif file *)
   (*  pp "\n\n(* == THEORY == *)\n"; *)
-  pp "\n(********   This file has been automatically generated using the tool UKano ********)\n\n";
+  pp "\n(********   This file has been automatically generated using the tool UKano. It encodes the frame opacity condition. ********)\n\n";
   pp theoryStr;
   pp " *)\n";
-  pp "\n\n(* == PROTOCOL WITH NONCE VERSIONS == *)\n";
+  pp "\n\n(* == PROTOCOL WITH IDEALIZATION == *)\n";
   pp "let SYSTEM =\n";
-  let toDisplay = pushNames cond1Proto in
+  let toDisplay = pushNames condFOProto in
   displayProtocolProcess toDisplay;
   Printf.printf ".\nprocess SYSTEM\n%!";
   close_out newstdout;
@@ -846,14 +933,51 @@ let transC1 proto p inNameFile nameOutFile =
 (* END OF REDIRECTION *)
 
 
-(** [transC2 p inNameFile outNameFileC1 outNameFileC2] writes in the files [outNameFileC_] complete ProVerif files checking respectively
+let printHelp path =
+  if !verbose
+  then pp (Printf.sprintf "If you want to manually verify the condition, launch 'proverif -in pitype %s'.\n" path)
+     
+(** [transBoth p inNameFile outNameFileFO outNameFileWA] writes in the files [outNameFile*] complete ProVerif files checking respectively
 frame opacity and well-authentication for the process [p] and the theory contained in [inNameFile]. *)
 let transBoth  p inNameFile nameOutFileFO nameOutFileWA = 
+  verbose := not(!Param.shortOutput);
+  ideaAssumed := !Param.ideaAssumed;
+  if !verbose then pp (Display.title "GENERATION OF MODELS ENCODING SUFFICIENT CONDITIONS");
+  
+  if !verbose
+  then begin pp (Display.header "Parsing of the input model");
+	     pp "\n";
+       end;
   let proto1 = extractProto p in
   let proto2 = { proto1 with
 		 ini = proto1.ini;
-		 res = proto1.res } in
-  if !debug then
-    displayProtocol proto1;
-  transC1 proto1 p inNameFile nameOutFileFO;
-  transC2 proto2 p inNameFile nameOutFileWA
+		 res = proto1.res } in  
+  if !verbose
+  then begin
+      pp (Printf.sprintf "2-Party protocol extracted from yout input model %s:\n"
+			 (if !Param.has_choice then "(choice[ul,ur]'\nspecifies that 'ul' is the real output and 'ur' is the idealization)" else ""));
+      displayProtocol proto1;
+      if false			(* debug *)
+      then pp (Printf.sprintf "Is Initiator the role that outputs the last message in the honest execution? --> %b\n" !isLastOutputByIni );
+    end;
+  
+  if not(!Param.onlyWA)
+  then begin
+      if !verbose then begin pp (Display.header "Generation of the model encoding frame opacity"); pp"\n"; end;
+      transFO proto1 p inNameFile nameOutFileFO;
+      pp (Display.result (Printf.sprintf "A ProVerif model encoding the frame opacity condition has been written in %s." nameOutFileFO));
+      if !verbose then pp "\n";
+      printHelp nameOutFileFO;
+    end;
+
+  if not(!Param.onlyFO)
+  then begin
+      if !verbose then begin
+	  pp (Display.header "Generation of the model encoding well-authentication");  
+	  pp "\n";
+	end;
+      transWA proto2 p inNameFile nameOutFileWA;
+      pp (Display.result (Printf.sprintf "A ProVerif model encoding the well-authentication condition has been written in %s.\n" nameOutFileWA));
+      printHelp nameOutFileWA;
+    end;
+  proto1.idNamesANO

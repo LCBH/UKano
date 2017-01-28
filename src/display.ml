@@ -1,10 +1,12 @@
 (*************************************************************
  *                                                           *
- *  Cryptographic protocol verifier                          *
+ *  UKano: UnlinKability and ANOnymity verifier              *
  *                                                           *
- *  Bruno Blanchet and Vincent Cheval                        *
- *                                                           *
- *  Copyright (C) INRIA, CNRS 2000-2015                      *
+ *  Lucca Hirschi                                            *
+ *  http://projects.lsv.ens-cachan.fr/ukano/                 *
+ *  Copyright (C) Lucca Hirschi 2015-2017                    *
+ *  Copyright (C) Bruno Blanchet, Vincent Cheval,            *
+ *                INRIA, CNRS 2000-2015                      *
  *                                                           *
  *************************************************************)
 
@@ -28,6 +30,25 @@
 open Types
 open Pitypes
 
+let char = "="
+let rec repeat s0 c = function
+  | 0 -> s0
+  | n -> repeat (s0^c) c (n-1)
+  
+let header s =
+  let len = String.length s in
+  let lheader = repeat "" "=" (40 - (len+2)/2) in
+  let rheader = repeat "" "=" (80 - (len + 2 + String.length lheader)) in
+  "\n" ^ lheader ^ " " ^ s ^ " " ^ rheader
+		  
+let title s =
+  let len = String.length s in
+  let headerp = repeat "" "=" 80 in
+  Printf.sprintf "%s%s\n%s\n" headerp (header s) headerp
+
+let result s =
+  Printf.sprintf "------> %s" s
+		   
 (* Helper function to make the display more readable: we abbreviate names with
    just a constant symbol. *)
 

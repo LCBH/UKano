@@ -28,6 +28,12 @@
 open Types
 open Ptree
 
+(* UKANO *)
+let shortOutput = ref false
+let ideaAssumed = ref false
+let onlyFO = ref false
+let onlyWA = ref false
+
 let lib_name = ref ""
 
 let def_var_name = "v"
@@ -59,7 +65,7 @@ let active_attacker = ref true
 
 let key_compromise = ref 0
 
-let typed_frontend = ref false
+let typed_frontend = ref true
 type ignore_t =
     NotSet
   | Ignore
@@ -394,8 +400,3 @@ let session1 = { f_name = "session1";
 	         f_initial_cat = Eq [] }
 let red_rules = ref []
 let elim_true = ref []
-
-
-(* ukano translator *)
-let trad_ukano = ref true
-let newCases = ref true

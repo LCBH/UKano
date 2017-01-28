@@ -1,10 +1,12 @@
 (*************************************************************
  *                                                           *
- *  UKano                                                    *
+ *  UKano: UnlinKability and ANOnymity verifier              *
  *                                                           *
  *  Lucca Hirschi                                            *
- *                                                           *
+ *  http://projects.lsv.ens-cachan.fr/ukano/                 *
  *  Copyright (C) Lucca Hirschi 2015-2017                    *
+ *  Copyright (C) Bruno Blanchet, Vincent Cheval,            *
+ *                INRIA, CNRS 2000-2015                      *
  *                                                           *
  *************************************************************)
 
@@ -67,7 +69,7 @@ let display_process p biproc =
 let first_file = ref true
 
 let anal_file s =
-  if (s = "help" || s="") then begin Printf.printf "Error, you should enter a filename.\n%s\n" (Ukano.helpMess); exit(0); end;
+  if (s = "help" || s="") then begin Printf.printf "Error, you should enter a filename.\n%s\n" (Conditions.helpMess); exit(0); end;
   if not (!first_file) then
     Parsing_helper.user_error "Error: You can analyze a single ProVerif file for each run of UKano.\nPlease rerun UKano with your second file.\n";
   first_file := false;
@@ -85,14 +87,18 @@ let anal_file s =
   (* Check if destructors are deterministic *)
   Destructor.check_deterministic !Pitsyntax.destructors_check_deterministic;
   
-  (* Display the original processes *)
+  (* Simplification of the orginal process *)
   let p = Simplify.prepare_process p0 in
   Pitsyntax.set_need_vars_in_names();
   incr Param.process_number;
-  print_string "Process:\n";
-  Display.Text.display_process_occ "" p;
-  Display.Text.newline();
 
+  (* Display the original processes *)
+  if false then begin
+      print_string "Process:\n";
+      Display.Text.display_process_occ "" p;
+      Display.Text.newline();
+    end;
+  
   
   (* Compute filename for the two produced ProVerif files *)
   let fileNameC1, fileNameC2 =
@@ -101,13 +107,13 @@ let anal_file s =
 	  if List.length splitDot = 1
 	  then List.hd splitDot
 	  else  String.concat "." (List.rev (List.tl (List.rev splitDot))) in
-	let prefixRel = if prefix.[0] = '/' then "."^prefix else prefix in
+	let prefixRel = if false && prefix.[0] = '/' then "."^prefix else prefix in
 	(prefixRel^"_FOpa.pi", prefixRel^"_WAuth.pi")
     with _ -> ("OUTPUT_FOpa.pi","OUTPUT_WAuth.pi") in
   (* Compute and create the two ProVerif files checking the two conditions *)
-  Ukano.transBoth p s fileNameC1 fileNameC2;
+  let listIdNames = Conditions.transBoth p s fileNameC1 fileNameC2 in
   (* Verify the conditions using ProVerif *)
-  Proverif.verifyBoth (!pathProverif) fileNameC1 fileNameC2
+  Proverif.verifyBoth (!pathProverif) fileNameC1 fileNameC2 listIdNames
 
 
 (********************)
@@ -117,10 +123,16 @@ let _ =
   Arg.parse
     [ "-gc", Arg.Set gc, 
       "\t\t\tdisplay gc statistics (optional)";
-      "--help",  Arg.Unit (fun () -> Printf.printf "%s\n" helpMess),
-      "\t\tprint help message";
       "--proverif",  Arg.String (fun path -> pathProverif := path),
-      "\t\tpath of the ProVerif executable to use (optional, default: './proverif')"
+      "\t\tpath of the ProVerif executable to use (optional, default: './proverif')";
+      "--idea-no-check",  Arg.Unit (fun () -> Param.ideaAssumed := true),
+      "\t\tassume the idealization is conform (requires manual checks)";
+      "--less-verbose",  Arg.Unit (fun () -> Param.shortOutput := true),
+      "\t\treduce the verbosity";
+      "--only-fo",  Arg.Unit (fun () -> Param.onlyFO := true),
+      "\t\tverifies the frame opacity condition only";
+      "--only-wa",  Arg.Unit (fun () -> Param.onlyWA := true),
+      "\t\tverifies the well-authentication condition only"
     ]
     anal_file welcomeMess;
   if !gc then Gc.print_stat stdout

@@ -1,10 +1,12 @@
 (*************************************************************
  *                                                           *
- *  Cryptographic protocol verifier                          *
+ *  UKano: UnlinKability and ANOnymity verifier              *
  *                                                           *
- *  Bruno Blanchet and Vincent Cheval                        *
- *                                                           *
- *  Copyright (C) INRIA, CNRS 2000-2015                      *
+ *  Lucca Hirschi                                            *
+ *  http://projects.lsv.ens-cachan.fr/ukano/                 *
+ *  Copyright (C) Lucca Hirschi 2015-2017                    *
+ *  Copyright (C) Bruno Blanchet, Vincent Cheval,            *
+ *                INRIA, CNRS 2000-2015                      *
  *                                                           *
  *************************************************************)
 
@@ -42,3 +44,9 @@ val get_nounif : unit -> (fact_format * int) list
 val destructors_check_deterministic : funsymb list ref
 val set_need_vars_in_names : unit -> unit
 val reset_need_vars_in_names : unit -> unit
+
+(* UKano *)
+(* Register equations *)
+val funSymb_equation : string list ref
+
+

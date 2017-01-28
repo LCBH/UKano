@@ -1,10 +1,12 @@
 (*************************************************************
  *                                                           *
- *  Cryptographic protocol verifier                          *
+ *  UKano: UnlinKability and ANOnymity verifier              *
  *                                                           *
- *  Bruno Blanchet and Vincent Cheval                        *
- *                                                           *
- *  Copyright (C) INRIA, CNRS 2000-2015                      *
+ *  Lucca Hirschi                                            *
+ *  http://projects.lsv.ens-cachan.fr/ukano/                 *
+ *  Copyright (C) Lucca Hirschi 2015-2017                    *
+ *  Copyright (C) Bruno Blanchet, Vincent Cheval,            *
+ *                INRIA, CNRS 2000-2015                      *
  *                                                           *
  *************************************************************)
 
@@ -27,6 +29,14 @@
 *)
 open Types
 
+(* Some pretty printing stuff *)
+(** Takes a string and decorate it with a header. *)
+val header : string -> string
+(** Takes a string and decorate it with a title header. *)
+val title : string -> string
+(** Takes a string and decorate it to highlight a result. *)
+val result : string -> string
+			 
 (* Return an abbreviated derivation and an association table where the names are abbreviated *)
 
 val abbreviate_derivation : fact_tree -> (term * term) list * fact_tree
