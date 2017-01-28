@@ -69,7 +69,7 @@ let display_process p biproc =
 let first_file = ref true
 
 let anal_file s =
-  if (s = "help" || s="") then begin Printf.printf "Error, you should enter a filename.\n%s\n" (Ukano.helpMess); exit(0); end;
+  if (s = "help" || s="") then begin Printf.printf "Error, you should enter a filename.\n%s\n" (Conditions.helpMess); exit(0); end;
   if not (!first_file) then
     Parsing_helper.user_error "Error: You can analyze a single ProVerif file for each run of UKano.\nPlease rerun UKano with your second file.\n";
   first_file := false;
@@ -111,7 +111,7 @@ let anal_file s =
 	(prefixRel^"_FOpa.pi", prefixRel^"_WAuth.pi")
     with _ -> ("OUTPUT_FOpa.pi","OUTPUT_WAuth.pi") in
   (* Compute and create the two ProVerif files checking the two conditions *)
-  let listIdNames = Ukano.transBoth p s fileNameC1 fileNameC2 in
+  let listIdNames = Conditions.transBoth p s fileNameC1 fileNameC2 in
   (* Verify the conditions using ProVerif *)
   Proverif.verifyBoth (!pathProverif) fileNameC1 fileNameC2 listIdNames
 
