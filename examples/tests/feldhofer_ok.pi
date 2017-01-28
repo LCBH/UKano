@@ -1,0 +1,55 @@
+(**********)
+(* THEORY *)
+(**********)
+
+(* public communication channel *)
+free c : channel.
+free ci : channel.
+free cr : channel.
+free secret : bitstring [private].
+(* constant values *)
+free ok : bitstring.
+free hole : bitstring.
+
+
+(* Diffie-Hellman exponentiation *)
+(* Symmetric Encryption *)
+fun enc(bitstring, bitstring) : bitstring.
+  reduc forall xm:bitstring, xk:bitstring;
+        dec(enc(xm, xk), xk) = xm.
+			       
+(*************)
+(* PROTOCOLS *)
+(*************)
+
+(* Feldhofer Protocol *)
+let I (k:bitstring) =
+    new nI:bitstring;
+(* I ----[n]---> R *)
+    out(ci, nI);
+(* I <---[{nI,nR}_k]--- R *)
+    in(ci, x:bitstring);
+    let (=nI, xnr:bitstring) = dec(x, k) in
+(* I ----[{nI,nI}_k]---> R *)
+    out(ci, enc((xnr,nI),k)).   
+
+let R (k:bitstring) =
+    new nR:bitstring;
+(* R <---[nI]--- I *)
+    in(cr, ynI:bitstring);
+(* R ----[{nI,nR}_k]---> I *)
+    out(cr, enc((ynI, nR), k));
+(* R <---[{nR,nI}_k]--- I *)
+    in(cr, y:bitstring);
+    let (=nR,=ynI) = dec(y,k) in
+    out(cr, ok).
+
+(* WHOLE SYSIEM *)
+let FH =
+  ! new k:bitstring;
+    ! (I(k) | R(k)).
+
+(*
+query attacker(secret).
+*)
+process FH
