@@ -1,0 +1,6 @@
+For better readability in irma_abcdh.ORIG, we used the shortcut 'b' for 'bitstring'.
+It suffices to launch the script './replace.sh irma_abcdh.ORIG  > irma_abcdh_clean.pi'
+to produce the final file that can be fed to UKano.
+
+In irma_abcdh.pi, we specified idealizations of outputted messages. This has been
+written roughly by following the semantical canonical idealization operator.
