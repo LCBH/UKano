@@ -12,39 +12,39 @@ verification of anonymity and unlinkability of 2-agents protocols.
 See http://projects.lsv.ens-cachan.fr/ukano/ for more details and the
 underlying theory.
 
-The file README_PV contains the README file of ProVerif.
-
 Official webpage: http://projects.lsv.ens-cachan.fr/ukano/
 
 
 INSTALL
 
 You need OCaml >=3.00 (you can find Objective Caml at ocaml.org).
-Go to ./src/ and type:
+Just type:
    make
-The executable program 'proverif' has been built.
-See the file README_PV for all the details.
+The executable program 'ukano' and 'proverif' have been built.
 
 
 QUICK TEST
 
-To quickly test the tool on our case studies: build it, go to
-src/examples/ and use the script AutoCheck.sh on our case studies
-(there is a subfolder for each). For instance:
-       ./AutoCheck.sh Feldhofer/feldhofer.pi
+To quickly test the tool on our case studies: build it, choose an example
+in the examples folder (e.g., 'examples/Feldhofer/feldhofer.pi') and type
+   ./ukano <path-example>
 
 
 USAGE
 
-You must use the executable program proverif.
+You must use the executable program ukano.
 To run UKANO on a ProVerif file <filename> (see next for the expected
 format of this file), use 
-        ./proverif -ukano <filename>
+        ./ukano <filename>
 After parsing your file, the tool creates two other files in the same
 directory by using translations described in the paper. One is suffixed
 with '_FOpa.pi' and can be used to check frame opacity of the given
 protocol. The second suffixed with '_WAuth.pi' can be used to check
 well-authentication. The latter contains a query per conditional.
+The tool then launches proverif on those two models and parse the results
+in order to conclue whether both conditions have been established. In such
+a case, the tool concludes that the input protocol ensures unlinkability and
+anonymity.
 
 The folder './examples/' contain some ProVerif files in the expected
 format. It can be used as a starting point to write your own
@@ -53,11 +53,12 @@ protocols.
 
 EXPECTED FORMAT
 
-Only typed ProVerif files are accepted (the option '-in pitype' is
-enabled by default). The file should not define new types and only use
-types 'bitstring' and 'channel'. The file must declare at least one
-channel 'c' (i.e., contains a line 'free c:channel.'). After the
-definition of the equational theory (without any declaration of
+Only typed ProVerif files are accepted (proverif should successfully parse
+it when using the option '-in pitype'). The file should not define new types
+and only use types 'bitstring' and 'channel'. The file must declare at least one
+channel 'c' (i.e., contains a line 'free c:channel.').
+
+After the definition of the equational theory (without any declaration of
 events), the inputted file should contain a commentary:
        (* ==PROTOCOL== *)
 and then define only one process corresponding to the whole multiple
@@ -68,14 +69,14 @@ if the corresponding 'else' branches are the same. You can also use most
 of syntactical sugars allowed by ProVerif (e.g., modular definitions
 through definitions of functions and call, etc.).
 Finally, to check anonymity as well, identity names to be revealed
-(and only them) must have 'id' as prefix (e.g.,  idName). 
+(and only them) must have 'id' as prefix (e.g., idName). 
 
 Improve precision:
 Note that, currently, UKano does not detect safe conditionals and consider
-all conditiionals unsafe by default. Thus, in case some queries in the 
+all conditionals unsafe by default. Thus, in case some queries in the 
 file checking well-authentication cannot be proved, you should remove them
 from the file if they target a safe conditional (i.e., to find it, look at
-the first event of the query and find the conditional it corresponds to).
+the UKAno's output explaining the relation between conditionals and events.
 
 If the tool cannot guess idealizations of outputs (to check frame opacity),
 you can compute them manually and add it to the file as follow. 
