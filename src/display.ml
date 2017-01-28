@@ -42,7 +42,7 @@ let header s =
 let title s =
   let len = String.length s in
   let headerp = repeat "" "=" 80 in
-  Printf.sprintf "\n%s%s\n%s\n" headerp (header s) headerp
+  Printf.sprintf "%s%s\n%s\n" headerp (header s) headerp
 
 let result s =
   Printf.sprintf "------> %s" s

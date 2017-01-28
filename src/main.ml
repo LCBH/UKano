@@ -123,14 +123,16 @@ let _ =
   Arg.parse
     [ "-gc", Arg.Set gc, 
       "\t\t\tdisplay gc statistics (optional)";
-      "--help",  Arg.Unit (fun () -> Printf.printf "%s\n" helpMess),
-      "\t\tprint help message";
       "--proverif",  Arg.String (fun path -> pathProverif := path),
       "\t\tpath of the ProVerif executable to use (optional, default: './proverif')";
       "--idea-no-check",  Arg.Unit (fun () -> Param.ideaAssumed := true),
       "\t\tassume the idealization is conform (requires manual checks)";
       "--less-verbose",  Arg.Unit (fun () -> Param.shortOutput := true),
-      "\t\treduce the verbosity"
+      "\t\treduce the verbosity";
+      "--only-fo",  Arg.Unit (fun () -> Param.onlyFO := true),
+      "\t\tverifies the frame opacity condition only";
+      "--only-wa",  Arg.Unit (fun () -> Param.onlyWA := true),
+      "\t\tverifies the well-authentication condition only"
     ]
     anal_file welcomeMess;
   if !gc then Gc.print_stat stdout

@@ -31,7 +31,11 @@
 val shortOutput : bool ref
 (* do we assume idealization is conform *)
 val ideaAssumed : bool ref
-		    
+(* only verifies FO ? *)
+val onlyFO : bool ref		       
+(* only verifies WA ? *)
+val onlyWA : bool ref		       
+
 val lib_name : string ref
 
 val def_var_name : string

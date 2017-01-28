@@ -28,20 +28,20 @@
 open Types
 open Pervasives
 
-(* Helping message *)
-let helpMess = 			(* TODO *)
-  ("Your input model is not conform. It should be a valid typed ProVerif model ('proverif -in pitype <path>' should accept it).\nMoreover, it should comply with requirements
-    explained in the README. You can refer to the folder './examples/' for examples of files in the correct format.\n They can be used to bootstrap your own file.")
-     
-let pp s= Printf.printf "%s" s
-let email = " Please report this error with the input file to lucca.hirschi@lsv.ens-cachan.fr'."
-	      
+(* flags *)
+let ideaAssumed = ref false
+let isLastOutputByIni = ref false
+
 (* For debugging purpose *)
+let email = " Please report this error with the input file to lucca.hirschi@lsv.ens-cachan.fr'."
+let pp s= Printf.printf "%s" s
 let log s = Printf.printf "> %s\n%!" s
 let debug = ref false
 let verbose = ref false
-let ideaAssumed = ref false
-let isLastOutputByIni = ref false
+(* Helping message *)
+let helpMess =
+  ("Your input model is not conform. It should be a valid typed ProVerif model ('proverif -in pitype <path>' should accept it).\nMoreover, it should comply with requirements
+    explained in the README. You can refer to the folder './examples/' for examples of files in the correct format.\n They can be used to bootstrap your own file.")
 			    
 let splitTheoryString = "==PROTOCOL=="
 
@@ -510,7 +510,7 @@ let transWA proto p inNameFile nameOutFile =
 	     let subProcEv = addEvent nameEv argsEv subProc in
 	     if !verbose
 	     then begin
-		 pp (Printf.sprintf "Creation of event %s for consecutive tests ending with '(" nameEv);
+		 pp (Printf.sprintf "Creation of event %s for consecutive tests ending with 'let (" nameEv);
 		 Display.Text.display_pattern pat;
 		 pp ") = ";
 		 Display.Text.display_term t;
@@ -529,6 +529,12 @@ let transWA proto p inNameFile nameOutFile =
 	     let argsEv = makeArgs listIn listOut
 	     and nameEv = nameEvent prefixName (List.length newListTest) "test" in
 	     let subProcEv = addEvent nameEv argsEv subProc in
+	     if !verbose
+	     then begin
+		 pp (Printf.sprintf "Creation of event %s for consecutive tests ending with 'if (" nameEv);
+		 Display.Text.display_term t;
+		 pp ")'.\n";
+	       end;
 	     (Test(t,subProcEv,pe,occ), lTest, nbOut))
       | Nil -> (Nil, List.rev listTest, List.length listOut)
       | _ -> failwith ("Critical error: transWA is applied on a protocol that does not satisfy the syntactical restrictions. Should never happen [7]."^email) in
@@ -621,7 +627,7 @@ let transWA proto p inNameFile nameOutFile =
   Unix.dup2 (Unix.descr_of_out_channel newstdout) Unix.stdout;
   (* Print (=write in the file) the complete ProVerif file *)
 (*  pp "\n\n(* == THEORY == *)\n"; *)
-  pp "\n(********   This file has been automatically generated using the tool UKano ********)\n\n";
+  pp "\n(********   This file has been automatically generated using the tool UKano. It encodes the well-authentication condition. ********)\n\n";
   pp theoryStr;
   pp " *)\n";
   pp "\n\n(* == DECLARATIONS OF EVENTS == *)\n";
@@ -913,7 +919,7 @@ let transFO proto p inNameFile nameOutFile =
   Unix.dup2 (Unix.descr_of_out_channel newstdout) Unix.stdout;
   (* Print (=write in the file) the complete ProVerif file *)
   (*  pp "\n\n(* == THEORY == *)\n"; *)
-  pp "\n(********   This file has been automatically generated using the tool UKano ********)\n\n";
+  pp "\n(********   This file has been automatically generated using the tool UKano. It encodes the frame opacity condition. ********)\n\n";
   pp theoryStr;
   pp " *)\n";
   pp "\n\n(* == PROTOCOL WITH NONCE VERSIONS == *)\n";
@@ -948,23 +954,29 @@ let transBoth  p inNameFile nameOutFileFO nameOutFileWA =
   if !verbose
   then begin
       pp (Printf.sprintf "2-Party protocol extracted from yout input model %s:\n"
-		  (if !Param.has_choice then "(choice[ul,ur]'\nspecifies that 'ul' is the real output and 'ur' is the idealization)" else ""));
+			 (if !Param.has_choice then "(choice[ul,ur]'\nspecifies that 'ul' is the real output and 'ur' is the idealization)" else ""));
       displayProtocol proto1;
       if false			(* debug *)
       then pp (Printf.sprintf "Is Initiator the role that outputs the last message in the honest execution? --> %b\n" !isLastOutputByIni );
     end;
   
-  if !verbose then pp (Display.header "Generation of the model encoding frame opacity");  
-  if !verbose then pp "\n";
-  transFO proto1 p inNameFile nameOutFileFO;
-  pp (Display.result (Printf.sprintf "A ProVerif model encoding the frame opacity condition has been written in %s." nameOutFileFO));
-  if !verbose then pp "\n";
-  printHelp nameOutFileFO;
-  if !verbose then begin
-      pp (Display.header "Generation of the model encoding well-authentication");  
-      pp "\n";
+  if not(!Param.onlyWA)
+  then begin
+      if !verbose then begin pp (Display.header "Generation of the model encoding frame opacity"); pp"\n"; end;
+      transFO proto1 p inNameFile nameOutFileFO;
+      pp (Display.result (Printf.sprintf "A ProVerif model encoding the frame opacity condition has been written in %s." nameOutFileFO));
+      if !verbose then pp "\n";
+      printHelp nameOutFileFO;
     end;
-  transWA proto2 p inNameFile nameOutFileWA;
-  pp (Display.result (Printf.sprintf "A ProVerif model encoding the well-authentication condition has been written in %s.\n" nameOutFileWA));
-  printHelp nameOutFileWA;
+
+  if not(!Param.onlyFO)
+  then begin
+      if !verbose then begin
+	  pp (Display.header "Generation of the model encoding well-authentication");  
+	  pp "\n";
+	end;
+      transWA proto2 p inNameFile nameOutFileWA;
+      pp (Display.result (Printf.sprintf "A ProVerif model encoding the well-authentication condition has been written in %s.\n" nameOutFileWA));
+      printHelp nameOutFileWA;
+    end;
   proto1.idNamesANO

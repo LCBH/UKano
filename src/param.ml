@@ -31,7 +31,9 @@ open Ptree
 (* UKANO *)
 let shortOutput = ref false
 let ideaAssumed = ref false
-		   
+let onlyFO = ref false
+let onlyWA = ref false
+
 let lib_name = ref ""
 
 let def_var_name = "v"
