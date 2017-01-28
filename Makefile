@@ -6,7 +6,7 @@ PROVERIF =proverif1.96/src
 UKANO =./ukano
 UKANO_S =src
 
-all: ukano
+all: ukano proverif
 ukano:
 	@echo "#### Building UKano ...."
 	$(MAKE) all -C $(UKANO_S)
