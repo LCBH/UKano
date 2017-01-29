@@ -723,11 +723,13 @@ let transFO proto p inNameFile nameOutFile =
 	 if List.exists (fun s -> f.f_name = s) !Pitsyntax.funSymb_equation (* if there is a match with a function in equation *)
 	 then hole
 	 else FunApp (f, List.map (guessIdeal listVarIn) listT)  in
-       if !Param.ideaGreedy (* depends on options *)
-       then (if List.mem f.f_name nonTransparentSymbList (* should be non-transparent *)
-	     then hole
+       if !Param.ideaFullSyntax
+       then FunApp (f, List.map (guessIdeal listVarIn) listT)
+       else (if !Param.ideaGreedy (* depends on options *)
+	     then (if List.mem f.f_name nonTransparentSymbList (* should be non-transparent *)
+		   then hole
+		   else recT)
 	     else recT)
-       else recT 
     | Var b as t when List.mem b.sname listVarIn -> t  (* variable of input *)
     | Var b -> hole (* variable of let *)
     | term -> (* if true then begin log "Warning: some idealized messages you gave do not use 'hole' and are extended. The idealization of : "; *)
@@ -770,8 +772,11 @@ let transFO proto p inNameFile nameOutFile =
       | FunApp (f, []) when isName f -> false   (* (private) names *)
       | FunApp (f, []) when isConstant f -> false (* public constants *)
       | FunApp (f, tl) -> List.exists checkOneName tl in (* ok, pursue *)
-    (checkSyntax t) && (not(inHonest) || checkOneName t) in
-
+    if checkSyntax t
+    then if !Param.ideaFullSyntax
+	 then true		(* we will print a warning message in the only problematic case (=shared case)  *)
+	 else (not(inHonest) || checkOneName t)
+    else false in
   let countNonces = ref 0 in
   let listNames = ref [] in
   (* Create the next new session name to fill in a hole *)
@@ -841,11 +846,18 @@ let transFO proto p inNameFile nameOutFile =
       res = noncesProc false [] proto.res;
       sessNames = proto.sessNames @ (List.rev !listNames);
     } in
+
   if !verbose && !ideaChecked
   then (if !ideaAssumed
 	then log "Remember that we do not check that idealizations are conform (option '--idea-no-check'). You should check this yourself by inspecting the produced file."
 	else log "All idealizations (including the ones you gave as input) have been checked (i.e., only constants, session nammes, holes, variables bind by inputs and functions not in E) and at least one hole or a session name in each idealized output (except in else branches and last honest output).");
 
+  if !verbose && !Param.ideaFullSyntax
+  then (let isShared = List.length proto.idNamesShared > 0 in
+	if isShared
+	then log "WARNING: you used the option '--idea-full-syntax' for a protocol in the shared case. Therefore, you should check condition Well-Authentication item (ii) separately.");
+	 
+	 
   (* -- 2. -- Deal with conditionals (should not create false attacks for diff-equivalence) *)
   (* a) we push conditionals (Test and Let) and put them just before Output (when needed)
      b) we use a hack to be sure the 'Let' construct will never fail:

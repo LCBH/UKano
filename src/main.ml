@@ -130,6 +130,8 @@ let _ =
       "\tdo not takes given diealizations into account, generate them automatically instead";
       "--idea-greedy",  Arg.Unit (fun () -> Param.ideaGreedy  := true),
       "\tmodifies the idealization heuristics: put fresh names for all non-tuple sub-terms";
+      "--idea-full-syntax",  Arg.Unit (fun () -> Param.ideaFullSyntax  := true),
+      "\tmodifies the idealization heuristics: go through all functions (including ones in equations) and replace identity names and let variables by holes.";
       "--only-fo",  Arg.Unit (fun () -> Param.onlyFO := true),
       "\t\tverifies the frame opacity condition only";
       "--only-wa",  Arg.Unit (fun () -> Param.onlyWA := true),
