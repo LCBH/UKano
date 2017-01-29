@@ -8,23 +8,17 @@ verification of anonymity and unlinkability of 2-agents protocols.
 See [UKAno webpage](http://projects.lsv.ens-cachan.fr/ukano/) for more details and the
 underlying theory.
 
-<img align="center" src="http://projects.lsv.ens-cachan.fr/ukano/pictures/International_justice_and_privacy.jpg" width="120">
+<img align="center" src="http://projects.lsv.ens-cachan.fr/ukano/pictures/International_justice_and_privacy.jpg" width="100" />
 
 
 ## Install
 
 You need OCaml >=3.00 (you can find Objective Caml at [OCaml webpage](ocaml.org)).
-Just type:
-````bash
-make
-````
-The executable program 'ukano' and 'proverif' have been built.
+Just type: `make`.
+The executable program `ukano` and `proverif` have been built.
 
-You can also build UKano only by typing
-````bash
-make ukano
-````
-The executable needs an exectuable of ProVerif though. You can specify the path of
+You can also build UKano only by typing `make ukano`.
+UKano needs an exectuable of ProVerif though. You can specify the path of
 your ProVerif executable with the option `--proverif <path>`.
 
 
@@ -37,10 +31,7 @@ and type
 ./ukano <path-example>
 ````
 
-To test the tool against exampels with known expected conclusions, you can also type:
-````bash
-make test
-````
+To test the tool against examples with known expected conclusions, you can also type `make test`.
 
 
 ## Usage
