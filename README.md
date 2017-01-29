@@ -1,6 +1,7 @@
 # UKano: UnlinKability and ANOnymity verifier
 > Lucca Hirschi     
-> http://projects.lsv.ens-cachan.fr/ukano/
+> Land page: http://projects.lsv.ens-cachan.fr/ukano/
+> Wiki: https://github.com/LCBH/UKano/wiki
 
 *UKano* is a modified version of the ProVerif tool including automatic
 verification of anonymity and unlinkability of 2-agents protocols.
@@ -147,7 +148,7 @@ of names).
 
 
 ## Our Case Studies
-So far, we have tested UKano on several real-world case studies.
+We have tested UKano on several real-world case studies.
 We list them all below. They all have a dedicatd folder in [`./examples/`](./examples).
 
 Legend:
