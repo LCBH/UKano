@@ -1,0 +1,131 @@
+(* MODIFIED TO TEST A STRONG DEF OF UK using UKANO 
+ * MINIMAL VERSION FOR DAA SIGN
+ * ULTIMATE GOAL: strong UK of signers for Join + Sign + Verify
+ * Lucca Hirschi
+ * 23/03/2016
+ *)
+
+(* REMARKS
+Verified in 8sec for FO and 0.1s for WA.
+*)
+
+(*
+	This script supports the following article:
+
+		Smyth, B., Ryan, M., & Chen, L. (2012) Formal analysis of anonymity in Direct Anonymous Attestation schemes.
+
+	The script models the fixed RSA-based Direct Anonymous Attestation process specification <Join_RSA', Sign_RSA'>.
+
+	RESULT: Observational equivalence succeeds
+	EXECUTION TIME: 26 seconds 
+	PROVERIF VERSION: 1.86pl3
+	MACHINE SPEC: CentOS 5.7 on 2.40GHz Intel Xeon with 4GB memory (19 September 2012) 
+
+	NOTE: The execution time increases to 7 minutes 42 seconds without the ProVerif parameter selFun = Term.
+*)
+
+(***************)
+(* ==THEORY==  *)
+(***************)
+free c:channel.
+
+fun accept () :bitstring.
+fun zero() :bitstring.
+fun one() :bitstring.
+fun FJoin() :bitstring.
+fun FSign() :bitstring.
+fun clgetnonce(bitstring) :bitstring.
+fun clgetprime(bitstring) :bitstring.
+fun hash(bitstring) :bitstring.
+fun pk(bitstring) :bitstring.
+fun commit(bitstring,bitstring):bitstring.
+fun circ(bitstring,bitstring):bitstring.
+fun checkclsign(bitstring,bitstring,bitstring) :bitstring.
+fun checkspk(bitstring,bitstring,bitstring) :bitstring.
+fun clcommit(bitstring,bitstring,bitstring) :bitstring.
+fun clopen(bitstring,bitstring,bitstring) :bitstring.
+fun spk(bitstring,bitstring,bitstring) :bitstring.
+fun clsign(bitstring,bitstring,bitstring,bitstring):bitstring.
+fun getmsgspk(bitstring) :bitstring.
+
+fun bottom() :bitstring.
+fun KI() :bitstring.
+
+
+(* Signature + blind signtaure *)
+equation forall xsk:bitstring,xprime:bitstring,xrand:bitstring,xmsg:bitstring;
+  clgetprime(clsign(xsk,xprime,xrand,xmsg)) = xprime.
+equation forall xsk:bitstring,xprime:bitstring,xrand:bitstring,xmsg:bitstring;
+  clgetnonce(clsign(xsk,xprime,xrand,xmsg)) = xrand.
+equation forall xsk:bitstring,xprime:bitstring,xrand:bitstring,xmsg:bitstring;
+  checkclsign(pk(xsk),xmsg,clsign(xsk,xprime,xrand,xmsg)) 
+				= accept.
+equation forall x:bitstring,xrand:bitstring,xplain:bitstring;
+  clopen(x,xrand,clcommit(x,xrand,xplain)) = xplain.
+equation forall xsk:bitstring,xrand:bitstring,yprime:bitstring,yrand:bitstring,xmsg:bitstring;
+  clopen(pk(xsk),xrand,clsign(xsk,yprime,yrand,
+	clcommit(pk(xsk),xrand,xmsg))) = clsign(xsk,yprime,xrand,xmsg).
+(* ZK of join + sign *)
+equation forall xzeta:bitstring,xsk:bitstring,xtsk:bitstring,xw:bitstring,xe:bitstring,xv:bitstring,xrand:bitstring,yprime:bitstring,yrand:bitstring,xmsg:bitstring;
+   checkspk(FSign,(xzeta,pk(xsk),commit(xtsk,xzeta),
+	    clcommit(pk(xsk),xw,clsign(xsk,xe,xv,xtsk)),xmsg),
+    spk(FSign,(xtsk,xw),(xzeta,pk(xsk),commit(xtsk,xzeta),
+		clcommit(pk(xsk),xw,clsign(xsk,xe,xv,xtsk)),xmsg))) = accept.
+equation forall xzeta:bitstring,xsk:bitstring,xtsk:bitstring,xw:bitstring,xe:bitstring,xv:bitstring,xrand:bitstring,yprime:bitstring,yrand:bitstring,xmsg:bitstring;
+    getmsgspk(spk(FSign,(xtsk,xw),(xzeta,pk(xsk),commit(xtsk,xzeta),
+		clcommit(pk(xsk),xw,clsign(xsk,xe,xv,xtsk)),xmsg))) = xmsg.
+
+
+(****************)
+(* ==PROTOCOL== *)
+(****************)
+
+let SignerP(cre:bitstring,tsk:bitstring,skI:bitstring)  = 
+    new msg :bitstring;  (* message to sign *)
+    in(c,nv:bitstring);
+    new nt :bitstring;
+    new w :bitstring;
+    new zeta :bitstring; (* when basename <> \bot, this is hash((one,bsnV)) *)
+    let creHat:bitstring = clcommit(pk(skI),w,cre) in 
+    let NV:bitstring = commit(tsk,zeta) in
+
+    new NEWtsk:bitstring;
+    new NEWcredM:bitstring;
+    new NEWv':bitstring;
+    new NEWne:bitstring;
+    out(c,choice[(zeta,pk(skI),NV,creHat,nt,
+                  spk(FSign,(tsk,w),(zeta,pk(skI),NV,creHat,(nt,nv,msg)))),
+
+                  (zeta,pk(skI), commit(NEWtsk,zeta),clcommit(pk(skI),w,clsign(skI,NEWne,NEWv',NEWcredM)),nt,
+                  spk(FSign,(NEWtsk,w),(zeta,pk(skI),commit(NEWtsk,zeta),clcommit(pk(skI),w,clsign(skI,NEWne,NEWv',NEWcredM)),(nt,nv,msg))))
+		  ]).
+
+let VerifierP =
+  new nv :bitstring;
+  out(c,nv);
+  in(c, x:bitstring);
+  let (xz:bitstring, xpkI:bitstring,xNV:bitstring,xcreH:bitstring,xnt:bitstring,xZK:bitstring) = x in
+(* Verify ZK bounds nv (of that session) *)
+  let (=xnt, =nv, xmsg:bitstring) = getmsgspk(xZK) in
+(* Verify ZK *)
+  if checkspk(FSign, (xz, xpkI, xNV, xcreH), xZK) = accept
+  then out(c,accept).
+  
+
+let SYSTEM = 
+(* Names from JOIN PROTOCOl *)
+new skI :bitstring; (* Signature key of Issuer *)
+! (* ID *)
+ new cnt :bitstring;
+ new DAASeed :bitstring;
+ new v' :bitstring;  (* yrand (of cred) *)
+ new ne :bitstring;  (* yprime (of cred) *)
+ new credM :bitstring; (* mess (of cred) *)
+! (* Session *)
+(
+  SignerP(clsign(skI,ne,v',credM), hash((hash((DAASeed,hash(KI))),cnt,zero)),  skI)
+|
+  VerifierP
+).
+
+process SYSTEM
