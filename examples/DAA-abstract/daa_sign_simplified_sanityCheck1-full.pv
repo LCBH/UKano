@@ -1,0 +1,95 @@
+(* MINIMAL SIMPLIFIED VERSION FOF DAA SIGN
+ * MODIFIED TO TEST A STRONG DEF OF UK using UKANO 
+ * Lucca Hirschi
+ * 17/12/2016
+ *)
+
+(* REMARKS:
+todo Verified in 8sec for FO and 0.1s for WA.
+*)
+
+(*  SIMPLIFIED VERSION OF DAA SIGN ADAPTED FROM:
+	This script supports the following article:
+
+		Smyth, B., Ryan, M., & Chen, L. (2012) Formal analysis of anonymity in Direct Anonymous Attestation schemes.
+
+	The script models the fixed RSA-based Direct Anonymous Attestation process specification <Join_RSA', Sign_RSA'>.
+
+	RESULT: Observational equivalence succeeds
+	EXECUTION TIME: 26 seconds 
+	PROVERIF VERSION: 1.86pl3
+	MACHINE SPEC: CentOS 5.7 on 2.40GHz Intel Xeon with 4GB memory (19 September 2012) 
+
+	NOTE: The execution time increases to 7 minutes 42 seconds without the ProVerif parameter selFun = Term.
+*)
+
+(***************)
+(* ==THEORY==  *)
+(***************)
+free c:channel.
+free secret:bitstring [private].
+fun accept() : bitstring.
+
+(* Signature *)
+fun spk(bitstring) : bitstring.
+fun sign (bitstring, bitstring) : bitstring.
+reduc forall m: bitstring , k:bitstring ;
+  getmess(sign(m, k)) = m.
+reduc forall m: bitstring , k:bitstring ;
+  checksign(sign(m, k), spk(k)) = m.
+
+(* Zero-Knowledge proofs *)
+fun ZK (bitstring, bitstring) : bitstring.
+fun acceptZK() : bitstring.
+reduc forall Ktpm: bitstring , id:bitstring, kI:bitstring, nV:bitstring, nt:bitstring, m:bitstring;
+  checkZK(ZK( (sign((Ktpm,id),kI),Ktpm),
+              (nV,nt,m,spk(kI))
+	  )) = acceptZK.
+reduc forall Ktpm: bitstring , id:bitstring, kI:bitstring, nV:bitstring, nt:bitstring, m:bitstring;
+  publicZK(ZK( (sign((Ktpm,id),kI),Ktpm),
+              (nV,nt,m,spk(kI))
+	  )) = (nV,nt,m,spk(kI)).
+
+(****************)
+(* ==PROTOCOL== *)
+(****************)
+
+let SignerP(cred:bitstring, Ktpm:bitstring,   m:bitstring,     pkI:bitstring) =
+(* args:    credential,     TPM's secret key, message to sign, issuer's public key *)
+    in(c, nv:bitstring);
+    new nt: bitstring;
+    out(c, ZK( (cred,Ktpm),
+               (nv,nt,m,pkI)
+	     )).
+(* Danity check:  out(c, Ktpm).*)
+
+let VerifierP(pkI:bitstring) =
+(* args:      issuer's public key *)
+    new nv :bitstring;
+    out(c,nv);
+    in(c, xZK:bitstring);
+(* Verify ZK bounds nv (of that session) and contains credential of issuer I*)
+    let (=nv, nt:bitstring, xmsg:bitstring, =pkI) = publicZK(xZK) in
+(* Verify ZK *)
+    let (=acceptZK) = checkZK(xZK) in
+    out(c,secret).
+  
+
+let SYSTEM = 
+new skI: bitstring; (* Signature key of Issuer *)
+! (* ID *)
+ new Ktpm :bitstring; (* TPM's secret internal key *)
+ new IDtpm :bitstring;   (* TPM's identity *)
+ (* next is credential bound to this TPM signed by issuer I *)
+ let cred: bitstring = sign((Ktpm,IDtpm),skI) in
+! (* SESSION *)
+(
+  new m: bitstring; (* the message TPM is willing to sign m with cred *)
+  SignerP(cred, Ktpm, m, spk(skI))
+|
+  VerifierP(spk(skI))
+).
+
+
+query attacker(secret).
+process SYSTEM
