@@ -703,7 +703,6 @@ let debugFunSymb f =
 let transFO proto p inNameFile nameOutFile = 
 
   (* -- 1. -- Build idealized versions of outputson the right and check conformity *)
-  (* TODO: extend this list: *)
   let nonTransparentSymbList = ["enc"; "aenc"; "dec"; "adec"; "h"; "hash"; "xor"; "dh"; "exp"; "mac"] in
   let isArity0 funSymb = match funSymb.f_type with | ([], _) -> true | _ -> false in
   let isName funSymb = match funSymb.f_cat with Name _ -> true | _ -> false in
@@ -711,16 +710,26 @@ let transFO proto p inNameFile nameOutFile =
   let isConstant funSymb = (isName funSymb) || (isArity0 funSymb) in
   let isTuple funSymb = match funSymb.f_cat with Tuple -> true | _ -> false in
   (* Given a term, tries to guess an idealization *)
-  let rec guessIdeal = function
+  let rec guessIdeal listVarIn = function
     | FunApp (f, []) as t
-	 when isConstant f -> t	             (* public constants *)
+	 when isConstant f -> t (* public constants *)
+    | FunApp (f, []) as t
+	 when (isName f && List.mem f proto.sessNames) -> t (* session name *)
     | FunApp (f, []) when isName f -> hole   (* (private) names *)
-    | FunApp (f, _)
-	 when (List.mem f.f_name nonTransparentSymbList) 
-      -> hole	                             (* should be non-transparent *)
     | FunApp (f, listT)
-	 when isTuple f
-      -> FunApp (f, List.map guessIdeal listT) (* tuple *)
+	 when isTuple f -> FunApp (f, List.map (guessIdeal listVarIn) listT) (* tuple *)
+    | FunApp (f, listT) as t ->
+       let recT =		(* try to go through if f\notin E *)
+	 if List.exists (fun s -> f.f_name = s) !Pitsyntax.funSymb_equation (* if there is a match with a function in equation *)
+	 then hole
+	 else FunApp (f, List.map (guessIdeal listVarIn) listT)  in
+       if !Param.ideaGreedy (* depends on options *)
+       then (if List.mem f.f_name nonTransparentSymbList (* should be non-transparent *)
+	     then hole
+	     else recT)
+       else recT 
+    | Var b as t when List.mem b.sname listVarIn -> t  (* variable of input *)
+    | Var b -> hole (* variable of let *)
     | term -> (* if true then begin log "Warning: some idealized messages you gave do not use 'hole' and are extended. The idealization of : "; *)
        (* 	  Printf.printf "     "; *)
        (* 	  Display.Text.display_term term; *)
@@ -803,17 +812,17 @@ let transFO proto p inNameFile nameOutFile =
        let inHonest = not(inE) && not(lastOutHonest) in
        let (tmReal, tmIdeal) =
 	 match tm with
-	 | FunApp (funSymb, tm1 :: tm2 :: tl) when funSymb.f_cat = Choice ->
+	 | FunApp (funSymb, tm1 :: tm2 :: tl) when (not(!Param.ideaAutomatic) && funSymb.f_cat = Choice) ->
 	    if !ideaAssumed || checkIdeal inHonest listVarIn tm2
-	    then begin ideaChecked := true; (tm1, tm2); end (* user already built idealization *)
+	    then begin ideaChecked := true; (tm1, tm2); end (* user already built idealization and no option 'ideaAutomatic' *)
 	    else begin pp "[ERROR] The following idealization you built is not conform: ";
 		       Display.Text.display_term tm2;
 		       pp ".\n";
 		       exit(2);
 		 end
-	 | _ -> let tmIdeal = guessIdeal tm in (* he did not, we need to guess it *)
+	 | _ -> let tmIdeal = guessIdeal listVarIn tm in (* he did not, we need to guess it *)
 		if checkIdeal inHonest listVarIn tmIdeal
-		then (tm, guessIdeal tm) 
+		then (tm, guessIdeal listVarIn tm) 
 		else failwith ("Critial Error [458]."^email) in
        (* if false then begin pp "\n";  *)  (* For debugging purpose: *)
        (* 			(match tm with | FunApp (f, li) -> debugFunSymb f); *)
