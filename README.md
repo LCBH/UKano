@@ -92,10 +92,10 @@ Given a syntactic output `u` in some role, we recursively build an idealization 
  7. `u=f(u1,...,un)` and `f` does occur in equations then we let a fresh session name be the idealization of `u`
 
 The options `--idea-greedy` and `--idea-full-syntax` allows to modify the above heuristics:
- - `--idea-greedy` replaces the cases 6. and 7. as follows: when `f` is not a tuple then the idealization is a fresh session name otherwise, we proceed as in 6.
+ - `--idea-greedy` replaces the cases 6. and 7. as follows: when `f` is not a tuple then the idealization is a fresh session name, otherwise we proceed as in 6.
  - `--idea-full-syntax` removes the case 7 and removes the condition "`f` does not occur in equations " in case 6. In case the protocol is in the shared case, UKano then displays a warning message saying that the user should verifies WA item (ii) separately.
 
-UKano checks the confomity of guessed idealizations as well as idealizations given by the user as explained below. Those checks can be bypassed using the option `--idea-no-check`.
+UKano checks the confomity of guessed idealizations as well as idealizations given by the user. Those checks can be bypassed using the option `--idea-no-check`.
 
 The option `--idea-automatic` makes UKano bypass idealizations given in input files and automatically guess idealizations.
 
@@ -129,12 +129,15 @@ could not be established. You should check that they correspond to safe
 conditionals.
 
 If the tool cannot guess idealizations of outputs (to check frame opacity),
-you can compute them manually and add it to the file as follow. 
+you can play with the options described in [Sectionc Idealizations Heuristics](#idealizations-heuristics)
+or compute them manually and add it to the file as explained next.
+
 First, the equational theory must declare a constant `hole` by adding this
 line: `free hole:bitstring.`. Output messages that cannot be guessed
 automatically should be of the form: `choice[u,uh]` where `u` is the real
 message outputted by the protocol and `uh` is the idealization of any concrete
-message outputted here (by using the constant `hole` instead of holes).
+message outputted here (by using the constant `hole`). All `hole` will be replaced
+by a fresh session name.
 
 Finally, when frame opacity cannot be checked directly, it is sometimes
 possible to make ProVerif prove it just by slightly modifying the file
