@@ -4,8 +4,8 @@
 
 *UKano* is a modified version of the ProVerif tool including automatic
 verification of anonymity and unlinkability of 2-agents protocols.
-See [UKAno webpage](http://projects.lsv.ens-cachan.fr/ukano/) for more details and the
-underlying theory.
+See [UKAno webpage](http://projects.lsv.ens-cachan.fr/ukano/) and the paper [HBD16](#references)
+for more details and the underlying theory.
 
 <img align="center" src="http://projects.lsv.ens-cachan.fr/ukano/pictures/International_justice_and_privacy.jpg" width="100" />
 
@@ -41,10 +41,11 @@ and anonymity could be established or not.
 
 
 ### How it works?
-We have proved in (1)[1] that, for 2-party protocols, unlinkability and anonmyity 
-follow from two sufficent conditions we called *Frame Opacity* (FO) and
-*Well-Authentication* (WA). We also show how to verify those two conditions
-relying on dedicated encodings. UKAno mechanizes all those encodings.
+We have proved in [HBD16](#references) that, for 2-party protocols,
+unlinkability and anonmyity  follow from two sufficent conditions we
+called *Frame Opacity* (FO) and *Well-Authentication* (WA). We also show
+how to verify those two conditions relying on dedicated encodings.
+UKAno mechanizes all those encodings.
 
 After parsing your file, the tool creates two other files in the same
 directory. Each file encodes one of our two sufficient conditions. 
@@ -97,7 +98,7 @@ The options `--idea-greedy` and `--idea-full-syntax` allows to modify the above 
 
 UKano checks the confomity of guessed idealizations as well as idealizations given by the user. Those checks can be bypassed using the option `--idea-no-check`.
 
-The option `--idea-automatic` makes UKano bypass idealizations given in input files and automatically guess idealizations.
+The option `--idea-automatic` makes UKano bypass idealizations given in input files and automatically guess idealizations instead.
 
 
 ### Expected Format
@@ -150,9 +151,9 @@ So far, we have tested UKano on several real-world case studies.
 We list them all below. They all have a dedicatd folder in [`./examples/`](./examples).
 
 Legend:
-- :white_check_mark: : means that condition or property could be automaticaly established using UKano
-- :x: : when a conditition fail to hold or could not be established
-- :fire: : an attack has been found
+- :white_check_mark: : means that the corresponding condition or property could be automaticaly established using UKano
+- :x: : when a condition fails to hold or could not be established
+- :fire: : when an attack has been found
 
 | Protocol | Frame-Opacity | Well-Authentication | Unlinkability |
 |:---------|:-------------:|:-------------------:|:-------------:|
@@ -162,7 +163,7 @@ Legend:
 | BAC       | :white_check_mark: | :white_check_mark: | :white_check_mark: |
 | BAC+ PA AA | :white_check_mark: | :white_check_mark: | :white_check_mark: |
 | PACE (faillible dec) |  -- | :x: | :fire: |
-| PACE (as in~[2](2))     |  -- | :x: | :fire: |
+| PACE (as in~[BFK-09](#references))     |  -- | :x: | :fire: |
 | PACE | -- | :x: | :fire: |
 | PACE with tags | :white_check_mark: | :white_check_mark: | :white_check_mark: |
 | DAA sign | :white_check_mark: | :white_check_mark: | :white_check_mark: |
@@ -170,11 +171,12 @@ Legend:
 | abcdh (irma) | :white_check_mark: | :white_check_mark: | :white_check_mark: |
 
 
-[1]: L. Hirschi, D. Baelde and S. Delaune.
+## References
+[HBD16]: L. Hirschi, D. Baelde and S. Delaune.
      A Method for Verifying Privacy-Type Properties : The Unbounded Case.
      In IEEE Symposium on Security and Privacy (Oakland), 2016. To appear.
      A copy can be found at http://projects.lsv.ens-cachan.fr/ukano/.
 
-[2]: J. Bender, M. Fischlin, and D. Kügler.
+[BFK-09]: J. Bender, M. Fischlin, and D. Kügler.
      Security analysis of the pace key-agreement protocol.
      In Information Security, pages 33–48. Springer, 2009.
