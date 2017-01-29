@@ -41,32 +41,31 @@ fun hashKey(bitstring, bitstring) : bitstring.
 
 (* ==PROTOCOL== *)
 
-(* Active Authentication *)
-let RAA (k2:bitstring, skP:bitstring,randR:bitstring) =
-  out(cr, enc((init, randR), k2)); 
-  in(cr, y3:bitstring);
-  let m:bitstring = dec(y3, k2) in
-  if checksign(m, spk(skP)) = getmess(m)
-  then out(cr, ok).
-
-let TAA (k2:bitstring, skP:bitstring, dgi:bitstring,randT:bitstring) =
-  in(ct, x2:bitstring);
-  let (=init, xrandR:bitstring) = dec(x2,k2) in
-  out(ct, enc(sign((randT,xrandR), skP), k2)).
-
 (* Passive Authentication *)
-let RPA(k2:bitstring, skP:bitstring, randR:bitstring) =
+let RPA(k2:bitstring, skP:bitstring) =
   out(cr, enc(read, k2));
   in(cr, y4:bitstring);
   let (ydgi:bitstring, ysign:bitstring) = dec(y4, k2) in
   if checksign(ysign, spk(skP)) = ydgi
-  then RAA(k2, skP, randR).
+  then out(cr, ok).
 
-let TPA(k2:bitstring, skP:bitstring, dgi:bitstring,randT:bitstring) =
+let TPA(k2:bitstring, skP:bitstring, dgi:bitstring) =
     in(ct, x3:bitstring);
     if dec(x3, k2) = read
-    then out(ct, enc((dgi, sign(dgi, skP)), k2));
-         TAA(k2,skP,dgi,randT).
+    then out(ct, enc((dgi, sign(dgi, skP)), k2)).
+
+(* Active Authentication *)
+let RAA (k2:bitstring, skP:bitstring,randR:bitstring) =
+  in(cr, y3:bitstring);
+  let m:bitstring = dec(y3, k2) in
+  if checksign(m, spk(skP)) = getmess(m)
+  then RPA(k2, skP).
+
+let TAA (k2:bitstring, skP:bitstring, dgi:bitstring,randT:bitstring) =
+  in(ct, x2:bitstring);
+  let (=init, xrandR:bitstring) = dec(x2,k2) in
+  out(ct, enc(sign((randT,xrandR), skP), k2));
+  TPA(k2, skP, dgi).
 
 (* BAC Protocol *)
 let TB (k:bitstring, skP:bitstring, dgi:bitstring,nt:bitstring,kt:bitstring,randT:bitstring) =
@@ -79,7 +78,7 @@ let TB (k:bitstring, skP:bitstring, dgi:bitstring,nt:bitstring,kt:bitstring,rand
 (* T ----[{nt,nr,kt}_k]---> R *)         
          let (xnr:bitstring,=nt,xkr:bitstring) = dec(x1, k) in (
          out(ct, enc((nt,xnr,kt), k));
-         TPA(hashKey(kt,xkr), skP, dgi,randT)
+         TAA(hashKey(kt,xkr), skP, dgi,randT)
          ) else
          out(ct, error_mac)	(* error bitstring in FR *)
     else out(ct, error_mac).    (* error mac in FR *)
@@ -92,7 +91,8 @@ let RB (k:bitstring, skP:bitstring,nr:bitstring,kr:bitstring,randR:bitstring) =
 (* R <----[{nt,nr,kt}_k]--- T *)
     in(cr, y2:bitstring);
     let (=y1, =nr, ykt:bitstring) = dec(y2, k) in (
-    RPA(hashKey(ykt, kr), skP,randR)
+    out(cr, enc((init, randR), hashKey(ykt, kr)));
+    RAA(hashKey(ykt, kr), skP,randR)
     ).
 
 (* WHOLE SYSTEM *)

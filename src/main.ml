@@ -121,18 +121,27 @@ let anal_file s =
 (********************)
 let _ =
   Arg.parse
-    [ "-gc", Arg.Set gc, 
-      "\t\t\tdisplay gc statistics (optional)";
+    [
       "--proverif",  Arg.String (fun path -> pathProverif := path),
       "\t\tpath of the ProVerif executable to use (optional, default: './proverif')";
       "--idea-no-check",  Arg.Unit (fun () -> Param.ideaAssumed := true),
-      "\t\tassume the idealization is conform (requires manual checks)";
-      "--less-verbose",  Arg.Unit (fun () -> Param.shortOutput := true),
-      "\t\treduce the verbosity";
+      "\tassume the idealization is conform (requires manual checks)";
+      "--idea-automatic",  Arg.Unit (fun () -> Param.ideaAutomatic  := true),
+      "\tdo not takes given diealizations into account, generate them automatically instead";
+      "--idea-greedy",  Arg.Unit (fun () -> Param.ideaGreedy  := true),
+      "\tmodifies the idealization heuristics: put fresh names for all non-tuple sub-terms";
+      "--idea-full-syntax",  Arg.Unit (fun () -> Param.ideaFullSyntax  := true),
+      "\tmodifies the idealization heuristics: go through all functions (including ones in equations) and replace identity names and let variables by holes. Conformity checks are modified accordingly (no requirement on function symbols).";
       "--only-fo",  Arg.Unit (fun () -> Param.onlyFO := true),
       "\t\tverifies the frame opacity condition only";
       "--only-wa",  Arg.Unit (fun () -> Param.onlyWA := true),
-      "\t\tverifies the well-authentication condition only"
+      "\t\tverifies the well-authentication condition only";
+      "--clean",  Arg.Unit (fun () -> Param.cleanFiles := true),
+      "\t\tremove generated files after successful verification";
+      "--less-verbose",  Arg.Unit (fun () -> Param.shortOutput := true),
+      "\treduce the verbosity";
+      "-gc", Arg.Set gc, 
+      "\t\t\tdisplay gc statistics (optional)"
     ]
     anal_file welcomeMess;
   if !gc then Gc.print_stat stdout

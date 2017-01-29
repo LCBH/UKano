@@ -186,8 +186,19 @@ let verifyBoth pathProverif sFO sWA namesIdAno =
 		    "This does not necessarily implies that the input protocol violates unlinkability or anonymity.\n"^
                       "\t1. Indeed, it may be the case that ProVerif could not established the conditions\n"^
 			"\t (due to over-approximations) while they actually hold --- in that case, please refer to the\n"^
-			  "\t ProVerif's manual. \n"^
+			  "\t ProVerif's manual. Or try another idealization option (list them with './ukano --help').\n"^
 			    "\t2. Or the conditions do not hold. In that case, UKano cannot currently conclude on your protocol.\n"^
 			      "\t If you think that is the case, please send your input protocol at lucca.hirschi@lsv.ens-cachan.fr so\n"^
 				"\t that we can investigate further and improve UKano."));
+    end;
+  
+  if !Param.cleanFiles
+  then begin
+      pp (Printf.sprintf "We are now removing generated files %s and %s." sFO sWA);
+      (try
+	  Sys.remove sFO;
+	with Sys_error _ -> pp (Printf.sprintf "No file %s, we skip that..." sFO));
+      try
+	Sys.remove sWA;
+      with Sys_error _ -> pp (Printf.sprintf "No file %s, we skip that..." sWA)
     end

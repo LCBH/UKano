@@ -29,10 +29,15 @@ open Types
 open Ptree
 
 (* UKANO *)
+let cleanFiles = ref false
 let shortOutput = ref false
 let ideaAssumed = ref false
 let onlyFO = ref false
 let onlyWA = ref false
+let ideaGreedy = ref false
+let ideaAutomatic = ref false
+let ideaFullSyntax = ref false
+
 
 let lib_name = ref ""
 

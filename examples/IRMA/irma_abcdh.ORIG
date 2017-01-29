@@ -1,0 +1,174 @@
+(* Scenario of ABCDH protocol as [2] using idemix primitives as specified in [1]
+ * MINIMAL VERSION ABCDH
+ * ULTIMATE GOAL: strong UK of ABCDH 
+ * Lucca Hirschi
+ * 29/03/2016
+ * Status: Done & Works
+ *)
+
+(*
+IDEMIX (from [1] A formal Model of Identity Mixer Mixer (Modersheim + IBM Zurich)
+             [2] A secure channel for attribute-based credentials (Alpar, Hoepman (Netherlands)))
+[1]
+  - users that have each a master secret never revealed to other parties
+  - users are known to organizations under pseudonyms bound to sessions
+  - organizations make statements abouth users by issuing credentials bound to the master secret of that user
+[2]
+  - selective discolsure
+    SD(O,Attr,R)   "I know a credential bounds to a MS I know that has been signed by O and asserting
+                    that I have attribute Attre. This is bound to R".
+*)
+(* THEORY - INGREDIENTS
+- Master Secret: Each user u has a master secret MS(u).
+- Pseudonym: Each user u may generate a random R and use pseudonym pd(u,R).
+- Commitments: commit(R,V) is comit of V with random V
+- Credentials: basically a list of attributes signed by an issuing organization.
+   We assume each orga sign a certain type of attribute and its public keys are publicly known
+   -> cred(sk(O),xU,Attr): credential for attribute Attr by orga O bound to master secret xu (of user u)
+   Can be issued using some sk(O), and some commit(R,xu), A.
+To simplify, we only consider attributes verification that are unary relations. For instance "over-18 years old".
+This will be an attribute "isOver18".
+For SD:
+SD(cred(sk(O),xU,Attr),O, xU, R, Attr)
+   check: if it has this form or this one (for SD(\emptyset;n)): SD(cred(sk(O),xU,Attr),empty, xU, R, empty)
+   projection: of O, R and Attr (not from cred)
+*)
+
+(***************)
+(* ==THEORY==  *)
+(***************)
+
+type b.
+channel c.
+
+fun MS(b):b [private].  (* Master secret of a user *)
+fun sk(b):b [private].  (* Secret key of an organization O *)
+fun pd(b,b):b.          (* pseudonym of a user for a specific random *)
+fun commit(b,b):b.      (* commitments (public but no projection) *)
+fun skS(b):b.           (* Secret key of signature of credentials *)
+fun cred(b,b,b):b.      (* credential (public, projection3) *)
+fun SD(b,b,b,b,b):b.    (* Selective Disclosure *)
+
+fun isOver18():b.
+fun movieTheater():b.
+fun requestIsOver18():b.
+fun empty():b.
+fun accept():b.
+fun OK():b.
+fun c1():b.
+fun c2():b.
+fun g():b.
+
+fun hash(b):b.
+fun aenc(b,b):b.
+fun pk(b):b.
+fun senc(b,b):b.
+fun exp (b,b) :b.
+
+(* Organizations *)
+fun OrgaAge():b.           (* new organization: can issue age info *)
+fun OrgaCheckAge():b.      (* new organization: can check age info *)
+
+
+(* Random Oracles: free constructor symbols *)
+fun f1(b):b.
+fun f2(b):b.
+fun f3(b):b.
+
+(* Diffie-Hellman exponentiation *)
+equation forall x :b, y :b;
+  exp(exp(g,x),y) = exp(exp(g,y),x).
+(* (a)symmetric encryption *)
+reduc forall m:b, k:b;
+      adec(aenc(m, pk(k)), k) = m.
+reduc forall m:b, k:b;
+      sdec(senc(m, k), k) = m.
+(* Credentials *)
+reduc forall Attr:b, R:b, xU:b, skSO:b;
+	makeCred(Attr,commit(R,xU), skSO) = cred(skSO, xU,Attr).
+reduc forall skSO:b, xU:b, Attr:b;
+	getAttr(cred(skSO,xU,Attr)) = Attr.
+(* SD: Selective Disclosure *)
+fun verifySD(b):b
+reduc forall O:b, U:b, Attr:b, R:b;
+	verifySD(SD(cred(skS(O), MS(U), Attr), O, MS(U), R, Attr)) = accept
+otherwise forall O:b, U:b, Attr:b, R:b;
+	verifySD(SD(cred(skS(O), MS(U), Attr), empty, MS(U), R, empty)) = accept.
+reduc forall O:b, xU:b, Attr:b, R:b, O2:b, Attr2:b;
+        getPublicSD(SD(cred(skS(O), xU, Attr), O2, xU, R, Attr2)) = (O2,R,Attr2).
+
+(* For defining idealizations *)
+free hole:b.
+
+(****************)
+(* ==PROTOCOL== *)
+(****************)
+
+let verifier(u:b, Overifier:b, Oprover:b, credV:b) =
+    new xv:b;
+    new NEWu:b;
+    out(c, choice[(exp(g,xv), SD(credV, Overifier, MS(u), f1(exp(g,xv)), movieTheater)),
+      	          (xv, SD(cred(skS(OrgaCheckAge),MS(NEWu),movieTheater), Overifier, MS(NEWu), f1(xv), movieTheater))
+                 ]); 
+    in(c,x:b);
+    let (xhc:b,xsc:b) = x in
+    let (=accept) = verifySD(xsc) in
+    let (=empty, =f1((exp(g,xv),xhc)), =empty) = getPublicSD(xsc) in
+    out(c, choice[senc((c1,OK), f2(exp(xhc,xv))),
+                  hole
+		 ]);
+    in(c, y:b);
+    new n:b;
+    let (=c2, =OK) = sdec(y, f2( exp(xhc,xv))) in
+    out(c, senc((n,requestIsOver18), f2(exp(xhc,xv))));
+    in(c, z:b);
+    let (=isOver18, xsv:b) = sdec(z,f2( exp(xhc,xv))) in
+    let (=accept) = verifySD(xsv) in
+    let (=Oprover, =f3((n, exp(xhc,xv))), =isOver18) = getPublicSD(xsv) in   	
+    out(c, OK).
+    
+let prover(u:b, Overifier:b, Oprover:b, credP:b) =
+    in(c,x:b);
+    new xc:b;
+    new NEWu:b;
+    let (xhv:b, xsv:b) = x in
+    let (=accept) = verifySD(xsv) in
+    let (=Overifier, =f1(xhv), =movieTheater) = getPublicSD(xsv) in
+    out(c, choice[(exp(g, xc), SD(credP, empty, MS(u), f1((xhv, exp(g, xc))), empty)),
+      	          (xc, SD(cred(skS(OrgaAge),MS(NEWu),isOver18), empty, MS(NEWu), f1((hole,xc)), empty))
+                 ]);
+(* TODO: in the baove idealization: hole was 'xhv' but thats a let variable. Check if FO holds with that idealization. *)
+    in(c, y:b);
+    let (=c1, =OK) = sdec(y, f2(exp(xhv,xc))) in
+    out(c, senc((c2,OK), f2(exp(xhv,xc))));
+    in(c, z:b);
+    new NEWn:b;
+    let (xn:b, =requestIsOver18) = sdec(z,f2(exp(xhv,xc))) in
+    out(c, choice[senc((isOver18, SD(credP, Oprover, MS(u), f3((xn, exp(xhv,xc))), isOver18)),f2(exp(xhv,xc))),
+                  senc((isOver18, SD(cred(skS(OrgaAge),MS(NEWu),isOver18), Oprover, MS(NEWu), f3((NEWn, xc)), isOver18)),f2(xc))
+		  ]).
+
+let SYSTEM =
+! new userA:b;      (* new user *)
+  new userB:b;      (* new user *)
+!
+(  prover(userA,
+	  OrgaCheckAge,
+          OrgaAge,
+          cred(skS(OrgaAge),MS(userA),isOver18)
+	  )
+ | verifier(userB,
+	    OrgaCheckAge,
+            OrgaAge,
+            cred(skS(OrgaCheckAge),MS(userB),movieTheater)
+	   )
+).	   
+
+process SYSTEM
+
+
+(* RMQ:
+For the sake of readability, I replaced 'bitstring' by 'b'. To compile this file into a well formed
+Proverif file, type:
+     ./replace.sh irma_abcdh.ORIG  > irma_abcdh_clean.pi; ukano  irma_abcdh_clean.pi  
+*)

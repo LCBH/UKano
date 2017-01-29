@@ -1,0 +1,8 @@
+# Protocol:
+Basically an abstraction of DAA sign withsimplified credentials and ZK proofs. See file `daa_sign_simplified_UK-directly.pv` for a docummented description.
+
+# Files:
+- `daa_sign_simplified_UK-directly.pv`: specification of the protocol (with many explanatory commentaries) and modelization of UK directly in PV -> verification in 0.03s directly in PV.
+- `daa_join_simplified_ukano.pi`: this model can be def to UKano producing: `daa_join_simplified_ukano_FOpa.pi` and `daa_join_simplified_ukano_WAuth.pi`. Everything can be checked via UKano in 0.03s.
+- `daa_sign_simplified_sanityCheck1-full.pv` is a sanity check showing that the protocol can be fully executed.
+

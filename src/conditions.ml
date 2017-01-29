@@ -703,7 +703,6 @@ let debugFunSymb f =
 let transFO proto p inNameFile nameOutFile = 
 
   (* -- 1. -- Build idealized versions of outputson the right and check conformity *)
-  (* TODO: extend this list: *)
   let nonTransparentSymbList = ["enc"; "aenc"; "dec"; "adec"; "h"; "hash"; "xor"; "dh"; "exp"; "mac"] in
   let isArity0 funSymb = match funSymb.f_type with | ([], _) -> true | _ -> false in
   let isName funSymb = match funSymb.f_cat with Name _ -> true | _ -> false in
@@ -711,16 +710,28 @@ let transFO proto p inNameFile nameOutFile =
   let isConstant funSymb = (isName funSymb) || (isArity0 funSymb) in
   let isTuple funSymb = match funSymb.f_cat with Tuple -> true | _ -> false in
   (* Given a term, tries to guess an idealization *)
-  let rec guessIdeal = function
+  let rec guessIdeal listVarIn = function
     | FunApp (f, []) as t
-	 when isConstant f -> t	             (* public constants *)
+	 when isConstant f -> t (* public constants *)
+    | FunApp (f, []) as t
+	 when (isName f && List.mem f proto.sessNames) -> t (* session name *)
     | FunApp (f, []) when isName f -> hole   (* (private) names *)
-    | FunApp (f, _)
-	 when (List.mem f.f_name nonTransparentSymbList) 
-      -> hole	                             (* should be non-transparent *)
     | FunApp (f, listT)
-	 when isTuple f
-      -> FunApp (f, List.map guessIdeal listT) (* tuple *)
+	 when isTuple f -> FunApp (f, List.map (guessIdeal listVarIn) listT) (* tuple *)
+    | FunApp (f, listT) as t ->
+       let recT =		(* try to go through if f\notin E *)
+	 if List.exists (fun s -> f.f_name = s) !Pitsyntax.funSymb_equation (* if there is a match with a function in equation *)
+	 then hole
+	 else FunApp (f, List.map (guessIdeal listVarIn) listT)  in
+       if !Param.ideaFullSyntax
+       then FunApp (f, List.map (guessIdeal listVarIn) listT)
+       else (if !Param.ideaGreedy (* depends on options *)
+	     then (if List.mem f.f_name nonTransparentSymbList (* should be non-transparent *)
+		   then hole
+		   else recT)
+	     else recT)
+    | Var b as t when List.mem b.sname listVarIn -> t  (* variable of input *)
+    | Var b -> hole (* variable of let *)
     | term -> (* if true then begin log "Warning: some idealized messages you gave do not use 'hole' and are extended. The idealization of : "; *)
        (* 	  Printf.printf "     "; *)
        (* 	  Display.Text.display_term term; *)
@@ -748,7 +759,8 @@ let transFO proto p inNameFile nameOutFile =
       | FunApp (f, tl) ->
 	 (* For debugging purposes: *)
 	 (* List.iter (fun f -> Printf.printf "%s, " (\* Display.Text.display_function_name *\) f) !Pitsyntax.funSymb_equation; *)
-	 if List.exists (fun s -> f.f_name = s) !Pitsyntax.funSymb_equation (* if there is a match with a function in equation *)
+	 if not(!Param.ideaFullSyntax) &&
+	      List.exists (fun s -> f.f_name = s) !Pitsyntax.funSymb_equation (* if there is a match with a function in equation *)
 	 then false		(* function in E *)
 	 else List.for_all checkSyntax tl (* ok, pursue *)
       | Var b when List.mem b.sname listVarIn -> true  (* variable of input *)
@@ -761,8 +773,11 @@ let transFO proto p inNameFile nameOutFile =
       | FunApp (f, []) when isName f -> false   (* (private) names *)
       | FunApp (f, []) when isConstant f -> false (* public constants *)
       | FunApp (f, tl) -> List.exists checkOneName tl in (* ok, pursue *)
-    (checkSyntax t) && (not(inHonest) || checkOneName t) in
-
+    if checkSyntax t
+    then if !Param.ideaFullSyntax
+	 then true		(* we will print a warning message in the only problematic case (=shared case)  *)
+	 else (not(inHonest) || checkOneName t)
+    else false in
   let countNonces = ref 0 in
   let listNames = ref [] in
   (* Create the next new session name to fill in a hole *)
@@ -803,17 +818,17 @@ let transFO proto p inNameFile nameOutFile =
        let inHonest = not(inE) && not(lastOutHonest) in
        let (tmReal, tmIdeal) =
 	 match tm with
-	 | FunApp (funSymb, tm1 :: tm2 :: tl) when funSymb.f_cat = Choice ->
+	 | FunApp (funSymb, tm1 :: tm2 :: tl) when (not(!Param.ideaAutomatic) && funSymb.f_cat = Choice) ->
 	    if !ideaAssumed || checkIdeal inHonest listVarIn tm2
-	    then begin ideaChecked := true; (tm1, tm2); end (* user already built idealization *)
+	    then begin ideaChecked := true; (tm1, tm2); end (* user already built idealization and no option 'ideaAutomatic' *)
 	    else begin pp "[ERROR] The following idealization you built is not conform: ";
 		       Display.Text.display_term tm2;
 		       pp ".\n";
 		       exit(2);
 		 end
-	 | _ -> let tmIdeal = guessIdeal tm in (* he did not, we need to guess it *)
+	 | _ -> let tmIdeal = guessIdeal listVarIn tm in (* he did not, we need to guess it *)
 		if checkIdeal inHonest listVarIn tmIdeal
-		then (tm, guessIdeal tm) 
+		then (tm, guessIdeal listVarIn tm) 
 		else failwith ("Critial Error [458]."^email) in
        (* if false then begin pp "\n";  *)  (* For debugging purpose: *)
        (* 			(match tm with | FunApp (f, li) -> debugFunSymb f); *)
@@ -832,11 +847,18 @@ let transFO proto p inNameFile nameOutFile =
       res = noncesProc false [] proto.res;
       sessNames = proto.sessNames @ (List.rev !listNames);
     } in
+
   if !verbose && !ideaChecked
   then (if !ideaAssumed
 	then log "Remember that we do not check that idealizations are conform (option '--idea-no-check'). You should check this yourself by inspecting the produced file."
 	else log "All idealizations (including the ones you gave as input) have been checked (i.e., only constants, session nammes, holes, variables bind by inputs and functions not in E) and at least one hole or a session name in each idealized output (except in else branches and last honest output).");
 
+  if !verbose && !Param.ideaFullSyntax
+  then (let isShared = List.length proto.idNamesShared > 0 in
+	if isShared
+	then log "WARNING: you used the option '--idea-full-syntax' for a protocol in the shared case. Therefore, you should check condition Well-Authentication item (ii) separately.");
+	 
+	 
   (* -- 2. -- Deal with conditionals (should not create false attacks for diff-equivalence) *)
   (* a) we push conditionals (Test and Let) and put them just before Output (when needed)
      b) we use a hack to be sure the 'Let' construct will never fail:

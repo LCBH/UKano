@@ -27,6 +27,8 @@
 *)
 
 (* UKANO *)
+(* remove generated files after successful verification *)
+val cleanFiles : bool ref
 (* print only necessary information *)
 val shortOutput : bool ref
 (* do we assume idealization is conform *)
@@ -35,7 +37,17 @@ val ideaAssumed : bool ref
 val onlyFO : bool ref		       
 (* only verifies WA ? *)
 val onlyWA : bool ref		       
-
+(* idea greedy ? that means that idealizations will try to put as much holes
+   as possible (always when f(..) and f\neq tuple)  *)
+val ideaGreedy : bool ref		       
+(* idea automatic ? that means that we bypass given idealizations and compute
+   new idealizations using our heuristics *)
+val ideaAutomatic : bool ref		      
+(* idea full syntax ? that means that idealizations will go through all functions
+   even the oens in equations and only replace identity names and let variables by holes *)
+val ideaFullSyntax : bool ref		       
+ 
+		      
 val lib_name : string ref
 
 val def_var_name : string
