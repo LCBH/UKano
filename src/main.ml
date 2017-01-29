@@ -131,7 +131,7 @@ let _ =
       "--idea-greedy",  Arg.Unit (fun () -> Param.ideaGreedy  := true),
       "\tmodifies the idealization heuristics: put fresh names for all non-tuple sub-terms";
       "--idea-full-syntax",  Arg.Unit (fun () -> Param.ideaFullSyntax  := true),
-      "\tmodifies the idealization heuristics: go through all functions (including ones in equations) and replace identity names and let variables by holes.";
+      "\tmodifies the idealization heuristics: go through all functions (including ones in equations) and replace identity names and let variables by holes. Conformity checks are modified accordingly (no requirement on function symbols).";
       "--only-fo",  Arg.Unit (fun () -> Param.onlyFO := true),
       "\t\tverifies the frame opacity condition only";
       "--only-wa",  Arg.Unit (fun () -> Param.onlyWA := true),

@@ -759,7 +759,8 @@ let transFO proto p inNameFile nameOutFile =
       | FunApp (f, tl) ->
 	 (* For debugging purposes: *)
 	 (* List.iter (fun f -> Printf.printf "%s, " (\* Display.Text.display_function_name *\) f) !Pitsyntax.funSymb_equation; *)
-	 if List.exists (fun s -> f.f_name = s) !Pitsyntax.funSymb_equation (* if there is a match with a function in equation *)
+	 if not(!Param.ideaFullSyntax) &&
+	      List.exists (fun s -> f.f_name = s) !Pitsyntax.funSymb_equation (* if there is a match with a function in equation *)
 	 then false		(* function in E *)
 	 else List.for_all checkSyntax tl (* ok, pursue *)
       | Var b when List.mem b.sname listVarIn -> true  (* variable of input *)
