@@ -66,7 +66,7 @@ let SignerP(cred:bitstring, Ktpm:bitstring,   m:bitstring,     pkI:bitstring) =
     out(c, ZK( (cred,Ktpm),
                (nv,nt,m,pkI)
 	     )).
-(* Danity check:  out(c, Ktpm).*)
+(* Sanity check:  out(c, Ktpm).*)
 
 let VerifierP(pkI:bitstring) =
 (* args:      issuer's public key *)
