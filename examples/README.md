@@ -68,15 +68,16 @@ heuristics of UKano to build idealization:
 | Hash-Lock      | 0.03s  | 0.01s | 0.02s  | 0.02s   | 0.02s   | --    |
 | Fixed LAK      | 0.03s  | 0.01s | 0.02s  | 0.02s   | 0.02s   | --    |
 | BAC            | 70.65s | 0.09s | 66.56s | 128.03s | 132.24s | --    |
-| BAC+AA+PA      |1290.46s| 2.11s | 1288.46s| :curly-loop: | :curly_loop: | --    |
-[//]: # (default: 6111.04s | syntax: 6017.32s 
-| BAC+PA+AA      | 70.65s | 1.86s |1151.84s| :curly-loop: | :curly_loop: | --    |
-[//]: # (default: 7134.94s | syntax: )
+| BAC+AA+PA      |1290.46s| 2.11s | 1288.46s| :curly_loop: | :curly_loop: | --    |
+| BAC+PA+AA      | 70.65s | 1.86s |1151.84s| :curly_loop: | :curly_loop: | --    |
 | PACE with tags | todo   |491.16s|        |         |         |       |
 | DAA simplified [HBD17]| 0.12s |0.02s|0.10s| 0.10s  | 0.10s   | --    |
 | DAA sign       | 89.24s | 0.08s | :x:    | :x:     | 89.16s  | --    |
 | DAA join       | 21.84s | 0.01s | 21.83s | 22.25s  | 60.07s  | --    |
 | abcdh (irma)   | todo   |       |        |         |         |       |
+
+[//]: # (BAC+AA+PA: default: 6111.04s | syntax: 6017.32s 
+[//]: # (BAC+PA+AA: default: 7134.94s | syntax: )
 
 
 ## References
