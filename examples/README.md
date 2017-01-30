@@ -76,8 +76,9 @@ heuristics of UKano to build idealization:
 | DAA join       | 21.84s | 0.01s | 21.83s | 22.25s  | 60.07s  | --    |
 | abcdh (irma)   | todo   |       |        |         |         |       |
 
-[//]: # (BAC+AA+PA: default: 6111.04s | syntax: 6017.32s 
+[//]: # (BAC+AA+PA: default: 6111.04s | syntax: 6017.32s)
 [//]: # (BAC+PA+AA: default: 7134.94s | syntax: )
+[//]: # (TODO: solve problems with abcdh and termination with pace)
 
 
 ## References
