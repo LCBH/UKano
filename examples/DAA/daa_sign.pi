@@ -51,7 +51,6 @@ fun getmsgspk(bitstring) :bitstring.
 fun bottom() :bitstring.
 fun KI() :bitstring.
 
-
 (* Signature + blind signtaure *)
 equation forall xsk:bitstring,xprime:bitstring,xrand:bitstring,xmsg:bitstring;
   clgetprime(clsign(xsk,xprime,xrand,xmsg)) = xprime.
@@ -75,6 +74,9 @@ equation forall xzeta:bitstring,xsk:bitstring,xtsk:bitstring,xw:bitstring,xe:bit
     getmsgspk(spk(FSign,(xtsk,xw),(xzeta,pk(xsk),commit(xtsk,xzeta),
 		clcommit(pk(xsk),xw,clsign(xsk,xe,xv,xtsk)),xmsg))) = xmsg.
 
+(* Secret key of the issuer and corresponding public key given to the attacker *)
+fun skI(): bitstring [private]. (* Signature key of Issuer *)
+reduc getkI() = pk(skI).
 
 (****************)
 (* ==PROTOCOL== *)
@@ -114,7 +116,6 @@ let VerifierP =
 
 let SYSTEM = 
 (* Names from JOIN PROTOCOl *)
-new skI :bitstring; (* Signature key of Issuer *)
 ! (* ID *)
  new cnt :bitstring;
  new DAASeed :bitstring;

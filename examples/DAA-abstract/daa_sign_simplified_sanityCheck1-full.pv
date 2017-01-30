@@ -50,6 +50,11 @@ reduc forall Ktpm: bitstring , id:bitstring, kI:bitstring, nV:bitstring, nt:bits
               (nV,nt,m,spk(kI))
 	  )) = (nV,nt,m,spk(kI)).
 
+(* Secret key of the issuer and corresponding public key given to the attacker *)
+fun skI(): bitstring [private]. (* Signature key of Issuer *)
+reduc getkI() = spk(skI).
+
+
 (****************)
 (* ==PROTOCOL== *)
 (****************)
@@ -61,7 +66,7 @@ let SignerP(cred:bitstring, Ktpm:bitstring,   m:bitstring,     pkI:bitstring) =
     out(c, ZK( (cred,Ktpm),
                (nv,nt,m,pkI)
 	     )).
-(* Danity check:  out(c, Ktpm).*)
+(* Sanity check:  out(c, Ktpm).*)
 
 let VerifierP(pkI:bitstring) =
 (* args:      issuer's public key *)
@@ -76,7 +81,6 @@ let VerifierP(pkI:bitstring) =
   
 
 let SYSTEM = 
-new skI: bitstring; (* Signature key of Issuer *)
 ! (* ID *)
  new Ktpm :bitstring; (* TPM's secret internal key *)
  new IDtpm :bitstring;   (* TPM's identity *)
