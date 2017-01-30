@@ -44,7 +44,7 @@ let helpMess = 			(* TODO *)
      "of files in the correct format. They can be used to bootsrap your own file. For more details, see the README file at the root of\n"^
        "the project.\n")
 let welcomeMess =
-  "UKano 0.1. Cryptographic privacy verifier, by Lucca Hirschi. Based on Proverif 1.91, by Bruno Blanchet and Vincent Cheval."
+  "UKano v0.2 : Cryptographic privacy verifier, by Lucca Hirschi. Based on Proverif v1.91, by Bruno Blanchet and Vincent Cheval."
     
 (*********************************************
                  Interface
