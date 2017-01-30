@@ -1,5 +1,5 @@
 # UKano: UnlinKability and ANOnymity verifier
-> - Land page: http://projects.lsv.ens-cachan.fr/ukano
+> - Landing page: http://projects.lsv.ens-cachan.fr/ukano
 > - Wiki: https://github.com/LCBH/UKano/wiki
 
 *UKano* is a modified version of the [ProVerif](http://proverif.inria.fr)
