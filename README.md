@@ -1,10 +1,10 @@
 # UKano: UnlinKability and ANOnymity verifier
-> Lucca Hirschi     
-> Land page: http://projects.lsv.ens-cachan.fr/ukano/
+> Lucca Hirschi
+> Land page: http://projects.lsv.ens-cachan.fr/ukano/  &
 > Wiki: https://github.com/LCBH/UKano/wiki
 
-*UKano* is a modified version of the ProVerif tool including automatic
-verification of anonymity and unlinkability of 2-agents protocols.
+*UKano* is a modified version of the [ProVerif](http://proverif.inria.fr)
+tool including automatic verification of anonymity and unlinkability of 2-agents protocols.
 See [UKAno webpage](http://projects.lsv.ens-cachan.fr/ukano/) and the paper [HBD16](#references)
 for more details and the underlying theory.
 
@@ -53,7 +53,7 @@ directory. Each file encodes one of our two sufficient conditions.
 The one encoding FO is suffixed with `_FOpa.pi`. The second suffixed
 with `_WAuth.pi` can be used to check WA. The latter contains a query
 per conditional.
-UKano then launches proverif on those two models and parse the results
+UKano then launches `proverif` on those two models and parse the results
 in order to conclue whether both conditions have been established. In such
 a case, the tool concludes that the input protocol ensures unlinkability and
 anonymity.
@@ -103,9 +103,9 @@ The option `--idea-automatic` makes UKano bypass idealizations given in input fi
 
 
 ### Expected Format
-Only typed ProVerif files are accepted (proverif should successfully parse
+Only typed ProVerif files are accepted (ProVerif should successfully parse
 it when using the option `-in pitype`). Please refer to the manual of ProVerif
-at [Proverif webpage](http://proverif.inria.fr). Additionally, the file should
+at [ProVerif webpage](http://proverif.inria.fr). Additionally, the file should
 not define new types and only use types `bitstring` and `channel`. The file must
 declare at least one channel `c` (i.e., contains a line `free c:channel.`).
 
@@ -124,7 +124,8 @@ through definitions of functions and call, etc.).
 Finally, to check anonymity as well, identity names to be revealed
 (and only them) must have `id` as prefix (e.g., `idName`). 
 
-#### Improve precision:
+
+#### Improve precision
 Note that, currently, UKano does not detect safe conditionals and consider
 all conditionals unsafe by default. UKano lists conditionals for which WA
 could not be established. You should check that they correspond to safe
