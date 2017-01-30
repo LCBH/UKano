@@ -52,8 +52,9 @@ We performed those benchmarks on this machine:
 - CPU: Intel(R) Xeon(R) CPU X5650 @ 2.67GHz / stepping: 2 / microcode: 0x13 / cpu MHz: 2659.937 / cache size: 12288 KB
 - RAM: 47GO
 	    
-Legend: time in seconds when verification was successful and :x: when condition
-could not be established and -- when it was not necessary to build idealizations manually
+Legend: time in seconds when verification was successful, :x: when condition
+could not be established, :curly_loop: when the verification took too much time (>2 hours) or too
+much memory (>10GO of RAM), and, -- when it was not necessary to build idealizations manually
 (i.e., user defined). The different columns for FO (i.e., frame opacity) refers to the different
 heuristics of UKano to build idealization:
 - "greedy" corresponds to the option `--idea-greedy`
@@ -64,14 +65,16 @@ heuristics of UKano to build idealization:
 
 | Protocol    | Better time (total) | Time for WA | Time for FO (greedy) | Time for FO (default) | Time for FO (syntax)  | Time for FO (user-defined) |
 |:------------|:-------------:|:-------------------:|:-------------------:|:---------------------:|:--------------------:|:---------------------------|
-| Hash-Lock   | 0.03s  | 0.01s | 0.02s  | 0.02s   | 0.02s   | -- |
-| Fixed LAK   | 0.03s  | 0.01s | 0.02s  | 0.02s   | 0.02s   | -- |
-| BAC         | 70.65s | 0.09s | 66.56s | 128.03s | 132.24s | -- |
-| PACE with tags | todo    |       |        |         |         |
-| DAA simplified [HBD17]  | 0.16s | 0.06s  |:x:   | :x:  | :x: | 0.10s  |
-| DAA sign    | 88.40s            | 0.07s  | :x:  | :x:  | :x: | 88.36s |
-| DAA join    | 21.84s | 0.01s | 21.83s | 22.25s  | 60.07s  |
-| abcdh (irma)| todo      |      |       |        |     |
+| Hash-Lock      | 0.03s  | 0.01s | 0.02s  | 0.02s   | 0.02s   | --    |
+| Fixed LAK      | 0.03s  | 0.01s | 0.02s  | 0.02s   | 0.02s   | --    |
+| BAC            | 70.65s | 0.09s | 66.56s | 128.03s | 132.24s | --    |
+| BAC+AA+PA      | 70.65s | 2.11s |1288.46s| ?       | 2048.29s| --    |
+| BAC+PA+AA      | 70.65s | 1.86s |1151.84s| ?       | ?       | --    |
+| PACE with tags | todo   |491.16s|        |         |         |       |
+| DAA simplified [HBD17]| 0.12s |0.02s|0.10s| 0.10s  | 0.10s   | --    |
+| DAA sign       | 89.24s | 0.08s | :x:    | :x:     | 89.16s  | --    |
+| DAA join       | 21.84s | 0.01s | 21.83s | 22.25s  | 60.07s  | --    |
+| abcdh (irma)   | todo   |       |        |         |         |       |
 
 
 ## References
