@@ -172,6 +172,9 @@ Legend:
 | DAA join | :white_check_mark: | :white_check_mark: | :white_check_mark: |
 | abcdh (irma) | :white_check_mark: | :white_check_mark: | :white_check_mark: |
 
+You can find comprehensive benchmarks notably comparing all heuristics to build idealization
+[here](https://github.com/LCBH/UKano/blob/master/examples/README.md).
+
 
 ## References
 [HBD16]: L. Hirschi, D. Baelde and S. Delaune.
