@@ -52,18 +52,19 @@ We performed those benchmarks on this machine:
 - CPU: Intel(R) Xeon(R) CPU X5650 @ 2.67GHz / stepping: 2 / microcode: 0x13 / cpu MHz: 2659.937 / cache size: 12288 KB
 - RAM: 47GO
 	    
-Legend: time in seconds when verification was successful and :x: when condition could not be established.
-THE TABLE IS WIP !
+Legend: time in seconds when verification was successful and :x: when condition
+could not be established and -- when it was not necessary to build idealizations manually.
 
-| Protocol    | Better time (total) | Time for WA | Time for FO (greedy) | Time for FO (default) | Time for FO (syntax)  |
-|:------------|:-------------:|:-------------------:|:-------------------:|:---------------------:|:--------------------:|:
-| Hash-Lock   | ?      | 0.01s | 0.02s  | ?       | ?       |
-| Fixed LAK   | ?      | 0.10s | 0.02s  | ?       | ?       |
-| BAC         | 70.65s | 0.10s | 70.55s | 262.70s | 256.80s | 
-| DAA simplified [HBD17] | 0.12s | 0.02s | 0.10s | 0.10s | 0.10s |
-| DAA sign    | 0.58s  | 0.07s | 0.54s  | :x:     | :x:     |
-| DAA join    | 35.90s | 13.18s| 22.72s | 22.72s  | 67.49s  |
-| abcdh (irma)| ?      | ?     | ?      | ?       | ?  -    |
+| Protocol    | Better time (total) | Time for WA | Time for FO (greedy) | Time for FO (default) | Time for FO (syntax)  | Time for FO (user-defined) |
+|:------------|:-------------:|:-------------------:|:-------------------:|:---------------------:|:--------------------:|:---------------------------|
+| Hash-Lock   | 0.03s  | 0.01s | 0.02s  | 0.02s   | 0.02s   | -- |
+| Fixed LAK   | 0.03s  | 0.01s | 0.02s  | 0.02s   | 0.02s   | -- |
+| BAC         | 70.65s | 0.09s | 66.56s | 128.03s | 132.24s | -- |
+| PACE with tags | todo    |       |        |         |         |
+| DAA simplified [HBD17]  | 0.16s | 0.06s  |:x:   | :x:  | :x: | 0.10s  |
+| DAA sign    | 88.40s            | 0.07s  | :x:  | :x:  | :x: | 88.36s |
+| DAA join    | 21.84s | 0.01s | 21.83s | 22.25s  | 60.07s  |
+| abcdh (irma)| todo      |      |       |        |     |
 
 
 ## References
