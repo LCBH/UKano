@@ -30,6 +30,7 @@ open Ptree
 
 (* UKANO *)
 let cleanFiles = ref false
+let logAll = ref false
 let shortOutput = ref false
 let ideaAssumed = ref false
 let onlyFO = ref false

@@ -80,7 +80,13 @@ let read_process_lines command =
   begin
     try
       while true do
-	lines := input_line in_channel :: !lines
+	let nextLine = input_line in_channel in
+	if !Param.logAll
+	then begin
+	    Printf.printf "[PV] %s\n" nextLine;
+	    flush_all();
+	  end;
+	lines := nextLine :: !lines
       done;
     with End_of_file ->
       ignore (Unix.close_process_in in_channel)

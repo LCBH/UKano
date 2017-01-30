@@ -706,15 +706,17 @@ let transFO proto p inNameFile nameOutFile =
   let nonTransparentSymbList = ["enc"; "aenc"; "dec"; "adec"; "h"; "hash"; "xor"; "dh"; "exp"; "mac"] in
   let isArity0 funSymb = match funSymb.f_type with | ([], _) -> true | _ -> false in
   let isName funSymb = match funSymb.f_cat with Name _ -> true | _ -> false in
+  let isSessName funSymb = List.mem funSymb proto.sessNames in
+  let isName funSymb = List.mem funSymb (proto.comNames @ proto.idNames @ proto.sessNames) in
+  let isConstant funSymb = isArity0 funSymb && not(isName funSymb) in
   let isPrivate funSymb = funSymb.f_private in
-  let isConstant funSymb = (isName funSymb) || (isArity0 funSymb) in
   let isTuple funSymb = match funSymb.f_cat with Tuple -> true | _ -> false in
   (* Given a term, tries to guess an idealization *)
   let rec guessIdeal listVarIn = function
     | FunApp (f, []) as t
 	 when isConstant f -> t (* public constants *)
     | FunApp (f, []) as t
-	 when (isName f && List.mem f proto.sessNames) -> t (* session name *)
+	 when isSessName f -> t (* session name *)
     | FunApp (f, []) when isName f -> hole   (* (private) names *)
     | FunApp (f, listT)
 	 when isTuple f -> FunApp (f, List.map (guessIdeal listVarIn) listT) (* tuple *)
@@ -828,7 +830,7 @@ let transFO proto p inNameFile nameOutFile =
 		 end
 	 | _ -> let tmIdeal = guessIdeal listVarIn tm in (* he did not, we need to guess it *)
 		if checkIdeal inHonest listVarIn tmIdeal
-		then (tm, guessIdeal listVarIn tm) 
+		then (tm, tmIdeal) 
 		else failwith ("Critial Error [458]."^email) in
        (* if false then begin pp "\n";  *)  (* For debugging purpose: *)
        (* 			(match tm with | FunApp (f, li) -> debugFunSymb f); *)

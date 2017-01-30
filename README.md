@@ -76,6 +76,7 @@ UKano 0.1. Cryptographic privacy verifier, by Lucca Hirschi. Based on Proverif 1
   --only-wa             verifies the well-authentication condition only
   --clean               remove generated files after successful verification
   --less-verbose        reduce the verbosity
+  --log-proverif        log in stdout all ProVerif outputs
   -gc                   display gc statistics (optional)
 ```
 
