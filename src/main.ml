@@ -140,6 +140,8 @@ let _ =
       "\t\tremove generated files after successful verification";
       "--less-verbose",  Arg.Unit (fun () -> Param.shortOutput := true),
       "\treduce the verbosity";
+      "--log-proverif",  Arg.Unit (fun () -> Param.logAll := true),
+      "\tlog in stdout all ProVerif outputs";
       "-gc", Arg.Set gc, 
       "\t\t\tdisplay gc statistics (optional)"
     ]

@@ -29,6 +29,8 @@
 (* UKANO *)
 (* remove generated files after successful verification *)
 val cleanFiles : bool ref
+(* log all ProVerif outputs in stdout *)
+val logAll : bool ref
 (* print only necessary information *)
 val shortOutput : bool ref
 (* do we assume idealization is conform *)
