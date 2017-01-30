@@ -828,7 +828,7 @@ let transFO proto p inNameFile nameOutFile =
 		 end
 	 | _ -> let tmIdeal = guessIdeal listVarIn tm in (* he did not, we need to guess it *)
 		if checkIdeal inHonest listVarIn tmIdeal
-		then (tm, guessIdeal listVarIn tm) 
+		then (tm, tmIdeal) 
 		else failwith ("Critial Error [458]."^email) in
        (* if false then begin pp "\n";  *)  (* For debugging purpose: *)
        (* 			(match tm with | FunApp (f, li) -> debugFunSymb f); *)
