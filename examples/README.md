@@ -53,7 +53,14 @@ We performed those benchmarks on this machine:
 - RAM: 47GO
 	    
 Legend: time in seconds when verification was successful and :x: when condition
-could not be established and -- when it was not necessary to build idealizations manually.
+could not be established and -- when it was not necessary to build idealizations manually
+(i.e., user defined). The different columns for FO (i.e., frame opacity) refers to the different
+heuristics of UKano to build idealization:
+- "greedy" corresponds to the option `--idea-greedy`
+- "default" corresponds to the default heuristics of UKano
+- "syntax" corresponds to the option `--idea-full-syntax`
+- "user-defined" when a user defined idealization is necessary
+
 
 | Protocol    | Better time (total) | Time for WA | Time for FO (greedy) | Time for FO (default) | Time for FO (syntax)  | Time for FO (user-defined) |
 |:------------|:-------------:|:-------------------:|:-------------------:|:---------------------:|:--------------------:|:---------------------------|
@@ -72,4 +79,3 @@ could not be established and -- when it was not necessary to build idealizations
      A Method for Verifying Privacy-Type Properties : The Unbounded Case.
      Journal version under submission.
      A copy will soon be available at http://projects.lsv.ens-cachan.fr/ukano/.
-
