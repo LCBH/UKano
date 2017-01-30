@@ -1,7 +1,0 @@
-This folder contains all ProVerif models for which unlinkability
-and anonymity can be automaticcaly established using UKano.
-
-In some files, we may use multiple conditionals in a row to ease the readability.
-This is without loss of generality w.r.t. our results since we could have compacted
-them in a single one. Note that UKano considers them as a single compacted conditional.
-We also show how UKano detects some attacks (for files whose name contains 'attack').
