@@ -69,16 +69,17 @@ heuristics of UKano to build idealization:
 | Hash-Lock      | 0.00s  | 0.00s | 0.00s  | 0.00s   | 0.00s   | --    |
 | Fixed LAK      | 0.00s  | 0.00s | 0.00s  | 0.00s   | 0.00s   | --    |
 | BAC            | 11.00s | 0.02s | 10.98s | 21.10s  | 21.04s  | --    |
+| BAC+AA+PA      | 198.28 | 0.42s |197.86s| 1013.56s| todo | --    |
+| BAC+PA+AA      | 183.40s| 0.33s |183.07s| todo    | todo | --    |
+| PACE with tags | todo   | 62.99s| todo    | todo    | todo | --    |
+| DAA simplified [HBD17]| 0.02s |0.01s|0.01s| 0.01s  | 0.01s   | --    |
+| DAA sign       | 7.77s  | 0.01s | :x:    | :x:     | 7.76s  | --    |
+| DAA join       | 4.68s  | 2.38s | 2.30s  | 2.30s   | 5.84s   | --    |
+| abcdh (irma)   | todo   | todo | todo| todo | todo  | todo |
 
-| BAC+AA+PA      |1290.46s| 0.38ss |1288.46s| 6111.04s| 6017.32s| --    |
-| BAC+PA+AA      | 70.65s | 1.86s |1151.84s| 7134.94s| 6956.75s| --    |
-| PACE with tags | todo   |488.11s| :x:    | :x:     | todo    | --    |
-| DAA simplified [HBD17]| 0.12s |0.02s|0.10s| 0.10s  | 0.10s   | --    |
-| DAA sign       | 89.24s | 0.02s | :x:    | :x:     | 89.16s  | --    |
-| DAA join       | 4.52s  | 2.26s | 2.26s  | 2.27ss  | 5.74s   | --    |
-| abcdh (irma)   | todo   | 62524.78s|:curly_loop:| todo | todo  | ok, bench running~ |
+<!-- ~ indicates that we had to slightly modify the produced file. -->
 
-~ indicates that we had to slightly modify the produced file.
+
 
 ### Benchmarks with ProVerif v1.96
 
@@ -89,15 +90,11 @@ heuristics of UKano to build idealization:
 | BAC            | 70.65s | 0.09s | 66.56s | 128.03s | 132.24s | --    |
 | BAC+AA+PA      |1290.46s| 2.11s |1288.46s| 6111.04s| 6017.32s| --    |
 | BAC+PA+AA      | 70.65s | 1.86s |1151.84s| 7134.94s| 6956.75s| --    |
-| PACE with tags | todo   |488.11s| :x:    | :x:     | todo    | --    |
+| PACE with tags | :curly_loop:   |488.11s| :x:    | :x:     | :curly_loop: | --    |
 | DAA simplified [HBD17]| 0.12s |0.02s|0.10s| 0.10s  | 0.10s   | --    |
 | DAA sign       | 89.24s | 0.08s | :x:    | :x:     | 89.16s  | --    |
 | DAA join       | 21.84s | 0.01s | 21.83s | 22.25s  | 60.07s  | --    |
-| abcdh (irma)   | todo   | 62524.78s|:curly_loop:| todo | todo  | ok, bench running~ |
-
-~ indicates that we had to slightly modify the produced file.
-
-[//]: # (TODO: solve problems with abcdh and termination with pace)
+| abcdh (irma)   | :curly_loop: | 62524.78s|:curly_loop:| :curly_loop: | :curly_loop:  | :curly_loop: |
 
 
 ## References
