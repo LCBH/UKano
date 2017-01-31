@@ -820,6 +820,11 @@ let transFO proto p inNameFile nameOutFile =
        let inHonest = not(inE) && not(lastOutHonest) in
        let (tmReal, tmIdeal) =
 	 match tm with
+	 | FunApp (funSymb, tm1 :: tm2 :: tl) when (!Param.ideaAutomatic && funSymb.f_cat = Choice) ->
+	    let tmIdeal = guessIdeal listVarIn tm1 in (* he did give an idealization but we'll recompute it *)
+	    if checkIdeal inHonest listVarIn tmIdeal
+	    then (tm, tmIdeal)
+	    else failwith ("Critial Error [458]."^email)
 	 | FunApp (funSymb, tm1 :: tm2 :: tl) when (not(!Param.ideaAutomatic) && funSymb.f_cat = Choice) ->
 	    if !ideaAssumed || checkIdeal inHonest listVarIn tm2
 	    then begin ideaChecked := true; (tm1, tm2); end (* user already built idealization and no option 'ideaAutomatic' *)
