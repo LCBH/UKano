@@ -823,7 +823,7 @@ let transFO proto p inNameFile nameOutFile =
 	 | FunApp (funSymb, tm1 :: tm2 :: tl) when (!Param.ideaAutomatic && funSymb.f_cat = Choice) ->
 	    let tmIdeal = guessIdeal listVarIn tm1 in (* he did give an idealization but we'll recompute it *)
 	    if checkIdeal inHonest listVarIn tmIdeal
-	    then (tm, tmIdeal)
+	    then (tm1, tmIdeal)
 	    else failwith ("Critial Error [458]."^email)
 	 | FunApp (funSymb, tm1 :: tm2 :: tl) when (not(!Param.ideaAutomatic) && funSymb.f_cat = Choice) ->
 	    if !ideaAssumed || checkIdeal inHonest listVarIn tm2
