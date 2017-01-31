@@ -711,6 +711,7 @@ let transFO proto p inNameFile nameOutFile =
   let isConstant funSymb = isArity0 funSymb && not(isName funSymb) in
   let isPrivate funSymb = funSymb.f_private in
   let isTuple funSymb = match funSymb.f_cat with Tuple -> true | _ -> false in
+  let isChoice funSymb = funSymb.f_name = "choice" in
   (* Given a term, tries to guess an idealization *)
   let rec guessIdeal listVarIn = function
     | FunApp (f, []) as t
@@ -728,9 +729,10 @@ let transFO proto p inNameFile nameOutFile =
        if !Param.ideaFullSyntax
        then FunApp (f, List.map (guessIdeal listVarIn) listT)
        else (if !Param.ideaGreedy (* depends on options *)
-	     then (if List.mem f.f_name nonTransparentSymbList (* should be non-transparent *)
-		   then hole
-		   else recT)
+	     then  hole
+	     (* (if List.mem f.f_name nonTransparentSymbList (* should be non-transparent *)
+	         then hole
+   	         else recT) *)
 	     else recT)
     | Var b as t when List.mem b.sname listVarIn -> t  (* variable of input *)
     | Var b -> hole (* variable of let *)
@@ -820,12 +822,12 @@ let transFO proto p inNameFile nameOutFile =
        let inHonest = not(inE) && not(lastOutHonest) in
        let (tmReal, tmIdeal) =
 	 match tm with
-	 | FunApp (funSymb, tm1 :: tm2 :: tl) when (!Param.ideaAutomatic && funSymb.f_cat = Choice) ->
+	 | FunApp (funSymb, tm1 :: tm2 :: tl) when (!Param.ideaAutomatic && isChoice funSymb) ->
 	    let tmIdeal = guessIdeal listVarIn tm1 in (* he did give an idealization but we'll recompute it *)
 	    if checkIdeal inHonest listVarIn tmIdeal
 	    then (tm1, tmIdeal)
 	    else failwith ("Critial Error [458]."^email)
-	 | FunApp (funSymb, tm1 :: tm2 :: tl) when (not(!Param.ideaAutomatic) && funSymb.f_cat = Choice) ->
+	 | FunApp (funSymb, tm1 :: tm2 :: tl) when (not(!Param.ideaAutomatic) && isChoice funSymb) ->
 	    if !ideaAssumed || checkIdeal inHonest listVarIn tm2
 	    then begin ideaChecked := true; (tm1, tm2); end (* user already built idealization and no option 'ideaAutomatic' *)
 	    else begin pp "[ERROR] The following idealization you built is not conform: ";
