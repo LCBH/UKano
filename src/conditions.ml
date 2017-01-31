@@ -716,14 +716,14 @@ let transFO proto p inNameFile nameOutFile =
   let isPrivate funSymb = funSymb.f_private in
   let isTuple funSymb = match funSymb.f_cat with Tuple -> true | _ -> false in
   let isChoice funSymb = funSymb.f_name = "choice" in
-  let isHole funSymb = funSymb.f_cat = Hole in
+  let isHole funSymb = funSymb.f_cat = Hole || funSymb.f_name = "hole" in
   (* Given a term, tries to guess an idealization *)
   let rec guessIdeal listVarIn = function
     | FunApp (f, []) as t
 	 when isConstant f -> t (* public constants *)
     | FunApp (f, []) as t
 	 when isSessName f -> t (* session name *)
-    | FunApp (f, []) when isName f -> hole_of_name f   (* (private) names *)
+    | FunApp (f, []) when isName f -> hole_of_name f (* (private) names *)
     | FunApp (f, listT)
 	 when isTuple f -> FunApp (f, List.map (guessIdeal listVarIn) listT) (* tuple *)
     | FunApp (f, listT) as t ->
@@ -800,7 +800,11 @@ let transFO proto p inNameFile nameOutFile =
       then begin
 	  incr(countNonces);
 	  Printf.sprintf "hole__%d" !countNonces;
-	end else funSymb.f_name in
+	end else (if notInListName funSymb !listNames
+		  then begin
+		      incr(countNonces);
+		      Printf.sprintf "%s_%d" funSymb.f_name !countNonces; (* need to avoid clash between two roles e.g., *)
+		    end else funSymb.f_name ) in 
     let funSymb =
       {
 	f_name = nameName;
@@ -864,10 +868,12 @@ let transFO proto p inNameFile nameOutFile =
     | Let (patx,t,pt,pe,occ) -> Let (patx,t, noncesProc isIni listVarIn pt, noncesProc ~inElse:true isIni listVarIn pe, occ)
     | Test (t,pt,pe,occ)-> Test(t, noncesProc isIni listVarIn pt, noncesProc ~inElse:true isIni listVarIn pe,occ)
     | p -> errorClass ("Critical error, should never happen [5]."^email) p in
+  let newIni = noncesProc true [] proto.ini in
+  let newRes = noncesProc false [] proto.res in
   let noncesProto = 
     { proto with
-      ini = noncesProc true [] proto.ini;
-      res = noncesProc false [] proto.res;
+      ini = newIni;
+      res = newRes;
       sessNames = proto.sessNames @ (List.rev !listNames);
     } in
 
