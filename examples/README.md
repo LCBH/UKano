@@ -54,7 +54,7 @@ We performed those benchmarks on this machine:
 	    
 Legend: time in seconds when verification was successful, :x: when condition
 could not be established, :curly_loop: when the verification took too much time (>18 hours) or too
-much memory (>10GO of RAM), and, -- when it was not necessary to build idealizations manually
+much memory (>20GO of RAM), and, -- when it was not necessary to build idealizations manually
 (i.e., user defined). The different columns for FO (i.e., frame opacity) refers to the different
 heuristics of UKano to build idealization:
 - "greedy" corresponds to the option `--idea-greedy`
@@ -69,8 +69,8 @@ heuristics of UKano to build idealization:
 | Hash-Lock      | 0.00s  | 0.00s | 0.00s  | 0.00s   | 0.00s   | --    |
 | Fixed LAK      | 0.00s  | 0.00s | 0.00s  | 0.00s   | 0.00s   | --    |
 | BAC            | 11.00s | 0.02s | 10.98s | 21.10s  | 21.04s  | --    |
-| BAC+AA+PA      | 198.28 | 0.42s |197.86s| 1013.56s| todo | --    |
-| BAC+PA+AA      | 183.40s| 0.33s |183.07s| todo    | todo | --    |
+| BAC+AA+PA      | 198.28s| 0.42s |197.86s | 1013.56s    | 998.81s    | --    |
+| BAC+PA+AA      | 183.40s| 0.33s |183.07s| :curly_loop: | todo       | --    |
 | PACE with tags | todo   | 62.99s| todo    | todo    | todo | --    |
 | DAA simplified [HBD17]| 0.02s |0.01s|0.01s| 0.01s  | 0.01s   | --    |
 | DAA sign       | 7.77s  | 0.01s | :x:    | :x:     | 7.76s  | --    |
