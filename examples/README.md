@@ -62,6 +62,25 @@ heuristics of UKano to build idealization:
 - "syntax" corresponds to the option `--idea-full-syntax`
 - "user-defined" when a user defined idealization is necessary
 
+### Benchmarks with ProVerif v1.92
+
+| Protocol    | Better time (total) | Time for WA | Time for FO (greedy) | Time for FO (default) | Time for FO (syntax)  | Time for FO (user-defined) |
+|:------------|:-------------:|:-------------------:|:-------------------:|:---------------------:|:--------------------:|:---------------------------|
+| Hash-Lock      | 0.00s  | 0.00s | 0.00s  | 0.00s   | 0.00s   | --    |
+| Fixed LAK      | 0.00s  | 0.00s | 0.00s  | 0.00s   | 0.00s   | --    |
+| BAC            | 11.00s | 0.02s | 10.98s | 21.10s  | 21.04s  | --    |
+
+| BAC+AA+PA      |1290.46s| 0.38ss |1288.46s| 6111.04s| 6017.32s| --    |
+| BAC+PA+AA      | 70.65s | 1.86s |1151.84s| 7134.94s| 6956.75s| --    |
+| PACE with tags | todo   |488.11s| :x:    | :x:     | todo    | --    |
+| DAA simplified [HBD17]| 0.12s |0.02s|0.10s| 0.10s  | 0.10s   | --    |
+| DAA sign       | 89.24s | 0.02s | :x:    | :x:     | 89.16s  | --    |
+| DAA join       | 4.52s  | 2.26s | 2.26s  | 2.27ss  | 5.74s   | --    |
+| abcdh (irma)   | todo   | 62524.78s|:curly_loop:| todo | todo  | ok, bench running~ |
+
+~ indicates that we had to slightly modify the produced file.
+
+### Benchmarks with ProVerif v1.96
 
 | Protocol    | Better time (total) | Time for WA | Time for FO (greedy) | Time for FO (default) | Time for FO (syntax)  | Time for FO (user-defined) |
 |:------------|:-------------:|:-------------------:|:-------------------:|:---------------------:|:--------------------:|:---------------------------|
