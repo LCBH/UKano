@@ -71,13 +71,13 @@ heuristics of UKano to build idealization:
 | BAC            | 11.00s | 0.02s | 10.98s | 21.10s  | 21.04s  | --    |
 | BAC+AA+PA      | 198.28s| 0.42s |197.86s | 1013.56s    | 998.81s    | --    |
 | BAC+PA+AA      | 183.40s| 0.33s |183.07s| :curly_loop: | todo       | --    |
-| PACE with tags | todo   | 62.99s| todo    | todo    | todo | --    |
+| PACE with tags | 169.91 | 62.99s| 106.92s (*) | :curly_loop:   | :curly_loop: |106.92s |
 | DAA simplified [HBD17]| 0.02s |0.01s|0.01s| 0.01s  | 0.01s   | --    |
-| DAA sign       | 7.77s  | 0.01s | :x:    | :x:     | 7.76s  | --    |
+| DAA sign       | 7.77s  | 0.01s | :x:    | :x:     | 7.76s   | --    |
 | DAA join       | 4.68s  | 2.38s | 2.30s  | 2.30s   | 5.84s   | --    |
 | abcdh (irma)   | todo   | todo | todo| todo | todo  | todo |
 
-<!-- ~ indicates that we had to slightly modify the produced file. -->
+(*) indicates that we had to slightly modify the produced file (roughly by simplifying nested conditionals while preserving their semantics).
 
 
 

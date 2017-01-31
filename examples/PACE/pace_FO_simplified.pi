@@ -1,0 +1,108 @@
+
+(********   This file has been automatically generated using the tool UKano. It encodes the frame opacity condition. ********)
+
+(**********)
+(* THEORY *)
+(**********)
+
+
+(* public communication channel *)
+free c : channel.
+free ct : channel.
+free cr : channel.
+
+(* constant values *)
+free error_mac : bitstring.
+free init : bitstring.
+free read : bitstring.
+free ok : bitstring.
+free tagPass : bitstring.
+free tagReader : bitstring.
+free secret : bitstring [private].
+const g : bitstring [data].
+
+
+(* Generation of a new paramater *)
+fun gen(bitstring,bitstring) : bitstring.
+
+(* Diffie-Hellman exponentiation: partial axiomatization
+   as defined in the ProVerif 1.92's manual (p. 33) *)
+fun exp (bitstring, bitstring) : bitstring.
+equation forall x : bitstring, y : bitstring;
+  exp(exp(g,x),y) = exp(exp(g,y),x).
+equation forall x : bitstring, y : bitstring,
+                a : bitstring, b : bitstring;
+  exp(exp(gen(a,b),x),y) = exp(exp(gen(a,b),y),x).
+
+
+fun enc (bitstring, bitstring) : bitstring.
+fun dec (bitstring, bitstring) : bitstring.
+equation forall x : bitstring, y : bitstring;
+  dec(enc(x,y),y) = x.	       
+
+ (* Mac (of pairs) *)
+fun mac(bitstring, bitstring) : bitstring.
+
+			       
+(*************)
+(*  *)
+
+
+(* == PROTOCOL WITH IDEALIZATION == *)
+let SYSTEM =
+( !
+  new k : bitstring;
+     !
+      new sess : bitstring;
+      ((
+        new s: bitstring;
+        new hole_4: bitstring;
+        out(ct, choice[enc(s,k),hole_4]);
+        in(ct, x1: bitstring);
+        new b1: bitstring;
+        new hole_5: bitstring;
+        out(ct, choice[exp(g,b1),hole_5]);
+        in(ct, x2: bitstring);
+        new b2: bitstring;
+        new hole_6: bitstring;
+        let (newG: bitstring) = gen(exp(g,s),exp(x1,b1)) in
+        out(ct, choice[exp(newG,b2), hole_6]);
+        in(ct, x3: bitstring);
+        new hole_7: bitstring;
+        let (mergeOut: bitstring) = 
+            choice[ 
+                let catchRealMess:bitstring = (
+                    let (newKey: bitstring) = exp(x2,b2) in
+                    if (mac((tagReader,exp(newG,b2)),newKey) = x3) then
+                       mac((tagPass,x2),newKey)  ) in
+                catchRealMess
+                else hole_7
+            , hole_7] in
+        out(cr, mergeOut)
+      )|(
+        in(cr, y1: bitstring);
+        new a1: bitstring;
+        new hole_1: bitstring;
+        out(cr, choice[exp(g,a1),hole_1]);
+        in(cr, y2: bitstring);
+        new a2: bitstring;
+        new hole_2: bitstring;
+        let (mergeOut: bitstring) = 
+            choice[ 
+                let catchRealMess:bitstring = (
+                    let (newG_58: bitstring) = gen(exp(g,dec(y1,k)),exp(y2,a1)) in
+                       exp(newG_58,a2)  ) in
+                catchRealMess
+                else hole_2
+            , hole_2] in
+        out(cr, mergeOut);
+        in(cr, y3: bitstring);
+        new hole_3: bitstring;
+        let (newKey_59: bitstring) = exp(y3,a2) in
+        out(cr, choice[mac((tagReader,y3),newKey_59), hole_3]);
+        in(cr, y4: bitstring);
+        out(cr, ok)
+      ))
+)
+.
+process SYSTEM
