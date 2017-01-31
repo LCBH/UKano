@@ -665,16 +665,20 @@ let letCatchSymb = {
     f_private = true;		(* CHECK* *)
     f_options = 0;		(* CHECK* *)
   }
-let hole =
+let hole_of_str s =
   FunApp
     ( {
-	f_name = "hole";
+	f_name = "hole__"^s;
 	f_type = ([], typeBit);
-	f_cat = Tuple;
-	f_initial_cat = Tuple;	f_private = true;
+	f_cat = Hole;
+	f_initial_cat = Hole;
+	f_private = true;
 	f_options = 0;		(* CHECK* *)
       }
     , [])
+let hole = hole_of_str ""
+let hole_of_name f = hole_of_str f.f_name
+
 let mergeOut = {
     sname = "mergeOut";
     vname = 0;
@@ -712,13 +716,14 @@ let transFO proto p inNameFile nameOutFile =
   let isPrivate funSymb = funSymb.f_private in
   let isTuple funSymb = match funSymb.f_cat with Tuple -> true | _ -> false in
   let isChoice funSymb = funSymb.f_name = "choice" in
+  let isHole funSymb = funSymb.f_cat = Hole in
   (* Given a term, tries to guess an idealization *)
   let rec guessIdeal listVarIn = function
     | FunApp (f, []) as t
 	 when isConstant f -> t (* public constants *)
     | FunApp (f, []) as t
 	 when isSessName f -> t (* session name *)
-    | FunApp (f, []) when isName f -> hole   (* (private) names *)
+    | FunApp (f, []) when isName f -> hole_of_name f   (* (private) names *)
     | FunApp (f, listT)
 	 when isTuple f -> FunApp (f, List.map (guessIdeal listVarIn) listT) (* tuple *)
     | FunApp (f, listT) as t ->
@@ -735,7 +740,7 @@ let transFO proto p inNameFile nameOutFile =
    	         else recT) *)
 	     else recT)
     | Var b as t when List.mem b.sname listVarIn -> t  (* variable of input *)
-    | Var b -> hole (* variable of let *)
+    | Var b -> hole_of_str b.sname (* variable of let *)
     | term -> (* if true then begin log "Warning: some idealized messages you gave do not use 'hole' and are extended. The idealization of : "; *)
        (* 	  Printf.printf "     "; *)
        (* 	  Display.Text.display_term term; *)
@@ -747,7 +752,7 @@ let transFO proto p inNameFile nameOutFile =
 	 Printf.printf "     ";
 	 Display.Text.display_term term;
 	 Printf.printf "   ";
-	 pp "be a hole (i.e., session name variable).\n";
+	 pp "be a hole (i.e., fresh session name variable).\n";
 	 hole;
        end in
   (* Given a term, check that its corresponds to a conform idealization.
@@ -756,7 +761,7 @@ let transFO proto p inNameFile nameOutFile =
   let checkIdeal inHonest listVarIn t =
     let rec checkSyntax  = function
       | FunApp (f, []) when isConstant f -> true (* public constants *)
-      | FunApp (f, []) when f.f_name = "hole" -> true (* hole *)
+      | FunApp (f, []) when isHole f -> true     (* hole *)
       | FunApp (f, []) when (isName f && List.mem f proto.sessNames)
 	-> true   (* session name *)
       | FunApp (f, []) when isName f -> false   (* (identity and global) names *)
@@ -771,7 +776,7 @@ let transFO proto p inNameFile nameOutFile =
       | Var b -> false	in	              	       (* variable of let *)
     let rec checkOneName = function
       | Var b -> false				 (* variable *)
-      | FunApp (f, []) when f.f_name = "hole" -> true (* hole *)
+      | FunApp (f, []) when isHole f -> true     (* hole *)
       | FunApp (f, []) when isName f && List.mem f proto.sessNames
 	-> true   (* session name *)
       | FunApp (f, []) when isName f -> false   (* (private) names *)
@@ -785,9 +790,17 @@ let transFO proto p inNameFile nameOutFile =
   let countNonces = ref 0 in
   let listNames = ref [] in
   (* Create the next new session name to fill in a hole *)
-  let createNonce () = 
-    incr(countNonces);
-    let nameName = Printf.sprintf "hole_%d" !countNonces in
+  let rec notInListName funSymb = function
+    | [] -> false
+    | x :: tl when x.f_name = funSymb.f_name -> true
+    | x :: tl -> notInListName funSymb tl in
+  let createNonce funSymb = 
+    let nameName =
+      if funSymb.f_name == "hole"
+      then begin
+	  incr(countNonces);
+	  Printf.sprintf "hole__%d" !countNonces;
+	end else funSymb.f_name in
     let funSymb =
       {
 	f_name = nameName;
@@ -797,11 +810,12 @@ let transFO proto p inNameFile nameOutFile =
 	f_private = true;
 	f_options = 0
       } in
-    listNames := funSymb :: !listNames;
+    if not(notInListName funSymb !listNames)
+    then listNames := funSymb :: !listNames;
     FunApp (funSymb, []) in
   (* idealized term -> nonce term *)
   let rec noncesTerm = function
-    | FunApp (f, tList) when f.f_name = "hole" -> createNonce()
+    | FunApp (f, tList) when isHole f -> createNonce f
     | FunApp (f, tList) -> FunApp (f, List.map noncesTerm tList)
     | Var b -> Var b
     | t -> errorClass ("Critical error, should never happen [3]."^email) p in

@@ -125,6 +125,7 @@ and funcats =
   | Failure
   | LetCatch    (* new construction of the form [let m = t in a else b]
                    taking 4 arguments [m,t,a,b] *)
+  | Hole        (* new internal construction for holes *)
 
 and rewrite_rule = term list * term * (term * term) list
 
