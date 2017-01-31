@@ -64,17 +64,21 @@ heuristics of UKano to build idealization:
 
 ### Benchmarks with ProVerif v1.92
 
+TODO:
+- make IRMA WA work !
+
+
 | Protocol    | Better time (total) | Time for WA | Time for FO (greedy) | Time for FO (default) | Time for FO (syntax)  | Time for FO (user-defined) |
 |:------------|:-------------:|:-------------------:|:-------------------:|:---------------------:|:--------------------:|:---------------------------|
 | Hash-Lock      | 0.00s  | 0.00s | 0.00s  | 0.00s   | 0.00s   | --    |
 | Fixed LAK      | 0.00s  | 0.00s | 0.00s  | 0.00s   | 0.00s   | --    |
-| BAC            | 11.00s | 0.02s | 10.98s | 21.10s  | 21.04s  | --    |
+| BAC            | 8.41s  | 0.02s | 8.39s | 17.24s  | 17.20s  | --    |
 | BAC+AA+PA      | 198.28s| 0.42s |197.86s | 1013.56s    | 998.81s    | --    |
 | BAC+PA+AA      | 183.40s| 0.33s |183.07s| :curly_loop: | todo       | --    |
 | PACE with tags | 169.91 | 62.99s| 106.92s (*) | :curly_loop:   | :curly_loop: |106.92s |
-| DAA simplified [HBD17]| 0.02s |0.01s|0.01s| 0.01s  | 0.01s   | --    |
-| DAA sign       | 7.77s  | 0.01s | :x:    | :x:     | 7.76s   | --    |
-| DAA join       | 4.68s  | 2.38s | 2.30s  | 2.30s   | 5.84s   | --    |
+| DAA simplified [HBD17]| 0.02s |0.01s| :x: | 0.01s  | 0.00s   | --    |
+| DAA sign       | 2.94s  | 0.01s | :x:    | :x:     | 2.76s   | --    |
+| DAA join       | 4.68s  | 1.82s | 2.30s  | 2.30s   | 28.85s  | --    |
 | abcdh (irma)   | todo   | todo | todo| todo | todo  | todo |
 
 (*) indicates that we had to slightly modify the produced file (roughly by simplifying nested conditionals while preserving their semantics).
@@ -82,6 +86,8 @@ heuristics of UKano to build idealization:
 
 
 ### Benchmarks with ProVerif v1.96
+
+The following table is not up to date concerning heuristics greedy/default/syntax.
 
 | Protocol    | Better time (total) | Time for WA | Time for FO (greedy) | Time for FO (default) | Time for FO (syntax)  | Time for FO (user-defined) |
 |:------------|:-------------:|:-------------------:|:-------------------:|:---------------------:|:--------------------:|:---------------------------|
