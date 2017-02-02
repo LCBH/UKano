@@ -109,7 +109,8 @@ let verifier(u:b, Overifier:b, Oprover:b, credV:b) =
     in(c, y:b);
     new n:b;
     let (=c2, =OK) = sdec(y, f2( exp(xhc,xv))) in
-    out(c, senc((n,requestIsOver18), f2(exp(xhc,xv))));
+    out(c, choice[senc((n,requestIsOver18), f2(exp(xhc,xv))),
+                  hole]);
     in(c, z:b);
     let (=isOver18, xsv:b) = sdec(z,f2( exp(xhc,xv))) in
     let (=accept) = verifySD(xsv) in
@@ -129,7 +130,8 @@ let prover(u:b, Overifier:b, Oprover:b, credP:b) =
 (* TODO: in the baove idealization: hole was 'xhv' but thats a let variable. Check if FO holds with that idealization. *)
     in(c, y:b);
     let (=c1, =OK) = sdec(y, f2(exp(xhv,xc))) in
-    out(c, senc((c2,OK), f2(exp(xhv,xc))));
+    out(c, choice[senc((c2,OK), f2(exp(xhv,xc))),
+                  hole]);
     in(c, z:b);
     new NEWn:b;
     let (xn:b, =requestIsOver18) = sdec(z,f2(exp(xhv,xc))) in

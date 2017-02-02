@@ -109,7 +109,8 @@ let verifier(u:bitstring, Overifier:bitstring, Oprover:bitstring, credV:bitstrin
     in(c, y:bitstring);
     new n:bitstring;
     let (=c2, =OK) = sdec(y, f2( exp(xhc,xv))) in
-    out(c, senc((n,requestIsOver18), f2(exp(xhc,xv))));
+    out(c, choice[senc((n,requestIsOver18), f2(exp(xhc,xv))),
+                  hole]);
     in(c, z:bitstring);
     let (=isOver18, xsv:bitstring) = sdec(z,f2( exp(xhc,xv))) in
     let (=accept) = verifySD(xsv) in
@@ -129,7 +130,8 @@ let prover(u:bitstring, Overifier:bitstring, Oprover:bitstring, credP:bitstring)
 (* TODO: in the baove idealization: hole was 'xhv' but thats a let variable. Check if FO holds with that idealization. *)
     in(c, y:bitstring);
     let (=c1, =OK) = sdec(y, f2(exp(xhv,xc))) in
-    out(c, senc((c2,OK), f2(exp(xhv,xc))));
+    out(c, choice[senc((c2,OK), f2(exp(xhv,xc))),
+                  hole]);
     in(c, z:bitstring);
     new NEWn:bitstring;
     let (xn:bitstring, =requestIsOver18) = sdec(z,f2(exp(xhv,xc))) in
