@@ -1,5 +1,7 @@
 
 (********   This file has been automatically generated using the tool UKano. It encodes the well-authentication condition. ********)
+(********   except that we simplified queries to make ProVerif
+            terminates sooner...                                            ********)
 
 (* Scenario of ABCDH protocol as [2] using idemix primitives as specified in [1]
  * MINIMAL VERSION ABCDH
