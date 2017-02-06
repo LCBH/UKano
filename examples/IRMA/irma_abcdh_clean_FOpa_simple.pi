@@ -1,0 +1,162 @@
+
+(********   This file has been automatically generated using the tool UKano ********)
+(********   except that we simplified conditionals to make ProVerif
+            terminates sooner...                                            ********)
+(* Scenario of ABCDH protocol as [2] using idemix primitives as specified in [1]
+ * MINIMAL VERSION ABCDH
+ * ULTIMATE GOAL: strong UK of ABCDH 
+ * Lucca Hirschi
+ * 29/03/2016
+ * Status: Done & Works
+ *)
+
+(*
+IDEMIX (from [1] A formal Model of Identity Mixer Mixer (Modersheim + IBM Zurich)
+             [2] A secure channel for attribute-based credentials (Alpar, Hoepman (Netherlands)))
+[1]
+  - users that have each a master secret never revealed to otehr parties
+  - users are known to organizations under pseudonyms bound to sessions
+  - organizations make statements abouth users by issuing credentials bound to the master secret of that user
+[2]
+  - selective discolsure
+    SD(O,Attr,R)   "I know a credential bounds to a MS I know that has been signed by O and asserting
+                    that I have attribute Attre. This is bound to R".
+*)
+(* THEORY - INGREDIENTS
+- Master Secret: Each user u has a master secret MS(u).
+- Pseudonym: Each user u may generate a random R and use pseudonym pd(u,R).
+- Commitments: commit(R,V) is comit of V with random V
+- Credentials: basically a list of attributes signed by an issuing organization.
+   We assume each orga sign a certain type of attribute and its public bitstrings are publicly known
+   -> cred(sk(O),xU,Attr): credential for attribute Attr by orga O bound to master secret xu (of user u)
+   Can be issued using some sk(O), and some commit(R,xu), A.
+To simplify, we only consider attributes verification that are unary relations. For instance "over-18 years old".
+This will be an attribute "isOver18".
+For SD:
+SD(cred(sk(O),xU,Attr),O, xU, R, Attr)
+   check: if it has this form or this one (for SD(\emptyset;n)): SD(cred(sk(O),xU,Attr),empty, xU, R, empty)
+   projection: of O, R and Attr (not from cred)
+*)
+
+(***************)
+(* ==THEORY==  *)
+(***************)
+
+type b.
+channel c.
+
+fun MS(bitstring):bitstring [private].  (* Master secret of a user *)
+fun sk(bitstring):bitstring [private].  (* Secret bitstring of an organization O *)
+fun pd(bitstring,bitstring):bitstring.          (* pseudonym of a user for a specific random *)
+fun commit(bitstring,bitstring):bitstring.      (* commitments (public but no projection) *)
+fun skS(bitstring):bitstring.           (* Secret bitstring of signature of credentials *)
+fun cred(bitstring,bitstring,bitstring):bitstring.      (* credential (public, projection3) *)
+fun SD(bitstring,bitstring,bitstring,bitstring,bitstring):bitstring.    (* Selective Disclosure *)
+
+fun isOver18():bitstring.
+fun movieTheater():bitstring.
+fun requestIsOver18():bitstring.
+fun empty():bitstring.
+fun accept():bitstring.
+fun OK():bitstring.
+fun c1():bitstring.
+fun c2():bitstring.
+fun g():bitstring.
+
+fun hash(bitstring):bitstring.
+fun aenc(bitstring,bitstring):bitstring.
+fun pk(bitstring):bitstring.
+fun senc(bitstring,bitstring):bitstring.
+fun exp (bitstring,bitstring) :bitstring.
+
+(* Organizations *)
+fun OrgaAge():bitstring.           (* new organization: can issue age info *)
+fun OrgaCheckAge():bitstring.      (* new organization: can check age info *)
+
+
+(* Random Oracles: free constructor symbols *)
+fun f1(bitstring):bitstring.
+fun f2(bitstring):bitstring.
+fun f3(bitstring):bitstring.
+
+(* Diffie-Hellman exponentiation *)
+equation forall x :bitstring, y :bitstring;
+  exp(exp(g,x),y) = exp(exp(g,y),x).
+(* (a)symmetric encryption *)
+reduc forall m:bitstring, k:bitstring;
+      adec(aenc(m, pk(k)), k) = m.
+reduc forall m:bitstring, k:bitstring;
+      sdec(senc(m, k), k) = m.
+(* Credentials *)
+reduc forall Attr:bitstring, R:bitstring, xU:bitstring, skSO:bitstring;
+	makeCred(Attr,commit(R,xU), skSO) = cred(skSO, xU,Attr).
+reduc forall skSO:bitstring, xU:bitstring, Attr:bitstring;
+	getAttr(cred(skSO,xU,Attr)) = Attr.
+(* SD: Selective Disclosure *)
+fun verifySD(bitstring):bitstring
+reduc forall O:bitstring, U:bitstring, Attr:bitstring, R:bitstring;
+	verifySD(SD(cred(skS(O), MS(U), Attr), O, MS(U), R, Attr)) = accept
+otherwise forall O:bitstring, U:bitstring, Attr:bitstring, R:bitstring;
+	verifySD(SD(cred(skS(O), MS(U), Attr), empty, MS(U), R, empty)) = accept.
+reduc forall O:bitstring, xU:bitstring, Attr:bitstring, R:bitstring, O2:bitstring, Attr2:bitstring;
+        getPublicSD(SD(cred(skS(O), xU, Attr), O2, xU, R, Attr2)) = (O2,R,Attr2).
+
+
+(****************)
+(*  *)
+
+
+(* == PROTOCOL WITH NONCE VERSIONS == *)
+let SYSTEM =
+( !
+  new userB : bitstring;
+  new userA : bitstring;
+     !
+      new sess : bitstring;
+      ((
+        new xv: bitstring;
+        new NEWu_126: bitstring;
+        out(c, choice[(exp(g,xv),SD(cred(skS(OrgaCheckAge),MS(userB),movieTheater),OrgaCheckAge,MS(userB),f1(exp(g,xv)),movieTheater)),
+	              (exp(g,xv),SD(cred(skS(OrgaCheckAge),MS(NEWu_126),movieTheater),OrgaCheckAge,MS(NEWu_126),f1(exp(g,xv)),movieTheater))]);
+        in(c, x_127: bitstring);
+        let ((xhc: bitstring,xsc: bitstring)) = x_127 in
+        let (=accept) = verifySD(xsc) in
+        let ((=empty,=f1((exp(g,xv),xhc)),=empty)) = getPublicSD(xsc) in
+        out(c, senc((c1,OK),f2(exp(xhc,xv))));
+        in(c, y_128: bitstring);
+        new n: bitstring;
+        let ((xhc: bitstring,xsc: bitstring)) = x_127 in
+        let (=accept) = verifySD(xsc) in
+        let ((=empty,=f1((exp(g,xv),xhc)),=empty)) = getPublicSD(xsc) in
+        let ((=c2,=OK)) = sdec(y_128,f2(exp(xhc,xv))) in
+        out(c, senc((n,requestIsOver18),f2(exp(xhc,xv))))
+(*        in(c, z_129: bitstring);
+        out(c, OK) *)
+      )|(
+        in(c, x_124: bitstring);
+        new xc: bitstring;
+        new NEWu: bitstring;
+        let ((xhv: bitstring,xsv: bitstring)) = x_124 in
+        let (=accept) = verifySD(xsv) in
+        let ((=OrgaCheckAge,=f1(xhv),=movieTheater)) = getPublicSD(xsv) in
+        out(c, choice[(exp(g,xc),SD(cred(skS(OrgaAge),MS(userA),isOver18),empty,MS(userA),f1((xhv,exp(g,xc))),empty)),
+                      (exp(g,xc),SD(cred(skS(OrgaAge),MS(NEWu),isOver18),empty,MS(NEWu),f1((xhv,exp(g,xc))),empty))]);
+        in(c, y_125: bitstring);
+        let ((xhv: bitstring,xsv: bitstring)) = x_124 in
+        let (=accept) = verifySD(xsv) in
+        let ((=OrgaCheckAge,=f1(xhv),=movieTheater)) = getPublicSD(xsv) in
+        let ((=c1,=OK)) = sdec(y_125,f2(exp(xhv,xc))) in
+        out(c, senc((c2,OK),f2(exp(xhv,xc))));
+        in(c, z: bitstring);
+        new NEWn: bitstring;
+        let ((xhv: bitstring,xsv: bitstring)) = x_124 in
+        let (=accept) = verifySD(xsv) in
+        let ((=OrgaCheckAge,=f1(xhv),=movieTheater)) = getPublicSD(xsv) in
+        let ((=c1,=OK)) = sdec(y_125,f2(exp(xhv,xc))) in
+        let ((xn: bitstring,=requestIsOver18)) = sdec(z,f2(exp(xhv,xc))) in
+        out(c, choice[senc((isOver18,SD(cred(skS(OrgaAge),MS(userA),isOver18),OrgaAge,MS(userA),f3((xn,exp(xhv,xc))),isOver18)),f2(exp(xhv,xc))),
+                      senc((isOver18,SD(cred(skS(OrgaAge),MS(NEWu),isOver18),OrgaAge,MS(NEWu),f3((NEWn,exp(xhv,xc))),isOver18)),f2(exp(xhv,xc)))])
+      ))
+)
+.
+process SYSTEM
