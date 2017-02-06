@@ -43,7 +43,6 @@ channel c.
 
 fun MS(bitstring):bitstring [private].  (* Master secret of a user *)
 fun sk(bitstring):bitstring [private].  (* Secret key of an organization O *)
-fun pd(bitstring,bitstring):bitstring.          (* pseudonym of a user for a specific random *)
 fun commit(bitstring,bitstring):bitstring.      (* commitments (public but no projection) *)
 fun skS(bitstring):bitstring.           (* Secret key of signature of credentials *)
 fun cred(bitstring,bitstring,bitstring):bitstring.      (* credential (public, projection3) *)
@@ -59,11 +58,8 @@ fun c1():bitstring.
 fun c2():bitstring.
 fun g():bitstring.
 
-fun hash(bitstring):bitstring.
-fun aenc(bitstring,bitstring):bitstring.
-fun pk(bitstring):bitstring.
 fun senc(bitstring,bitstring):bitstring.
-fun exp (bitstring,bitstring) :bitstring.
+fun exp(bitstring,bitstring) :bitstring.
 
 (* Organizations *)
 fun OrgaAge():bitstring.           (* new organization: can issue age info *)
@@ -78,16 +74,9 @@ fun f3(bitstring):bitstring.
 (* Diffie-Hellman exponentiation *)
 equation forall x :bitstring, y :bitstring;
   exp(exp(g,x),y) = exp(exp(g,y),x).
-(* (a)symmetric encryption *)
-reduc forall m:bitstring, k:bitstring;
-      adec(aenc(m, pk(k)), k) = m.
+(* symmetric encryption *)
 reduc forall m:bitstring, k:bitstring;
       sdec(senc(m, k), k) = m.
-(* Credentials *)
-reduc forall Attr:bitstring, R:bitstring, xU:bitstring, skSO:bitstring;
-	makeCred(Attr,commit(R,xU), skSO) = cred(skSO, xU,Attr).
-reduc forall skSO:bitstring, xU:bitstring, Attr:bitstring;
-	getAttr(cred(skSO,xU,Attr)) = Attr.
 (* SD: Selective Disclosure *)
 fun verifySD(bitstring):bitstring
 reduc forall O:bitstring, U:bitstring, Attr:bitstring, R:bitstring;
@@ -120,7 +109,8 @@ let verifier(u:bitstring, Overifier:bitstring, Oprover:bitstring, credV:bitstrin
     in(c, y:bitstring);
     new n:bitstring;
     let (=c2, =OK) = sdec(y, f2( exp(xhc,xv))) in
-    out(c, senc((n,requestIsOver18), f2(exp(xhc,xv))));
+    out(c, choice[senc((n,requestIsOver18), f2(exp(xhc,xv))),
+                  hole]);
     in(c, z:bitstring);
     let (=isOver18, xsv:bitstring) = sdec(z,f2( exp(xhc,xv))) in
     let (=accept) = verifySD(xsv) in
@@ -140,12 +130,13 @@ let prover(u:bitstring, Overifier:bitstring, Oprover:bitstring, credP:bitstring)
 (* TODO: in the baove idealization: hole was 'xhv' but thats a let variable. Check if FO holds with that idealization. *)
     in(c, y:bitstring);
     let (=c1, =OK) = sdec(y, f2(exp(xhv,xc))) in
-    out(c, senc((c2,OK), f2(exp(xhv,xc))));
+    out(c, choice[senc((c2,OK), f2(exp(xhv,xc))),
+                  hole]);
     in(c, z:bitstring);
     new NEWn:bitstring;
     let (xn:bitstring, =requestIsOver18) = sdec(z,f2(exp(xhv,xc))) in
     out(c, choice[senc((isOver18, SD(credP, Oprover, MS(u), f3((xn, exp(xhv,xc))), isOver18)),f2(exp(xhv,xc))),
-                  senc((isOver18, SD(cred(skS(OrgaAge),MS(NEWu),isOver18), Oprover, MS(NEWu), f3((NEWn, xc)), isOver18)),f2(xc))
+                  hole
 		  ]).
 
 let SYSTEM =
