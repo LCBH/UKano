@@ -79,7 +79,7 @@ TODO:
 | DAA simplified [HBD17]| 0.02s |0.01s| :x: | 0.01s  | 0.00s   | --    |
 | DAA sign       | 2.94s  | 0.01s | :x:    | :x:     | 2.76s   | --    |
 | DAA join       | 4.68s  | 1.82s | 2.30s  | 2.30s   | 28.85s  | --    |
-| abcdh (irma)   | todo   | todo | :x: | :x: |  2389.76s* |  2389.76s |
+| abcdh (irma)   | 8479.76| 9060 | :x: | :x: |  2389.76s* |  2389.76s |
 
 (*) indicates that we had to slightly modify the produced file (roughly by simplifying nested conditionals while preserving their semantics).
 
@@ -87,7 +87,8 @@ TODO:
 
 ### Benchmarks with ProVerif v1.96
 
-The following table is not up to date concerning heuristics greedy/default/syntax.
+The following table is not up to date concerning heuristics greedy/default/syntax. Please only refers to WA column
+and consider FO columns as 'user-defined' column.
 
 | Protocol    | Better time (total) | Time for WA | Time for FO (greedy) | Time for FO (default) | Time for FO (syntax)  | Time for FO (user-defined) |
 |:------------|:-------------:|:-------------------:|:-------------------:|:---------------------:|:--------------------:|:---------------------------|
