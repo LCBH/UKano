@@ -31,11 +31,10 @@ equation forall x : bitstring, y : bitstring,
                 a : bitstring, b : bitstring;
   exp(exp(gen(a,b),x),y) = exp(exp(gen(a,b),y),x).
 
-
-fun enc (bitstring, bitstring) : bitstring.
-fun dec (bitstring, bitstring) : bitstring.
-equation forall x : bitstring, y : bitstring;
-  dec(enc(x,y),y) = x.	       
+ (* Encryption (that may fail) *)
+fun enc(bitstring, bitstring) : bitstring.
+  reduc forall xm:bitstring, xk:bitstring;
+        dec(enc(xm, xk), xk) = xm.
 
  (* Mac (of pairs) *)
 fun mac(bitstring, bitstring) : bitstring.
