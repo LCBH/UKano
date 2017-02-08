@@ -67,9 +67,9 @@ They can be used as a starting point to write your own protocols.
 
 A complete manual of the tool can be found at https://github.com/LCBH/UKano/wiki. It notably
 describes the expected format for input files of UKano.
+You can find a comprehensive list of case studies and benchmarks described in the corresponding
+section of the manual: https://github.com/LCBH/UKano/wiki#our-case-studies.
 
-You can find a comprehensive list of case studies and benchmarks at
-https://github.com/LCBH/UKano/blob/master/examples/README.md.
 
 Finally, the underlying theory behind UKano are described in [HBD16] and [H17].
 
