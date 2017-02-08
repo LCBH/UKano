@@ -2,7 +2,7 @@
 We have tested UKano on several real-world case studies.
 This folder contains all ProVerif models for which unlinkability
 and anonymity can be automaticaly established using UKano.
-They all have a dedicatd folder in [`./examples/`](./examples).
+They all have a dedicatd folder in [`./examples/`](.).
 
 
 We list them all in the [next section](#list-of-case-studies) and provide
@@ -18,7 +18,7 @@ Note that UKano considers them as a single compacted conditional. We also show h
 UKano detects some attacks on variations of protocols that do not satisfy our conditions
 (corresponding files end with `-attack.pi`).
 
-Finally, the folder [`./examples/tamarin/`](./examples/tamarin/) contains
+Finally, the folder [`./examples/tamarin/`](./tamarin/) contains
 some Tamarin models mentioned in [H17]; they are obviously not valid
 UKano files.
 
