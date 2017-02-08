@@ -127,7 +127,7 @@ let _ =
       "--ideal-no-check",  Arg.Unit (fun () -> Param.ideaAssumed := true),
       "\tassume the idealisation is conform (requires manual checks)";
       "--ideal-automatic",  Arg.Unit (fun () -> Param.ideaAutomatic  := true),
-      "\tdo not take given diealisations into account, generate them automatically instead";
+      "\tdo not take given idealisations into account, generate them automatically instead";
       "--ideal-greedy",  Arg.Unit (fun () -> Param.ideaGreedy  := true),
       "\tmodifies the idealisation heuristic: put fresh names for all non-tuple sub-terms";
       "--ideal-full-syntax",  Arg.Unit (fun () -> Param.ideaFullSyntax  := true),

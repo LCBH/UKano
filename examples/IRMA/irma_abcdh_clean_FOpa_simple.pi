@@ -4,7 +4,6 @@
             terminates sooner...                                            ********)
 (* Scenario of ABCDH protocol as [2] using idemix primitives as specified in [1]
  * MINIMAL VERSION ABCDH
- * ULTIMATE GOAL: strong UK of ABCDH 
  * Lucca Hirschi
  * 29/03/2016
  * Status: Done & Works
