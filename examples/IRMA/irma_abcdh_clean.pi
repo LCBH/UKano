@@ -1,6 +1,5 @@
 (* Scenario of ABCDH protocol as [2] using idemix primitives as specified in [1]
  * MINIMAL VERSION ABCDH
- * ULTIMATE GOAL: strong UK of ABCDH 
  * Lucca Hirschi
  * 29/03/2016
  * Status: Done & Works
@@ -127,7 +126,6 @@ let prover(u:bitstring, Overifier:bitstring, Oprover:bitstring, credP:bitstring)
     out(c, choice[(exp(g, xc), SD(credP, empty, MS(u), f1((xhv, exp(g, xc))), empty)),
       	          (xc, SD(cred(skS(OrgaAge),MS(NEWu),isOver18), empty, MS(NEWu), f1((hole,xc)), empty))
                  ]);
-(* TODO: in the baove idealization: hole was 'xhv' but thats a let variable. Check if FO holds with that idealization. *)
     in(c, y:bitstring);
     let (=c1, =OK) = sdec(y, f2(exp(xhv,xc))) in
     out(c, choice[senc((c2,OK), f2(exp(xhv,xc))),
