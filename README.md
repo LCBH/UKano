@@ -58,7 +58,7 @@ in order to conclude whether both conditions have been established. In such
 a case, the tool concludes that the input protocol ensures unlinkability and
 anonymity.
 
-The folder [`./examples/`](./examples) contain some ProVerif files in the expected
+The folder [`./examples/`](./examples) contains some ProVerif files in the expected
 format (e.g., [`./examples/Feldhofer/feldhofer.pi`](./examples/Feldhofer/feldhofer.pi)). 
 They can be used as a starting point to write your own protocols.
 
