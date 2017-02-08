@@ -1,17 +1,17 @@
 # Our Case Studies
 We have tested UKano on several real-world case studies.
 This folder contains all ProVerif models for which unlinkability
-and anonymity can be automaticaly established using UKano.
+and anonymity can be automatically established using UKano.
 They all have a dedicatd folder in [`./examples/`](.).
 
 
 We list them all in the [next section](#list-of-case-studies) and provide
 benchmarks in section [Benchmarks](#benchmarks).
 
-Finally, note that for some protocols, you need to use specific idealisations
+Finally, note that for some protocols, you need to use specific idealisation
 heuristics as explained in the [dedicated section of the wiki](https://github.com/LCBH/UKano/wiki#idealisations-heuristics).
 We also list in section [Benchmarks](#benchmarks) the different results
-(conclusion and time needed to conclude) one obtain depending on the chosen heuristic.
+(conclusion and time needed to conclude) one obtains depending on the chosen heuristic.
 
 Remark that, in some files, we may use multiple conditionals in a row to ease the readability.
 Note that UKano considers them as a single compacted conditional. We also show how

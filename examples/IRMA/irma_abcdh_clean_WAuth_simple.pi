@@ -144,12 +144,13 @@ query k1:bitstring, k2:bitstring, n1:bitstring, n2:bitstring,
    (event(Itest_3(k1,n1,m1,m2,m3,m4,m5,m6))  ==>
    (event(Iin_3(k1,n1,m1,m2,m3,m4,m5,m6))  ==>
    (event(Rout_3(k2,n2,m1,m2,m3,m4,m5,m6))  ==>
-   (event(Rin_3(k2,n2,m1,m2,m3,m4,m5)) ==>
-   (event(Iout_3(k1,n1,m1,m2,m3,m4,m5))))))).
+   (event(Rin_3(k2,n2,m1,m2,m3,m4,m5)))))).
+
 (* The rest of the query (see below, is redundant with the query starting with Rtest_3
    Indeed, if Rin_3 and I_out3 are fired with those names then we're sure we can glue
    events given by the query Rtest_3 with this one.
 
+   (event(Iout_3(k1,n1,m1,m2,m3,m4,m5)) ==>
    (event(Iin_2(k1,n1,m1,m2,m3,m4))  ==>
    (event(Rout_2(k2,n2,m1,m2,m3,m4)) ==>
    (event(Rin_2(k2,n2,m1,m2,m3))  ==>
@@ -159,6 +160,7 @@ query k1:bitstring, k2:bitstring, n1:bitstring, n2:bitstring,
    (event(Rin_1(k2,n2,m1))  ==>
    (event(Iout_1(k1,n1,m1))))))))))))))).
 *)
+
 query k1:bitstring, k2:bitstring, n1:bitstring, n2:bitstring,
       m1:bitstring;
    (event(Rtest_1(k2,n2,m1))  ==>
