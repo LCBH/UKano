@@ -1,0 +1,156 @@
+theory UK
+begin
+section{* FELD *}
+
+/*
+ * Protocol: Toy example illustrating concurrent versus sequential sessions
+ * Modeler:  Lucca Hirschi
+ * Date:     April 2016
+ * Source:   [H17] Lucca Hirschi. PhD Thesis.
+ * Property: Unlinkability of Tag & Reader as defined in [Myrto et. al. CSF'10]
+ *           Should be linkable if sessions of tag or reader are in parallel and
+ *           unlinkable otherwise. Frame Opacity can be checked with over-approx parallel in ProVerif or Tamarin
+ *           but Well-Authentication is not true with the over-approx. In Tamarin, we can prove well-authentication
+ *           without this over-approximation and considering only sessions in sequence thanks to an axiom
+ *           that forbids parallel execution.
+ * Status:   The two lemmas corresponding to the WA condition for the two unsafe tests can be proved automatically
+ *           in less than 30 seconds.
+*/
+	 
+/* Description of the protocol in Alice & Bob notations:
+ *
+ * 1. T --> R : ni
+ * 2. R --> T : enc(<ni,random>,k),nr
+ * 3. T --> R : enc(<nr,random>,k)
+ *
+ * In steps 2 et 3, agents should check that expected nonces are present
+ * ins inputs.
+*/
+ 
+
+builtins: symmetric-encryption
+
+
+/****************/
+/* Whole system */
+/****************/
+rule new_identity: // new identity k
+ [ Fr(~k) ] --[]-> [ !RepSess(~k) ]
+
+rule new_session: // new session s and creation of session names
+ [ !RepSess(~k), Fr(~s), Fr(~nI), Fr(~nR) ] --[ NewSess(~k,~s) ]-> [ Tag(~k, ~s, ~nI), Reader(~k, ~s, ~nR) ]
+
+
+
+/*******************/
+/* TAG (ePassport) */
+/*******************/
+rule Tout_1:
+ [ Tag(~k, ~s, ~nI) ] --[ PlayT(~k,~s), OutT1(~k,~s,~nI) ]-> [Out(~nI), Tag1(~k, ~s, ~nI)]
+
+rule Tin_1:
+ [ Tag1(~k, ~s, ~nI), In(x1)] --[ PlayT(~k,~s), InT1(~k,~s,x1) ]-> [Tag2(~k, ~s, ~nI, x1)]
+
+rule Ttest_then:
+let mIn = <senc(<~nI, xR>,~k), xnR> in
+[ Tag2(~k, ~s, ~nI, mIn)] --[ PlayT(~k,~s), TestT1(~k,~s) ]-> [Tag3(~k, ~s, ~nI, mIn)]
+
+rule Tout_2:
+let mIn = <senc(<~nI, xR>,~k), xnR>
+    mOut = senc(<xnR,~R>, ~k) in
+ [ Tag3(~k, ~s, ~nI, mIn), Fr(~R) ] --[ PlayT(~k,~s), OutT2(~k,~s, mOut) ]-> [Out(mOut)]
+
+
+/**********/
+/* Reader */
+/**********/
+rule Rin_1:
+ [ Reader(~k, ~s, ~nR), In(y1)] --[ PlayR(~k,~s), InR1(~k,~s,y1) ]-> [Reader1(~k, ~s, ~nR, y1)]
+
+rule Rout_1:
+let mOut = <senc(<y1,~R>,~k), ~nR> in
+[ Reader1(~k, ~s, ~nR, y1), Fr(~R)] --[ PlayR(~k,~s), OutR1(~k,~s,mOut) ]-> [Out(mOut), Reader2(~k, ~s, ~nR, y1)]
+
+rule Rin_2:
+ [ Reader2(~k, ~s, ~nR, y1), In(y2)] --[ PlayR(~k,~s), InR2(~k,~s,y2) ]-> [Reader3(~k, ~s, ~nR, y1, y2)]
+
+rule Rtest_then:
+let mIn = senc(<~nR, xR>,~k) in
+[ Reader3(~k, ~s, ~nR, y1, mIn)] --[ PlayR(~k,~s), TestR1(~k,~s) ]-> []
+
+
+/**********/
+/* Axioms */
+/**********/
+//// AX1
+axiom seq_sessionR: // for having sessions in sequence only
+	"not (Ex k s1 s2 #i1 #i2 #i3.
+	        PlayR(k,s1) @ i1 & 
+                PlayR(k,s2) @ i2 &
+                PlayR(k,s1) @ i3 &
+                i1 < i2 &
+                i2 < i3 &
+                not(s1=s2)
+              )"
+axiom seq_sessionT: // for having sessions in sequence only
+	"not (Ex k s1 s2 #i1 #i2 #i3.
+	        PlayT(k,s1) @ i1 & 
+                 PlayT(k,s2) @ i2 &
+                 PlayT(k,s1) @ i3 &
+                 i1 < i2 &
+                 i2 < i3
+               )"
+
+
+/**********/
+/* Lemmas */
+/**********/
+lemma secrecyTag1 :
+"	not( Ex k s #t1 #t2. ((NewSess(k, s)@t1 & K(k)@t2)))"
+
+lemma tagComplete: //for sanity
+	exists-trace 
+	"Ex #t k s m. OutT2(k,s,m)@t"
+
+lemma readerComplete: //for sanity
+	exists-trace 
+	"Ex #t k s. TestR1(k,s)@t"
+
+/* WA */
+lemma WA_Tag1 [reuse, use_induction, typing] :
+"
+   All k s1 #t1.
+     TestT1(k,s1)@t1 ==>
+        ( Ex s2 m4 m3 m2 m1 #t2 #t3 #t4 #t5.
+          (
+            InT1(k,s1,m2)@t2 &
+            OutR1(k,s2,m3)@t3 &
+            InR1(k,s2,m1)@t4 &
+            OutT1(k,s1,m4)@t5 &
+            m2=m3 & m1=m4
+        )
+       )
+"
+   // not the same messages because Tamarin is not happy cause the "malleability" of <>
+   // but finally OK by adding /\ mi = mj
+
+// LEMMA1
+lemma WA_Reader1 [reuse, use_induction, typing] :
+"
+   All k s2 #t1.
+     TestR1(k,s2)@t1 ==>
+        ( Ex s1 m2 m3 m4 m5 m6 m7
+	 #t2 #t3 #t4 #t5 #t6 #t7
+         .(
+            InR2(k,s2,m2)@t2 &
+            OutT2(k,s1,m3)@t3 & 
+            InT1(k,s1,m4)@t4 &
+            OutR1(k,s2,m5)@t5 &
+            InR1(k,s2,m6)@t6  &
+            OutT1(k,s1,m7)@t7 &
+            m2=m3 & m4=m5 & m6=m7
+        )
+       )
+"
+
+end
