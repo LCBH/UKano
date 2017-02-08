@@ -8,8 +8,8 @@ They all have a dedicatd folder in [`./examples/`](./examples).
 We list them all in the [next section](#list-of-case-studies) and provide
 benchmarks in section [Benchmarks](#benchmarks).
 
-Finally, note that for some protocols, you need to use specific idealizations
-heuristics as explained in the [dedicated section of the wiki](https://github.com/LCBH/UKano/wiki#idealizations-heuristics).
+Finally, note that for some protocols, you need to use specific idealisations
+heuristics as explained in the [dedicated section of the wiki](https://github.com/LCBH/UKano/wiki#idealisations-heuristics).
 We also list in section [Benchmarks](#benchmarks) the different results
 (conclusion and time needed to conclude) one obtain depending on the chosen heuristic.
 
@@ -45,7 +45,7 @@ Legend:
 
 ## Benchmarks
 All benchmarks are performed using UKano v0.2 (with ProVerif v1.92 as backend)
-without user-defined idealizations (except for some cases indicated with (*)).
+without user-defined idealisations (except for some cases indicated with (*)).
 For most cases, the verification is thus truly fully automatic.
 
 Here are the specs of the machine we used:
@@ -56,13 +56,13 @@ We performed those benchmarks on this machine:
 	    
 Legend: time in seconds when verification was successful, :x: when condition
 could not be established, :curly_loop: when the verification took too much time (>20 hours) or too
-much memory (>20GO of RAM), and, -- when it was not necessary to build idealizations manually
+much memory (>20GO of RAM), and, -- when it was not necessary to build idealisations manually
 (i.e., user defined). The different columns for FO (i.e., frame opacity) refers to the different
-heuristics of UKano to build idealization:
+heuristics of UKano to build idealisation:
 - "greedy" corresponds to the option `--ideal-greedy`
 - "default" corresponds to the default heuristics of UKano
 - "syntax" corresponds to the option `--ideal-full-syntax`
-- "user-defined" when a user defined idealization is necessary
+- "user-defined" when a user defined idealisation is necessary
 
 
 | Protocol    | Better time (total) | Time for WA | Time for FO (greedy) | Time for FO (default) | Time for FO (syntax)  | Time for FO (user-defined) |
@@ -82,10 +82,11 @@ heuristics of UKano to build idealization:
 
 
 We also report on the table below the time needed to find an attack (on well-authentication):
+
 | Protocol    | Time to find an attack in WA |
 |:------------|:----------------------------:|
 | PACE (faillible dec)                 | 31.81s  |
-| PACE (as in [BFK-09](#references))   | 61.43s  |
+x| PACE (as in [BFK-09](#references))   | 61.43s  |
 | PACE                                 | 83.72s  |
 
 
