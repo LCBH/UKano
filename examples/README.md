@@ -1,8 +1,8 @@
 # Our Case Studies
 We have tested UKano on several real-world case studies.
 This folder contains all ProVerif models for which unlinkability
-and anonymity can be automaticaly established orusing UKano.
-It also contains protocols wit hattacks.
+and anonymity can be automaticaly established using UKano.
+It also contains protocols with attacks.
 They all have a dedicatd folder in [`./examples/`](./examples).
 
 We list them all in the [next section](#list-of-case-studies) and provide
@@ -11,7 +11,7 @@ benchmarks in section [Benchmarks](#benchmarks).
 Finally, note that for some protocols, you need to use specific idealizations
 heuristics as explained in the [dedicated section of the wiki](https://github.com/LCBH/UKano/wiki#idealizations-heuristics).
 We also list in section [Benchmarks](#benchmarks) the different results
-(conclusion and time needed to conclude) one obtain depending on the chosen heuristics.
+(conclusion and time needed to conclude) one obtain depending on the chosen heuristic.
 
 Remark that, in some files, we may use multiple conditionals in a row to ease the readability.
 Note that UKano considers them as a single compacted conditional. We also show how
@@ -33,6 +33,7 @@ Legend:
 | Fixed LAK | :white_check_mark: | :white_check_mark: | :white_check_mark: |
 | BAC       | :white_check_mark: | :white_check_mark: | :white_check_mark: |
 | BAC+ PA+ AA | :white_check_mark: | :white_check_mark: | :white_check_mark: |
+| BAC+ AA+ PA | :white_check_mark: | :white_check_mark: | :white_check_mark: |
 | PACE (faillible dec) |  -- | :x: | :fire: |
 | PACE (as in~[BFK-09](#references))     |  -- | :x: | :fire: |
 | PACE | -- | :x: | :fire: |
@@ -43,8 +44,9 @@ Legend:
 
 
 ## Benchmarks
-All benchmarks are performed using UKano v0.2 without user-defined idealizations.
-The verification is thus truly fully automatic.
+All benchmarks are performed using UKano v0.2 (with ProVerif v1.92 as backend)
+without user-defined idealizations (except for some cases indicated with (*)).
+For most cases, the verification is thus truly fully automatic.
 
 Here are the specs of the machine we used:
 We performed those benchmarks on this machine:
@@ -53,19 +55,14 @@ We performed those benchmarks on this machine:
 - RAM: 47GO
 	    
 Legend: time in seconds when verification was successful, :x: when condition
-could not be established, :curly_loop: when the verification took too much time (>18 hours) or too
+could not be established, :curly_loop: when the verification took too much time (>20 hours) or too
 much memory (>20GO of RAM), and, -- when it was not necessary to build idealizations manually
 (i.e., user defined). The different columns for FO (i.e., frame opacity) refers to the different
 heuristics of UKano to build idealization:
-- "greedy" corresponds to the option `--idea-greedy`
+- "greedy" corresponds to the option `--ideal-greedy`
 - "default" corresponds to the default heuristics of UKano
-- "syntax" corresponds to the option `--idea-full-syntax`
+- "syntax" corresponds to the option `--ideal-full-syntax`
 - "user-defined" when a user defined idealization is necessary
-
-### Benchmarks with ProVerif v1.92
-
-TODO:
-- make IRMA WA work !
 
 
 | Protocol    | Better time (total) | Time for WA | Time for FO (greedy) | Time for FO (default) | Time for FO (syntax)  | Time for FO (user-defined) |
@@ -84,28 +81,23 @@ TODO:
 (*) indicates that we had to slightly modify the produced file (roughly by simplifying nested conditionals while preserving their semantics).
 
 
-
-### Benchmarks with ProVerif v1.96
-
-The following table is not up to date concerning heuristics greedy/default/syntax. Please only refers to WA column
-and consider FO columns as 'user-defined' column.
-
-| Protocol    | Better time (total) | Time for WA | Time for FO (greedy) | Time for FO (default) | Time for FO (syntax)  | Time for FO (user-defined) |
-|:------------|:-------------:|:-------------------:|:-------------------:|:---------------------:|:--------------------:|:---------------------------|
-| Hash-Lock      | 0.03s  | 0.01s | 0.02s  | 0.02s   | 0.02s   | --    |
-| Fixed LAK      | 0.03s  | 0.01s | 0.02s  | 0.02s   | 0.02s   | --    |
-| BAC            | 70.65s | 0.09s | 66.56s | 128.03s | 132.24s | --    |
-| BAC+AA+PA      |1290.46s| 2.11s |1288.46s| 6111.04s| 6017.32s| --    |
-| BAC+PA+AA      | 70.65s | 1.86s |1151.84s| 7134.94s| 6956.75s| --    |
-| PACE with tags | :curly_loop:   |488.11s| :x:    | :x:     | :curly_loop: | --    |
-| DAA simplified [HBD17]| 0.12s |0.02s|0.10s| 0.10s  | 0.10s   | --    |
-| DAA sign       | 89.24s | 0.08s | :x:    | :x:     | 89.16s  | --    |
-| DAA join       | 21.84s | 0.01s | 21.83s | 22.25s  | 60.07s  | --    |
-| abcdh (irma)   | :curly_loop: | 62524.78s|:curly_loop:| :curly_loop: | :curly_loop:  | :curly_loop: |
+We also report on the table below the time needed to find an attack (on well-authentication):
+| Protocol    | Time to find an attack in WA |
+|:------------|:----------------------------:|
+| PACE (faillible dec)                 | 31.81s  |
+| PACE (as in [BFK-09](#references))   | 61.43s  |
+| PACE                                 | 83.72s  |
 
 
 ## References
-[HBD17]: L. Hirschi, D. Baelde and S. Delaune.
-     A Method for Verifying Privacy-Type Properties : The Unbounded Case.
-     Journal version under submission.
-     A copy will soon be available at http://projects.lsv.ens-cachan.fr/ukano/.
+
+[H17]: L. Hirschi.
+       PhD Thesis.
+       Automated Verification of Privacy in Security Protocols:
+       Back and Forth Between Theory & Practice.
+       A copy will soon be distributed at http://projects.lsv.ens-cachan.fr/ukano/.
+
+[BFK-09]: J. Bender, M. Fischlin, and D. Kügler.
+          Security analysis of the pace key-agreement protocol.
+          In Information Security, pages 33–48. Springer, 2009.
+	  
