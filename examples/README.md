@@ -2,8 +2,8 @@
 We have tested UKano on several real-world case studies.
 This folder contains all ProVerif models for which unlinkability
 and anonymity can be automaticaly established using UKano.
-It also contains protocols with attacks.
 They all have a dedicatd folder in [`./examples/`](./examples).
+
 
 We list them all in the [next section](#list-of-case-studies) and provide
 benchmarks in section [Benchmarks](#benchmarks).
@@ -15,8 +15,12 @@ We also list in section [Benchmarks](#benchmarks) the different results
 
 Remark that, in some files, we may use multiple conditionals in a row to ease the readability.
 Note that UKano considers them as a single compacted conditional. We also show how
-UKano detects some attacks (for files whose name contains 'attack').
+UKano detects some attacks on variations of protocols that do not satisfy our conditions
+(corresponding files end with `-attack.pi`).
 
+Finally, the folder [`./examples/tamarin/`](./examples/tamarin/) contains
+some Tamarin models mentioned in [H17]; they are obviously not valid
+UKano files.
 
 ## List of Case Studies
 See the table below. References to the protocols can be found at [HBD17].
@@ -58,11 +62,11 @@ Legend: time in seconds when verification was successful, :x: when condition
 could not be established, :curly_loop: when the verification took too much time (>20 hours) or too
 much memory (>20GO of RAM), and, -- when it was not necessary to build idealisations manually
 (i.e., user defined). The different columns for FO (i.e., frame opacity) refers to the different
-heuristics of UKano to build idealisation:
+heuristics implemented in  UKano to build idealisations:
 - "greedy" corresponds to the option `--ideal-greedy`
-- "default" corresponds to the default heuristics of UKano
+- "default" corresponds to the default heuristic of UKano
 - "syntax" corresponds to the option `--ideal-full-syntax`
-- "user-defined" when a user defined idealisation is necessary
+- "user-defined" when a user-defined idealisation is necessary
 
 
 | Protocol    | Better time (total) | Time for WA | Time for FO (greedy) | Time for FO (default) | Time for FO (syntax)  | Time for FO (user-defined) |
@@ -78,7 +82,7 @@ heuristics of UKano to build idealisation:
 | DAA join       | 4.68s  | 1.82s | 2.30s  | 2.30s   | 28.85s  | --    |
 | abcdh (irma)   | 8479.76| 9060 | :x: | :x: |  2389.76s* |  2389.76s |
 
-(*) indicates that we had to slightly modify the produced file (roughly by simplifying nested conditionals while preserving their semantics).
+(*) indicates that we had to slightly modify the produced file.
 
 
 We also report on the table below the time needed to find an attack (on well-authentication):
@@ -86,19 +90,19 @@ We also report on the table below the time needed to find an attack (on well-aut
 | Protocol    | Time to find an attack in WA |
 |:------------|:----------------------------:|
 | PACE (faillible dec)                 | 31.81s  |
-x| PACE (as in [BFK-09](#references))   | 61.43s  |
+| PACE (as in [BFK-09](#references))   | 61.43s  |
 | PACE                                 | 83.72s  |
 
 
 ## References
 
 [H17]: L. Hirschi.
-       PhD Thesis.
-       Automated Verification of Privacy in Security Protocols:
-       Back and Forth Between Theory & Practice.
-       A copy will soon be distributed at http://projects.lsv.ens-cachan.fr/ukano/.
+    PhD Thesis.
+    Automated Verification of Privacy in Security Protocols:
+    Back and Forth Between Theory & Practice.
+    A copy will soon be distributed at http://projects.lsv.ens-cachan.fr/ukano/.
 
 [BFK-09]: J. Bender, M. Fischlin, and D. Kügler.
-          Security analysis of the pace key-agreement protocol.
-          In Information Security, pages 33–48. Springer, 2009.
+    Security analysis of the pace key-agreement protocol.
+    In Information Security, pages 33–48. Springer, 2009.
 	  
