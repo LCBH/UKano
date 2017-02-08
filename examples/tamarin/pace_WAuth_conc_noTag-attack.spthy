@@ -9,11 +9,11 @@ section{* PACE *}
  * Date:     Janurary 2016
  * Source:   ICAO Spec: http://www.icao.int/publications/pages/publication.aspx?docnum=9303
  * Property: Unlinkability: this file contains sanity checks and the Well-Authentication for the
- *           first unsafe test of the Tag's role. It does not hold (concurent sessions)
+ *           first unsafe test of the Tag's role. It does not hold.
  *
  * Status:   - modelization of prototocol: done
  *           - sanity check: done
- *           - proof of Unlinkability using our method: ====> attack is found <=====
+ *           - WA on the first unsafe test of Tag's role does not hold
 */
 	 
 builtins: symmetric-encryption, diffie-hellman
