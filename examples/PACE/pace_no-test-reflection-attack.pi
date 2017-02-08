@@ -90,7 +90,8 @@ let R (k:bitstring) =
     in(cr, y3:bitstring);
     (* newKey = exp(gen(g^s,g^(a1.b1)),a2.b2) *)
 
-    if y3<>exp(newG, a2) then  (* CRITICAL TO AVOID REFLECTION ATTACK *)
+(* without the critial test to avoid reflection attacks *)
+(* (if y3<>exp(newG, a2) then *)
 
     let newKey:bitstring = exp(y3,a2) in
 (* R ----[mac((tagReader,exp(gen(g^s,g^(a1.b1)),b2)),newKey)]---> T *)  

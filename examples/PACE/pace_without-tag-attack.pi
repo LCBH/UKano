@@ -13,8 +13,6 @@ free error_mac : bitstring.
 free init : bitstring.
 free read : bitstring.
 free ok : bitstring.
-free tagPass : bitstring.
-free tagReader : bitstring.
 free secret : bitstring [private].
 const g : bitstring [data].
 
@@ -45,9 +43,7 @@ fun mac(bitstring, bitstring) : bitstring.
 (* PROTOCOLS *)
 (*************)
 
-(* When modelling the protocol, we add a constant inside the tag in order not to confuse authentication tokens
-   sent by the reader and those sent by the tag. Without this precaution there is an attack on authentication,
-   which consists in having two readers communicating with each other. *)
+(* Without the tag -> leads to an attack for concurrent sessiosn. *)
    
 (* PACE Protocol *)
 let T (k:bitstring) =
@@ -65,14 +61,14 @@ let T (k:bitstring) =
     let newG = gen(exp(g,s),exp(x1,b1)) in
 (* T ----[exp(gen(g^s,g^(a1.b1)),b2)]---> R *)  
     out(ct, exp(newG,b2));
-(* T <---[mac((tagReader,exp(gen(g^s,g^(a1.b1)),b2)),newKey)]--- R *)  
+(* T <---[mac((exp(gen(g^s,g^(a1.b1)),b2)),newKey)]--- R *)  
     in(ct, x3:bitstring);
     (* newKey = exp(gen(g^s,g^(a1.b1)),a2.b2) *)
     let newKey:bitstring = exp(x2,b2) in
-    if mac((tagReader,exp(newG,b2)), newKey) = x3
+    if mac((exp(newG,b2)), newKey) = x3
     then 
-(* T ----[mac((tagPass,exp(gen(g^s,g^(a1.b1)),a2)),newKey)]---> R *)  
-    out(cr, mac((tagPass,x2),newKey)).
+(* T ----[mac((exp(gen(g^s,g^(a1.b1)),a2)),newKey)]---> R *)  
+    out(cr, mac(x2,newKey)).
    
 let R (k:bitstring) =
     new a1:bitstring;
@@ -93,11 +89,11 @@ let R (k:bitstring) =
     if y3<>exp(newG, a2) then  (* CRITICAL TO AVOID REFLECTION ATTACK *)
 
     let newKey:bitstring = exp(y3,a2) in
-(* R ----[mac((tagReader,exp(gen(g^s,g^(a1.b1)),b2)),newKey)]---> T *)  
-    out(cr, mac((tagReader,y3),newKey));
-(* R <---[mac((tagPass,exp(gen(g^s,g^(a1.b1)),a2)),newKey)]--- T *)  
+(* R ----[mac((exp(gen(g^s,g^(a1.b1)),b2)),newKey)]---> T *)  
+    out(cr, mac(y3,newKey));
+(* R <---[mac(exp(gen(g^s,g^(a1.b1)),a2)),newKey)]--- T *)  
     in(cr, y4:bitstring);
-    if mac((tagPass,exp(newG,a2)), newKey) = y4
+    if mac(exp(newG,a2), newKey) = y4
     then 
 (* R ----[ok]---> T *)  
     out(cr, ok).
