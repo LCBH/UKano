@@ -1,11 +1,12 @@
 # UKano: UnlinKability and ANOnymity verifier
 > - Landing page: http://projects.lsv.ens-cachan.fr/ukano
-> - Wiki: https://github.com/LCBH/UKano/wiki
+> - Manual: https://github.com/LCBH/UKano/wiki
 
 *UKano* is a modified version of the [ProVerif](http://proverif.inria.fr)
 tool including automatic verification of anonymity and unlinkability of 2-agents protocols.
 See [UKAno webpage](http://projects.lsv.ens-cachan.fr/ukano/) for more details about the tools
-and references [HBD16](#references),[H17](#references) given below for the underlying theory.
+and references [HBD16](#references) & [H17](#references) given below for more details on
+the underlying theory.
 
 <img align="center" src="http://projects.lsv.ens-cachan.fr/ukano/pictures/International_justice_and_privacy.jpg" width="100" />
 
@@ -52,8 +53,8 @@ directory. Each file encodes one of our two sufficient conditions.
 The one encoding FO is suffixed with `_FOpa.pi`. The second suffixed
 with `_WAuth.pi` can be used to check WA. The latter contains a query
 per conditional.
-UKano then launches `proverif` on those two models and parse the results
-in order to conclue whether both conditions have been established. In such
+UKano then launches `proverif` on those two files and parse the results
+in order to conclude whether both conditions have been established. In such
 a case, the tool concludes that the input protocol ensures unlinkability and
 anonymity.
 
@@ -75,7 +76,7 @@ Finally, the underlying theory behind UKano are described in [HBD16] and [H17].
 
 [HBD16]: L. Hirschi, D. Baelde and S. Delaune.
          A Method for Verifying Privacy-Type Properties : The Unbounded Case.
-         In IEEE Symposium on Security and Privacy (Oakland), 2016. To appear.
+         In IEEE Symposium on Security and Privacy (Oakland), 2016.
          A copy can be found at http://projects.lsv.ens-cachan.fr/ukano/.
 
 [H17]: L. Hirschi.
