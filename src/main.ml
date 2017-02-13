@@ -106,7 +106,8 @@ let anal_file s =
 	let prefix =
 	  if List.length splitDot = 1
 	  then List.hd splitDot
-	  else  String.concat "." (List.rev (List.tl (List.rev splitDot))) in
+	  else (if s.[0] == '.' then "." else "")^
+		 (String.concat "." (List.rev (List.tl (List.rev splitDot)))) in
 	let prefixRel = if false && prefix.[0] = '/' then "."^prefix else prefix in
 	(prefixRel^"_FOpa.pi", prefixRel^"_WAuth.pi")
     with _ -> ("OUTPUT_FOpa.pi","OUTPUT_WAuth.pi") in
