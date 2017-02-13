@@ -748,7 +748,7 @@ let transFO proto p inNameFile nameOutFile =
        (* 	  log "will be itself.\n"; *)
        (* 	  term; end else*)
        begin
-	 log "WARNING: no idealization was given for an output and UKano's heuristics failed to guess one. For the sake of soundness, we let the idealization of : ";
+	 log "WARNING: no idealisation was given for an output and UKano's heuristics failed to guess one. For the sake of soundness, we let the idealisation of : ";
 	 Printf.printf "     ";
 	 Display.Text.display_term term;
 	 Printf.printf "   ";
@@ -848,7 +848,7 @@ let transFO proto p inNameFile nameOutFile =
 	 | FunApp (funSymb, tm1 :: tm2 :: tl) when (not(!Param.ideaAutomatic) && isChoice funSymb) ->
 	    if !ideaAssumed || checkIdeal inHonest listVarIn tm2
 	    then begin ideaChecked := true; (tm1, tm2); end (* user already built idealization and no option 'ideaAutomatic' *)
-	    else begin pp "[ERROR] The following idealization you built is not conform: ";
+	    else begin pp "[ERROR] The following idealisation you built is not conform: ";
 		       Display.Text.display_term tm2;
 		       pp ".\n";
 		       exit(2);
@@ -879,8 +879,8 @@ let transFO proto p inNameFile nameOutFile =
 
   if !verbose && !ideaChecked
   then (if !ideaAssumed
-	then log "Remember that we do not check that idealizations are conform (option '--idea-no-check'). You should check this yourself by inspecting the produced file."
-	else log "All idealizations (including the ones you gave as input) have been checked (i.e., only constants, session nammes, holes, variables bind by inputs and functions not in E) and at least one hole or a session name in each idealized output (except in else branches and last honest output).");
+	then log "Remember that we do not check that idealisations are conform (option '--idea-no-check'). You should check this yourself by inspecting the produced file."
+	else log "All idealisations (including the ones you gave as input) have been checked (i.e., only constants, session names, holes, variables bind by inputs and functions not in E) and at least one hole or a session name in each idealised output (except in else branches and last honest output).");
 
   if !verbose && !Param.ideaFullSyntax
   then (let isShared = List.length proto.idNamesShared > 0 in
@@ -973,7 +973,7 @@ let transFO proto p inNameFile nameOutFile =
   pp "\n(********   This file has been automatically generated using the tool UKano. It encodes the frame opacity condition. ********)\n\n";
   pp theoryStr;
   pp " *)\n";
-  pp "\n\n(* == PROTOCOL WITH IDEALIZATION == *)\n";
+  pp "\n\n(* == PROTOCOL WITH IDEALISATION == *)\n";
   pp "let SYSTEM =\n";
   let toDisplay = pushNames condFOProto in
   displayProtocolProcess toDisplay;
@@ -1004,8 +1004,8 @@ let transBoth  p inNameFile nameOutFileFO nameOutFileWA =
 		 res = proto1.res } in  
   if !verbose
   then begin
-      pp (Printf.sprintf "2-Party protocol extracted from yout input model %s:\n"
-			 (if !Param.has_choice then "(choice[ul,ur]'\nspecifies that 'ul' is the real output and 'ur' is the idealization)" else ""));
+      pp (Printf.sprintf "2-Party protocol extracted from your input model %s:\n"
+			 (if !Param.has_choice then "(choice[ul,ur]'\nspecifies that 'ul' is the real output and 'ur' is the idealisation)" else ""));
       displayProtocol proto1;
       if false			(* debug *)
       then pp (Printf.sprintf "Is Initiator the role that outputs the last message in the honest execution? --> %b\n" !isLastOutputByIni );

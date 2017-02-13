@@ -39,7 +39,7 @@ let pathProverif = ref "./proverif"
 let log s = Display.Text.print_string s;Display.Text.newline()
 
 (* Helping message *)
-let helpMess = 			(* TODO *)
+let helpMess = 
   ("Only typed ProVerif files are accepted (the option '-in pitype' is enabled by default). See the folder './examples/' for examples\n"^
    "of files in the correct format. They can be used to bootsrap your own file. For more details, see the README file at the root of\n"^
    "the project or the manual of UKano at https://github.com/LCBH/UKano/wiki.\n")
@@ -71,7 +71,7 @@ let first_file = ref true
 let anal_file s =
   if (s = "help" || s="") then begin Printf.printf "Error, you should enter a filename.\n%s\n" (Conditions.helpMess); exit(0); end;
   if not (!first_file) then
-    Parsing_helper.user_error "Error: You can analyze a single ProVerif file for each run of UKano.\nPlease rerun UKano with your second file.\n";
+    Parsing_helper.user_error "Error: You can analyze a single ProVerif file for each run of UKano.\nPlease re-run UKano with your second file.\n";
   first_file := false;
 
   let p0, second_p0 = Pitsyntax.parse_file s in

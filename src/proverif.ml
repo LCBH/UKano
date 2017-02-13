@@ -29,7 +29,7 @@ let okQuery = "true"
 let noQuery = "proved"
 
 let parseQueryAnswer s =
-  let err _ = ppError "ProVerif was not found or ProVerif crashed. Please puruse manually (launch ProVerif on generated files)." in
+  let err _ = ppError "ProVerif was not found or ProVerif crashed. Please pursue manually (launch ProVerif on generated files)." in
   let regexpIs = Str.regexp_string "is" in
   let last = String.length s in
   let cannotBeforeProved _ =
@@ -57,7 +57,7 @@ let parseQueryAnswer s =
   with Not_found -> cannotBeforeProved ()	(* no 'is' mayve cannot proved? *)
 
 let extractEvent s =
-  let err _ = ppError "ProVerif was not found or ProVerif crashed. Please puruse manually (launch ProVerif on generated files)." in
+  let err _ = ppError "ProVerif was not found or ProVerif crashed. Please pursue manually (launch ProVerif on generated files)." in
   try 
     let firstTest = (Str.search_forward
 		       (Str.regexp_string "test_")
@@ -117,7 +117,7 @@ let verifyBoth pathProverif sFO sWA namesIdAno =
       if verbose then pp (sprintf "We now launch Proverif (path: '%s') on '%s' to verify Frame Opacity ..." pathProverif sFO);
       let outputFO = launchProverif pathProverif sFO in
       if List.length outputFO = 0
-      then ppError "ProVerif was not found or ProVerif crashed. Please puruse manually (launch ProVerif on generated files)."
+      then ppError "ProVerif was not found or ProVerif crashed. Please pursue manually (launch ProVerif on generated files)."
       else begin
 	  if verbose then pp "[...]";
 	  let regexpResult = Str.regexp_string result in
@@ -189,10 +189,10 @@ let verifyBoth pathProverif sFO sWA namesIdAno =
 	end
       else pp (Display.result
 		 ("[RESULT: NO] Frame Opacity or Well-Authentication could not be established.\n"^
-		    "This does not necessarily implies that the input protocol violates unlinkability or anonymity.\n"^
+		    "This does not necessarily imply that the input protocol violates unlinkability or anonymity.\n"^
                       "\t1. Indeed, it may be the case that ProVerif could not established the conditions\n"^
 			"\t (due to over-approximations) while they actually hold --- in that case, please refer to the\n"^
-			  "\t ProVerif's manual. Or try another idealization option (list them with './ukano --help').\n"^
+			  "\t ProVerif's manual. Or try another idealisation option (list them with './ukano --help').\n"^
 			    "\t2. Or the conditions do not hold. In that case, UKano cannot currently conclude on your protocol.\n"^
 			      "\t If you think that is the case, please send your input protocol at lucca.hirschi@lsv.ens-cachan.fr so\n"^
 				"\t that we can investigate further and improve UKano."));
