@@ -1,0 +1,109 @@
+(**********)
+(* THEORY *)
+(**********)
+
+type nonce.
+(* public communication channel *)
+free c : channel.
+free ct : channel.
+free cr : channel.
+
+(* constant values *)
+free error_mac : bitstring.
+free init : bitstring.
+free read : bitstring.
+free ok : bitstring.
+free tagPass : bitstring.
+free tagReader : bitstring.
+free secret : bitstring [private].
+const g : bitstring [data].
+
+
+(* Generation of a new paramater *)
+fun gen(bitstring,bitstring) : bitstring.
+
+(* Diffie-Hellman exponentiation: partial axiomatization
+   as defined in the ProVerif 1.92's manual (p. 33) *)
+fun exp (bitstring, bitstring) : bitstring.
+equation forall x : bitstring, y : bitstring;
+  exp(exp(g,x),y) = exp(exp(g,y),x).
+equation forall x : bitstring, y : bitstring,
+                a : bitstring, b : bitstring;
+  exp(exp(gen(a,b),x),y) = exp(exp(gen(a,b),y),x).
+
+ (* Encryption (that may fail) *)
+fun enc(bitstring, bitstring) : bitstring.
+  reduc forall xm:bitstring, xk:bitstring;
+        dec(enc(xm, xk), xk) = xm.
+
+ (* Mac (of pairs) *)
+fun mac(bitstring, bitstring) : bitstring.
+
+			       
+(*************)
+(* PROTOCOLS *)
+(*************)
+
+(* When modelling the protocol, we add a constant inside the tag in order not to confuse authentication tokens
+   sent by the reader and those sent by the tag. Without this precaution there is an attack on authentication,
+   which consists in having two readers communicating with each other. *)
+   
+(* PACE Protocol *)
+let T (k:bitstring) =
+    new s:bitstring;
+    new b1:bitstring;
+    new b2:bitstring;
+(* T ----[{s}_k]---> R *)
+    out(ct,enc(s,k));
+(* T <---[exp(g,a1)]--- R *)
+    in(ct, x1:bitstring);
+(* T ----[exp(g,b1)]---> R *)
+    out(ct, exp(g,b1));
+(* T <---[exp(gen(g^s,g^(a1.b1)),a2)]--- R *)  
+    in(ct, x2:bitstring);
+    let newG = gen(exp(g,s),exp(x1,b1)) in
+(* T ----[exp(gen(g^s,g^(a1.b1)),b2)]---> R *)  
+    out(ct, exp(newG,b2));
+(* T <---[mac((tagReader,exp(gen(g^s,g^(a1.b1)),b2)),newKey)]--- R *)  
+    in(ct, x3:bitstring);
+    (* newKey = exp(gen(g^s,g^(a1.b1)),a2.b2) *)
+    let newKey:bitstring = exp(x2,b2) in
+    if mac((tagReader,exp(newG,b2)), newKey) = x3
+    then 
+(* T ----[mac((tagPass,exp(gen(g^s,g^(a1.b1)),a2)),newKey)]---> R *)  
+    out(cr, mac((tagPass,x2),newKey)).
+   
+let R (k:bitstring) =
+    new a1:bitstring;
+    new a2:bitstring;
+(* R <---[enc(s,k)]--- T *)
+    in(cr, y1:bitstring);
+(* R ----[exp(g,a1)]---> T *)
+    out(cr, exp(g,a1));
+(* R <---[exp(g,b1)]--- T *)
+    in(cr, y2:bitstring);
+    let newG = gen(exp(g,dec(y1,k)),exp(y2,a1)) in
+(* R ----[exp(gen(g^s,g^(a1.b1)),a2)]---> T *)  
+    out(cr, exp(newG,a2));
+(* R <---[exp(gen(g^s,g^(a1.b1)),b2)]--- T *)  
+    in(cr, y3:bitstring);
+    (* newKey = exp(gen(g^s,g^(a1.b1)),a2.b2) *)
+
+    if y3<>exp(newG, a2) then  (* CRITICAL TO AVOID REFLECTION ATTACK *)
+
+    let newKey:bitstring = exp(y3,a2) in
+(* R ----[mac((tagReader,exp(gen(g^s,g^(a1.b1)),b2)),newKey)]---> T *)  
+    out(cr, mac((tagReader,y3),newKey));
+(* R <---[mac((tagPass,exp(gen(g^s,g^(a1.b1)),a2)),newKey)]--- T *)  
+    in(cr, y4:bitstring);
+    if mac((tagPass,exp(newG,a2)), newKey) = y4
+    then 
+(* R ----[ok]---> T *)  
+    out(cr, ok).
+
+(* WHOLE SYSTEM *)
+let PACE =
+  ! new k:bitstring;
+    ! (T(k) | R(k)).
+
+process PACE

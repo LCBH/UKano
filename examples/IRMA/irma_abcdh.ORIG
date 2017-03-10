@@ -1,6 +1,5 @@
 (* Scenario of ABCDH protocol as [2] using idemix primitives as specified in [1]
  * MINIMAL VERSION ABCDH
- * ULTIMATE GOAL: strong UK of ABCDH 
  * Lucca Hirschi
  * 29/03/2016
  * Status: Done & Works
@@ -43,7 +42,6 @@ channel c.
 
 fun MS(b):b [private].  (* Master secret of a user *)
 fun sk(b):b [private].  (* Secret key of an organization O *)
-fun pd(b,b):b.          (* pseudonym of a user for a specific random *)
 fun commit(b,b):b.      (* commitments (public but no projection) *)
 fun skS(b):b.           (* Secret key of signature of credentials *)
 fun cred(b,b,b):b.      (* credential (public, projection3) *)
@@ -59,11 +57,8 @@ fun c1():b.
 fun c2():b.
 fun g():b.
 
-fun hash(b):b.
-fun aenc(b,b):b.
-fun pk(b):b.
 fun senc(b,b):b.
-fun exp (b,b) :b.
+fun exp(b,b) :b.
 
 (* Organizations *)
 fun OrgaAge():b.           (* new organization: can issue age info *)
@@ -78,16 +73,9 @@ fun f3(b):b.
 (* Diffie-Hellman exponentiation *)
 equation forall x :b, y :b;
   exp(exp(g,x),y) = exp(exp(g,y),x).
-(* (a)symmetric encryption *)
-reduc forall m:b, k:b;
-      adec(aenc(m, pk(k)), k) = m.
+(* symmetric encryption *)
 reduc forall m:b, k:b;
       sdec(senc(m, k), k) = m.
-(* Credentials *)
-reduc forall Attr:b, R:b, xU:b, skSO:b;
-	makeCred(Attr,commit(R,xU), skSO) = cred(skSO, xU,Attr).
-reduc forall skSO:b, xU:b, Attr:b;
-	getAttr(cred(skSO,xU,Attr)) = Attr.
 (* SD: Selective Disclosure *)
 fun verifySD(b):b
 reduc forall O:b, U:b, Attr:b, R:b;
@@ -120,7 +108,8 @@ let verifier(u:b, Overifier:b, Oprover:b, credV:b) =
     in(c, y:b);
     new n:b;
     let (=c2, =OK) = sdec(y, f2( exp(xhc,xv))) in
-    out(c, senc((n,requestIsOver18), f2(exp(xhc,xv))));
+    out(c, choice[senc((n,requestIsOver18), f2(exp(xhc,xv))),
+                  hole]);
     in(c, z:b);
     let (=isOver18, xsv:b) = sdec(z,f2( exp(xhc,xv))) in
     let (=accept) = verifySD(xsv) in
@@ -137,15 +126,15 @@ let prover(u:b, Overifier:b, Oprover:b, credP:b) =
     out(c, choice[(exp(g, xc), SD(credP, empty, MS(u), f1((xhv, exp(g, xc))), empty)),
       	          (xc, SD(cred(skS(OrgaAge),MS(NEWu),isOver18), empty, MS(NEWu), f1((hole,xc)), empty))
                  ]);
-(* TODO: in the baove idealization: hole was 'xhv' but thats a let variable. Check if FO holds with that idealization. *)
     in(c, y:b);
     let (=c1, =OK) = sdec(y, f2(exp(xhv,xc))) in
-    out(c, senc((c2,OK), f2(exp(xhv,xc))));
+    out(c, choice[senc((c2,OK), f2(exp(xhv,xc))),
+                  hole]);
     in(c, z:b);
     new NEWn:b;
     let (xn:b, =requestIsOver18) = sdec(z,f2(exp(xhv,xc))) in
     out(c, choice[senc((isOver18, SD(credP, Oprover, MS(u), f3((xn, exp(xhv,xc))), isOver18)),f2(exp(xhv,xc))),
-                  senc((isOver18, SD(cred(skS(OrgaAge),MS(NEWu),isOver18), Oprover, MS(NEWu), f3((NEWn, xc)), isOver18)),f2(xc))
+                  hole
 		  ]).
 
 let SYSTEM =

@@ -45,11 +45,9 @@ fun mac(bitstring, bitstring) : bitstring.
 (* PROTOCOLS *)
 (*************)
 
-(* When modeling the protocol, we add a constant inside the tag in order not to confuse authentication tokens
+(* When modelling the protocol, we add a constant inside the tag in order not to confuse authentication tokens
    sent by the reader and those sent by the tag. Without this precaution there is an attack on authentication,
-   which consists in having two readers communicating with each other.
-   We discovered this problem after submitting the paper and would of course reflect this issue in the final
-   version of the paper. *)
+   which consists in having two readers communicating with each other. *)
    
 (* PACE Protocol *)
 let T (k:bitstring) =

@@ -39,10 +39,10 @@ let pathProverif = ref "./proverif"
 let log s = Display.Text.print_string s;Display.Text.newline()
 
 (* Helping message *)
-let helpMess = 			(* TODO *)
+let helpMess = 
   ("Only typed ProVerif files are accepted (the option '-in pitype' is enabled by default). See the folder './examples/' for examples\n"^
-     "of files in the correct format. They can be used to bootsrap your own file. For more details, see the README file at the root of\n"^
-       "the project.\n")
+   "of files in the correct format. They can be used to bootsrap your own file. For more details, see the README file at the root of\n"^
+   "the project or the manual of UKano at https://github.com/LCBH/UKano/wiki.\n")
 let welcomeMess =
   "UKano v0.2 : Cryptographic privacy verifier, by Lucca Hirschi. Based on Proverif v1.91, by Bruno Blanchet and Vincent Cheval."
     
@@ -71,7 +71,7 @@ let first_file = ref true
 let anal_file s =
   if (s = "help" || s="") then begin Printf.printf "Error, you should enter a filename.\n%s\n" (Conditions.helpMess); exit(0); end;
   if not (!first_file) then
-    Parsing_helper.user_error "Error: You can analyze a single ProVerif file for each run of UKano.\nPlease rerun UKano with your second file.\n";
+    Parsing_helper.user_error "Error: You can analyze a single ProVerif file for each run of UKano.\nPlease re-run UKano with your second file.\n";
   first_file := false;
 
   let p0, second_p0 = Pitsyntax.parse_file s in
@@ -106,7 +106,8 @@ let anal_file s =
 	let prefix =
 	  if List.length splitDot = 1
 	  then List.hd splitDot
-	  else  String.concat "." (List.rev (List.tl (List.rev splitDot))) in
+	  else (if s.[0] == '.' then "." else "")^
+		 (String.concat "." (List.rev (List.tl (List.rev splitDot)))) in
 	let prefixRel = if false && prefix.[0] = '/' then "."^prefix else prefix in
 	(prefixRel^"_FOpa.pi", prefixRel^"_WAuth.pi")
     with _ -> ("OUTPUT_FOpa.pi","OUTPUT_WAuth.pi") in
@@ -124,14 +125,14 @@ let _ =
     [
       "--proverif",  Arg.String (fun path -> pathProverif := path),
       "\t\tpath of the ProVerif executable to use (optional, default: './proverif')";
-      "--idea-no-check",  Arg.Unit (fun () -> Param.ideaAssumed := true),
-      "\tassume the idealization is conform (requires manual checks)";
-      "--idea-automatic",  Arg.Unit (fun () -> Param.ideaAutomatic  := true),
-      "\tdo not takes given diealizations into account, generate them automatically instead";
-      "--idea-greedy",  Arg.Unit (fun () -> Param.ideaGreedy  := true),
-      "\tmodifies the idealization heuristics: put fresh names for all non-tuple sub-terms";
-      "--idea-full-syntax",  Arg.Unit (fun () -> Param.ideaFullSyntax  := true),
-      "\tmodifies the idealization heuristics: go through all functions (including ones in equations) and replace identity names and let variables by holes. Conformity checks are modified accordingly (no requirement on function symbols).";
+      "--ideal-no-check",  Arg.Unit (fun () -> Param.ideaAssumed := true),
+      "\tassume the idealisation is conform (requires manual checks)";
+      "--ideal-automatic",  Arg.Unit (fun () -> Param.ideaAutomatic  := true),
+      "\tdo not take given idealisations into account, generate them automatically instead";
+      "--ideal-greedy",  Arg.Unit (fun () -> Param.ideaGreedy  := true),
+      "\tmodifies the idealisation heuristic: put fresh names for all non-tuple sub-terms";
+      "--ideal-full-syntax",  Arg.Unit (fun () -> Param.ideaFullSyntax  := true),
+      "\tmodifies the idealisation heuristic: go through all functions (including ones in equations) and replace identity names and let variables by holes. Conformity checks are modified accordingly.";
       "--only-fo",  Arg.Unit (fun () -> Param.onlyFO := true),
       "\t\tverifies the frame opacity condition only";
       "--only-wa",  Arg.Unit (fun () -> Param.onlyWA := true),
@@ -143,7 +144,7 @@ let _ =
       "--log-proverif",  Arg.Unit (fun () -> Param.logAll := true),
       "\tlog in stdout all ProVerif outputs";
       "-gc", Arg.Set gc, 
-      "\t\t\tdisplay gc statistics (optional)"
+      "\t\t\tdisplay gc statistics"
     ]
     anal_file welcomeMess;
   if !gc then Gc.print_stat stdout
