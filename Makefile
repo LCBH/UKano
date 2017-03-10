@@ -17,8 +17,8 @@ ukano-short:
 	cp $(UKANO_S)/ukano .
 proverif:
 	@echo "#### Building ProVerif v1.92 ...."
-	$(MAKE) all -C $(PROVERIF)
-	cp $(PROVERIF)/proverif .
+	$(MAKE) opt -C $(PROVERIF)
+	cp $(PROVERIF)/proverif.opt proverif
 
 
 #### CLEAN ####
