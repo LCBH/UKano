@@ -83,4 +83,4 @@ Finally, the underlying theory behind UKano are described in [HBD16] and [H17].
 >      PhD Thesis.
 >	   Automated Verification of Privacy in Security Protocols:
 >	   Back and Forth Between Theory & Practice.
->	   A copy will soon be distributed at http://projects.lsv.ens-cachan.fr/ukano/.
+>	   A copy is available at http://www.lsv.fr/~hirschi/defense.php.
