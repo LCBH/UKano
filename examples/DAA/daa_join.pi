@@ -92,29 +92,29 @@ query event(END()).
 
 let join(pkI:bitstring, bsnI:bitstring,KI:bitstring,DAASeed:bitstring,cnt:bitstring,skM:bitstring) =  
     new v':bitstring;
-    let zetaI = hash((zero,bsnI)) in
-    let tsk = hash((hash((DAASeed,hash(KI))),cnt,zero)) in
-    let NI = commit(tsk,zetaI) in
-    let U = clcommit(pkI,v',tsk) in
-
-
-    new NEtsk:bitstring;
-    new NEzeta:bitstring;
-    new NENI:bitstring;
-    new NEU:bitstring;
-    
-    out(c,(NI,U));
-    
+    new DAASeeN:bitstring;
+    out(c, (commit(hash((hash((DAASeed,hash(KI))),cnt,zero)),hash((zero,bsnI))),
+            clcommit(pkI,v',hash((hash((DAASeed,hash(KI))),cnt,zero)))));
     in(c,encNe:bitstring);
-    out(c, hash((U, dec(skM,encNe))));
+    out(c, hash((clcommit(pkI,v',hash((hash((DAASeed,hash(KI))),cnt,zero))), dec(skM,encNe))));
  
     in(c,ni:bitstring);
     new nt:bitstring;
-    out(c, (nt,spk(FJoin,(tsk,v'),(zetaI,pkI,NI,U,(nt,ni)))));
-
+    out(c, 
+            (nt,
+            spk(FJoin,(hash((hash((DAASeed,hash(KI))),cnt,zero)),v'),
+	        (  hash((zero,bsnI)),
+	           pkI,
+	           commit(hash((hash((DAASeed,hash(KI))),cnt,zero)),hash((zero,bsnI))),
+	           clcommit(pkI,v',hash((hash((DAASeed,hash(KI))),cnt,zero))
+	        ),
+	        (nt,ni)
+                ))
+           ));
+	   
     in(c,sig:bitstring);
     let cre = clopen(pkI,v',sig) in 
-    if checkclsign(pkI,tsk,cre) = accept then 
+    if checkclsign(pkI,hash((hash((DAASeed,hash(KI))),cnt,zero)),cre) = accept then 
 
     out(c, ok).
     
@@ -138,8 +138,8 @@ let Issuer(skI:bitstring, pkM:bitstring) =
     let (xnt:bitstring, xspk:bitstring) = z in
     let (xzetaI:bitstring, =pk(skI),=xNi,=xU,(=xnt,=ni)) = getmsgspk(xspk) in
     0.
-(*    let zetaI = hash((zero,bsnI)) in 
-    if checkspk(FJoin, (xzetaI, pk(skI),xNi,xU,(xnt,ni)),
+(*    let hash((zero,bsnI)) = hash((zero,bsnI)) in 
+    if checkspk(FJoin, (xhash((zero,bsnI)), pk(skI),xNi,xU,(xnt,ni)),
 		       xspk) = accept
     then out(c, (pkM,clsign(skI,r1,r2,xU))). *)
 
@@ -147,14 +147,14 @@ let Issuer(skI:bitstring, pkM:bitstring) =
 let SYSTEM = 
 (* Names from JOIN PROTOCOl *)
 ! (* ID *)
- new cnt :bitstring;
  new DAASeed :bitstring;
  new skM :bitstring; (* mess (of cred) *)
 ! (* Session *)
 (* If bsnI (basename) does not change from one session to the other, then FO does not hold and neither does UK *)
-  new bsnI :bitstring; (* basename (of cred) *)
 (
-  join(pk(skI), bsnI, KI, DAASeed, cnt, skM)
+ new cnt :bitstring;
+ new bsnI :bitstring; (* basename (of cred) *)
+ join(pk(skI), bsnI, KI, DAASeed, cnt, skM)
 |
   Issuer(skI, pk(skM))
 ).

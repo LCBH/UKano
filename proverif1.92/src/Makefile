@@ -81,7 +81,7 @@ EXEC = proverif
 #
 # The Caml compilers.
 # You may fix here the path to access the Caml compiler on your machine
-CAMLC = ocamlc
+CAMLC = ocamlopt
 CAMLOPT = ocamlopt
 CAMLDEP = ocamldep
 CAMLLEX = ocamllex
