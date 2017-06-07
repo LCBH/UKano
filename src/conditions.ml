@@ -787,25 +787,28 @@ let transFO proto p inNameFile nameOutFile =
 	 then true		(* we will print a warning message in the only problematic case (=shared case)  *)
 	 else (not(inHonest) || checkOneName t)
     else false in
-  let countNonces = ref 0 in
-  let listNames = ref [] in
+  let suffix = ref "I" in	(* to create injective idealised nonces (\neq for roles) *)
+  let countHoles = ref 0 in	(* to create injective idealised nonces from holes *)
+  let listNameNames = ref [] in	(* assoc list: names of nonces -> 'idealized' name *)
+  let listNewNames = ref [] in	(* created new nonces *)
   (* Create the next new session name to fill in a hole *)
-  let rec notInListName funSymb = function
+  let rec inListName funSymb = function
     | [] -> false
     | x :: tl when x.f_name = funSymb.f_name -> true
-    | x :: tl -> notInListName funSymb tl in
+    | x :: tl -> inListName funSymb tl in
   let createNonce funSymb = 
     let nameName =
       if funSymb.f_name == "hole"
       then begin
-	  incr(countNonces);
-	  Printf.sprintf "hole__%d" !countNonces;
-	end else (if notInListName funSymb !listNames
+	  incr(countHoles);
+	  Printf.sprintf "hole__%d" !countHoles;
+	end else (if not(List.mem_assoc funSymb.f_name !listNameNames)
 		  then begin
-		      incr(countNonces);
-		      Printf.sprintf "%s_%d" funSymb.f_name !countNonces; (* need to avoid clash between two roles e.g., *)
-		    end else funSymb.f_name ) in 
-    let funSymb =
+		      let s = Printf.sprintf "%s_%s" funSymb.f_name !suffix in (* need to avoid clash between two roles e.g., *)
+		      listNameNames := (funSymb.f_name,s) :: !listNameNames;
+		      s
+		    end else List.assoc funSymb.f_name !listNameNames ) in 
+    let newFunSymb =
       {
 	f_name = nameName;
 	f_type = ([],typeBit);
@@ -814,9 +817,9 @@ let transFO proto p inNameFile nameOutFile =
 	f_private = true;
 	f_options = 0
       } in
-    if not(notInListName funSymb !listNames)
-    then listNames := funSymb :: !listNames;
-    FunApp (funSymb, []) in
+    if not(inListName newFunSymb !listNewNames)
+    then listNewNames := newFunSymb :: !listNewNames;
+    FunApp (newFunSymb, []) in
   (* idealized term -> nonce term *)
   let rec noncesTerm = function
     | FunApp (f, tList) when isHole f -> createNonce f
@@ -869,12 +872,14 @@ let transFO proto p inNameFile nameOutFile =
     | Test (t,pt,pe,occ)-> Test(t, noncesProc isIni listVarIn pt, noncesProc ~inElse:true isIni listVarIn pe,occ)
     | p -> errorClass ("Critical error, should never happen [5]."^email) p in
   let newIni = noncesProc true [] proto.ini in
+  suffix := "R";
+  listNameNames := [];
   let newRes = noncesProc false [] proto.res in
   let noncesProto = 
     { proto with
       ini = newIni;
       res = newRes;
-      sessNames = proto.sessNames @ (List.rev !listNames);
+      sessNames = proto.sessNames @ (List.rev !listNewNames);
     } in
 
   if !verbose && !ideaChecked
@@ -955,7 +960,7 @@ let transFO proto p inNameFile nameOutFile =
     | p -> errorClass ("Critical error, should never happen."^email) p in
   let condFOProto = 
     { noncesProto with
-      sessNames = proto.sessNames @ (List.rev !listNames);
+      sessNames = proto.sessNames @ (List.rev !listNewNames);
       ini = cleanTest [] [] noncesProto.ini;
       res = cleanTest [] [] noncesProto.res;
     } in
