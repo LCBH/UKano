@@ -762,9 +762,9 @@ let transFO proto p inNameFile nameOutFile =
     let rec checkSyntax  = function
       | FunApp (f, []) when isConstant f -> true (* public constants *)
       | FunApp (f, []) when isHole f -> true     (* hole *)
-      | FunApp (f, []) when (isName f && List.mem f proto.sessNames)
-	-> true   (* session name *)
-      | FunApp (f, []) when isName f -> false   (* (identity and global) names *)
+      | FunApp (f, []) when (isName f && (List.mem f proto.sessNames || List.mem f proto.comNames))
+	-> true   (* session or global names *)
+      | FunApp (f, []) when isName f -> false   (* identity names *)
       | FunApp (f, tl) ->
 	 (* For debugging purposes: *)
 	 (* List.iter (fun f -> Printf.printf "%s, " (\* Display.Text.display_function_name *\) f) !Pitsyntax.funSymb_equation; *)
@@ -825,7 +825,7 @@ let transFO proto p inNameFile nameOutFile =
     | FunApp (f, tList) when isHole f -> createNonce f
     | FunApp (f, tList) -> FunApp (f, List.map noncesTerm tList)
     | Var b -> Var b
-    | t -> errorClass ("Critical error, should never happen [3]."^email) p in
+  (* | t -> errorClass ("Critical error, should never happen [3]."^email) p *) in
   (* idealized process (some idealized output may miss) -> use heuristics from guessIdeal *)
   let ideaChecked = ref false in	(* whether given idealizations have been checked  *)
   (* [isIni] specifies whether the process is the initiator process or not *)
