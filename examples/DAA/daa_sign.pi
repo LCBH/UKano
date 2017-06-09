@@ -39,6 +39,7 @@ fun getmsgspk(bitstring) :bitstring.
 
 fun bottom() :bitstring.
 fun KI() :bitstring.
+fun skI() :bitstring [private].
 
 (* Signature + blind signtaure *)
 equation forall xsk:bitstring,xprime:bitstring,xrand:bitstring,xmsg:bitstring;
@@ -53,19 +54,24 @@ equation forall x:bitstring,xrand:bitstring,xplain:bitstring;
 equation forall xsk:bitstring,xrand:bitstring,yprime:bitstring,yrand:bitstring,xmsg:bitstring;
   clopen(pk(xsk),xrand,clsign(xsk,yprime,yrand,
 	clcommit(pk(xsk),xrand,xmsg))) = clsign(xsk,yprime,xrand,xmsg).
-(* ZK of join + sign *)
+(* ZK of sign *)
 equation forall xzeta:bitstring,xsk:bitstring,xtsk:bitstring,xw:bitstring,xe:bitstring,xv:bitstring,xrand:bitstring,yprime:bitstring,yrand:bitstring,xmsg:bitstring;
-   checkspk(FSign,(xzeta,pk(xsk),commit(xtsk,xzeta),
-	    clcommit(pk(xsk),xw,clsign(xsk,xe,xv,xtsk)),xmsg),
-    spk(FSign,(xtsk,xw),(xzeta,pk(xsk),commit(xtsk,xzeta),
-		clcommit(pk(xsk),xw,clsign(xsk,xe,xv,xtsk)),xmsg))) = accept.
-equation forall xzeta:bitstring,xsk:bitstring,xtsk:bitstring,xw:bitstring,xe:bitstring,xv:bitstring,xrand:bitstring,yprime:bitstring,yrand:bitstring,xmsg:bitstring;
-    getmsgspk(spk(FSign,(xtsk,xw),(xzeta,pk(xsk),commit(xtsk,xzeta),
-		clcommit(pk(xsk),xw,clsign(xsk,xe,xv,xtsk)),xmsg))) = xmsg.
+   checkspk(FSign,
+            (xzeta,pk(xsk),commit(xtsk,xzeta),
+	        clcommit(pk(xsk),xw,clsign(xsk,xe,xv,xtsk)),xmsg),
+            spk(FSign,(xtsk,xw),(xzeta,pk(xsk),commit(xtsk,xzeta),
+	        clcommit(pk(xsk),xw,clsign(xsk,xe,xv,xtsk)),xmsg)))
+   = accept.
 
-(* Secret key of the issuer and corresponding public key given to the attacker *)
-fun skI(): bitstring [private]. (* Signature key of Issuer *)
-reduc getkI() = pk(skI).
+equation forall privateM:bitstring, publicM:bitstring;
+    getmsgspk(spk(FSign,
+              privateM,
+	      publicM)) = publicM.
+
+(*
+event END().
+query event(END()).
+*)
 
 (****************)
 (* ==PROTOCOL== *)
@@ -76,26 +82,28 @@ let SignerP(cre:bitstring,tsk:bitstring,skI:bitstring)  =
     in(c,nv:bitstring);
     new nt :bitstring;
     new w :bitstring;
-    new zeta :bitstring; (* when basename <> \bot, this is hash((one,bsnV)) *)
-    let creHat:bitstring = clcommit(pk(skI),w,cre) in 
+    new zeta :bitstring; (* when bsnv <> \bot, this is hash((one,bsnv)) *)
+    let crehat:bitstring = clcommit(pk(skI),w,cre) in 
     let NV:bitstring = commit(tsk,zeta) in
 
-    new NEWtsk:bitstring;
-    new NEWcredM:bitstring;
-    new NEWv':bitstring;
-    new NEWne:bitstring;
-    out(c, (zeta,pk(skI),NV,creHat,nt,
-                  spk(FSign,(tsk,w),(zeta,pk(skI),NV,creHat,(nt,nv,msg))))).
+    new newtsk:bitstring;
+    new newcredm:bitstring;
+    new newv':bitstring;
+    new newne:bitstring;
+    out(c, (zeta,pk(skI),NV,crehat,nt,
+            spk(FSign,
+	        (tsk,w),
+		(zeta,pk(skI),NV,crehat,(nt,nv,msg))))).
 
 let VerifierP =
   new nv :bitstring;
   out(c,nv);
   in(c, x:bitstring);
-  let (xz:bitstring, xpkI:bitstring,xNV:bitstring,xcreH:bitstring,xnt:bitstring,xZK:bitstring) = x in
+  let (xz:bitstring, xpki:bitstring,xNV:bitstring,xcreH:bitstring,xnt:bitstring,xZK:bitstring) = x in
 (* Verify ZK bounds nv (of that session) *)
-  let (=xnt, =nv, xmsg:bitstring) = getmsgspk(xZK) in
+  let (=xz,=xpki,=xNV,=xcreH,(=xnt, =nv, xmsg:bitstring)) = getmsgspk(xZK) in
 (* Verify ZK *)
-  if checkspk(FSign, (xz, xpkI, xNV, xcreH), xZK) = accept
+  if checkspk(FSign, (xz, xpki, xNV, xcreH, (xnt,nv,xmsg)), xZK) = accept
   then out(c,accept).
   
 
@@ -104,12 +112,12 @@ let SYSTEM =
 ! (* ID *)
  new cnt :bitstring;
  new DAASeed :bitstring;
- new v' :bitstring;  (* yrand (of cred) *)
- new ne :bitstring;  (* yprime (of cred) *)
+ new r1 :bitstring;  (* yrand (of cred) *)
+ new r2 :bitstring;  (* yprime (of cred) *)
  new credM :bitstring; (* mess (of cred) *)
 ! (* Session *)
 (
-  SignerP(clsign(skI,ne,v',credM), hash((hash((DAASeed,hash(KI))),cnt,zero)),  skI)
+  SignerP(clsign(skI,r1,r2,credM), hash((hash((DAASeed,hash(KI))),cnt,zero)), skI)
 |
   VerifierP
 ).
