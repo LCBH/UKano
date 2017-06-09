@@ -28,7 +28,8 @@ fun one() :bitstring.
 fun FJoin() :bitstring.
 fun FSign() :bitstring.
 fun hash(bitstring) :bitstring.
-fun pk(bitstring) :bitstring.
+fun pk(bitstring) :bitstring.  (* Public key *)
+fun pks(bitstring) :bitstring. (* Signature public key *)
 fun commit(bitstring,bitstring):bitstring.
 fun circ(bitstring,bitstring):bitstring.
 fun clcommit(bitstring,bitstring,bitstring) :bitstring.
@@ -36,12 +37,12 @@ fun spk(bitstring,bitstring,bitstring) :bitstring.
 fun clsign(bitstring,bitstring,bitstring,bitstring):bitstring.
 fun penc(bitstring,bitstring,bitstring) : bitstring.
 fun dec(bitstring,bitstring) : bitstring.
-fun clopen(bitstring,bitstring,bitstring):bitstring.
+(*
 fun clgetnonce(bitstring) :bitstring.
 fun clgetprime(bitstring) :bitstring.
 fun checkclsign(bitstring,bitstring,bitstring) :bitstring.
 fun checkspk(bitstring,bitstring,bitstring) :bitstring.
-fun getmsgspk(bitstring) :bitstring.
+*)
 
 fun bottom() :bitstring.
 fun ok() :bitstring.
@@ -52,23 +53,25 @@ fun hole() :bitstring.
 equation forall k:bitstring, r:bitstring, m:bitstring;
    dec(k,penc(pk(k),r,m)) = m.
 (* Signature + blind signtaure *)
-equation forall xsk:bitstring,xprime:bitstring,xrand:bitstring,xmsg:bitstring;
+reduc forall xsk:bitstring,xprime:bitstring,xrand:bitstring,xmsg:bitstring;
   clgetprime(clsign(xsk,xprime,xrand,xmsg)) = xprime.
-equation forall xsk:bitstring,xprime:bitstring,xrand:bitstring,xmsg:bitstring;
+reduc forall xsk:bitstring,xprime:bitstring,xrand:bitstring,xmsg:bitstring;
   clgetnonce(clsign(xsk,xprime,xrand,xmsg)) = xrand.
-equation forall xsk:bitstring,xprime:bitstring,xrand:bitstring,xmsg:bitstring;
-  checkclsign(pk(xsk),xmsg,clsign(xsk,xprime,xrand,xmsg)) 
+reduc forall xsk:bitstring,xprime:bitstring,xrand:bitstring,xmsg:bitstring;
+  checkclsign(pks(xsk),xmsg,clsign(xsk,xprime,xrand,xmsg)) 
 				= accept.
-equation
+
+fun clopen(bitstring,bitstring,bitstring):bitstring
+reduc
 forall xsk:bitstring,xrand:bitstring,yprime:bitstring,yrand:bitstring,xmsg:bitstring;
-  clopen(pk(xsk),xrand,clsign(xsk,yprime,yrand,
-  	clcommit(pk(xsk),xrand,xmsg))) = clsign(xsk,yprime,xrand,xmsg).
-equation
+  clopen(pks(xsk),xrand,clsign(xsk,yprime,yrand,
+  	clcommit(pks(xsk),xrand,xmsg))) = clsign(xsk,yprime,xrand,xmsg)
+otherwise
 forall x:bitstring,xrand:bitstring,xplain:bitstring;
   clopen(x,xrand,clcommit(x,xrand,xplain)) = xplain.
 
 (* ZK of join *)
-equation forall xzeta:bitstring,xsk:bitstring,xtsk:bitstring,xw:bitstring,xe:bitstring,xv:bitstring,xrand:bitstring,yprime:bitstring,yrand:bitstring,xmsg:bitstring, xpk:bitstring;
+reduc forall xzeta:bitstring,xsk:bitstring,xtsk:bitstring,xw:bitstring,xe:bitstring,xv:bitstring,xrand:bitstring,yprime:bitstring,yrand:bitstring,xmsg:bitstring, xpk:bitstring;
     checkspk(FJoin,
              (xzeta,xpk,commit(xtsk,xzeta),clcommit(xpk,xv,xtsk),xmsg),
              spk(FJoin,
@@ -78,13 +81,6 @@ equation forall xzeta:bitstring,xsk:bitstring,xtsk:bitstring,xw:bitstring,xe:bit
 		 )
 	     )
 	     = accept.
-equation forall privateM:bitstring, publicM:bitstring;
-    getmsgspk(spk(FJoin,
-              privateM,
-	      publicM)) = publicM.
-
-free KI:bitstring [private].  (* Long-term public key of Issuer *)
-free skI:bitstring [private]. (* Signature key of Issuer *)
 
 (*
 event END().
@@ -95,7 +91,7 @@ query event(END()).
 (* ==PROTOCOL== *)
 (****************)
 
-let join(pkI:bitstring, bsnI:bitstring,KI:bitstring,DAASeed:bitstring,cnt:bitstring,skM:bitstring) =  
+let join(pkI:bitstring, bsnI:bitstring,KI:bitstring,DAASeed:bitstring,cnt:bitstring,skM:bitstring) =
     new DAASeeN:bitstring;
     new zetaIN:bitstring;
     new tskN:bitstring;
@@ -113,40 +109,39 @@ let join(pkI:bitstring, bsnI:bitstring,KI:bitstring,DAASeed:bitstring,cnt:bitstr
     in(c,ni:bitstring);
     new nt:bitstring;
     out(c, choice[
-             (nt,spk(FJoin,(hash((hash((DAASeed,hash(KI))),cnt,zero)),v'),(hash((zero,bsnI)),pkI,commit(hash((hash((DAASeed,hash(KI))),cnt,zero)),hash((zero,bsnI))), clcommit(pkI,v',hash((hash((DAASeed,hash(KI))),cnt,zero))),(nt,ni)))),
-             (nt,spk(FJoin,(tskN,v'),(zetaIN,pkI,commit(tskN,zetaIN), clcommit(pkI,v',tskN),(nt,ni))))]);
+             (nt,hash((zero,bsnI)), spk(FJoin,(hash((hash((DAASeed,hash(KI))),cnt,zero)),v'),(hash((zero,bsnI)),pkI,commit(hash((hash((DAASeed,hash(KI))),cnt,zero)),hash((zero,bsnI))), clcommit(pkI,v',hash((hash((DAASeed,hash(KI))),cnt,zero))),(nt,ni)))),
+             (nt,zetaIN,            spk(FJoin,(tskN,v'),(zetaIN,pkI,commit(tskN,zetaIN), clcommit(pkI,v',tskN),(nt,ni))))]);
 
     in(c,sig:bitstring);
     let cre = clopen(pkI,v',sig) in
-    if checkclsign(pkI,hash((hash((DAASeed,hash(KI))),cnt,zero)),cre) = accept then
-
+    let (=accept) = checkclsign(pkI,hash((hash((DAASeed,hash(KI))),cnt,zero)),cre) in
     out(c,ok).
     
 let Issuer(skI:bitstring, pkM:bitstring) =
     in(c,x:bitstring);
+    let (xNi:bitstring, xU:bitstring) = x in
     new n:bitstring;
     new ne:bitstring;
     out(c, choice[penc(pkM, n, ne), hole]);
 
     in(c,yau:bitstring);
+    
     new ni:bitstring;
     out(c,ni);
 
     in(c,z:bitstring);
     new r1:bitstring;
     new r2:bitstring;
-    let (xNi:bitstring, xU:bitstring) = x in
-
+    let (xnt:bitstring, xzetaI:bitstring, xspk:bitstring) = z in
     if yau = hash((xU,ne)) then
 
-    let (xnt:bitstring, xspk:bitstring) = z in
-    let (xzetaI:bitstring, =pk(skI),=xNi,=xU,(=xnt,=ni)) = getmsgspk(xspk) in
-    if checkspk(FJoin, (xzetaI, pk(skI),xNi,xU,(xnt,ni)),
-		       xspk) = accept
-    then out(c, (pkM,clsign(skI,r1,r2,xU))).
+    let (=accept) = checkspk(FJoin, (xzetaI, pks(skI),xNi,xU,(xnt,ni)), xspk) in
+    out(c, (clsign(skI,r1,r2,xU))).
 
     
 let SYSTEM = 
+new KI:bitstring;    (* Long-term public key of Issuer *)
+new skI:bitstring;   (* Signature key of Issuer *)
 (* Names from JOIN PROTOCOl *)
 ! (* ID *)
  new DAASeed :bitstring;
@@ -156,7 +151,7 @@ let SYSTEM =
 (
  new cnt :bitstring;
  new bsnI :bitstring; (* basename (of cred) *)
-  join(pk(skI), bsnI, KI, DAASeed, cnt, skM)
+  join(pks(skI), bsnI, KI, DAASeed, cnt, skM)
 |
   Issuer(skI, pk(skM))
 ).
