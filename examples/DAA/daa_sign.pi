@@ -23,50 +23,37 @@ fun zero() :bitstring.
 fun one() :bitstring.
 fun FJoin() :bitstring.
 fun FSign() :bitstring.
-fun clgetnonce(bitstring) :bitstring.
-fun clgetprime(bitstring) :bitstring.
 fun hash(bitstring) :bitstring.
 fun pk(bitstring) :bitstring.
 fun commit(bitstring,bitstring):bitstring.
 fun circ(bitstring,bitstring):bitstring.
-fun checkclsign(bitstring,bitstring,bitstring) :bitstring.
-fun checkspk(bitstring,bitstring,bitstring) :bitstring.
 fun clcommit(bitstring,bitstring,bitstring) :bitstring.
-fun clopen(bitstring,bitstring,bitstring) :bitstring.
 fun spk(bitstring,bitstring,bitstring) :bitstring.
 fun clsign(bitstring,bitstring,bitstring,bitstring):bitstring.
 fun getmsgspk(bitstring) :bitstring.
 
-fun bottom() :bitstring.
-fun KI() :bitstring.
-fun skI() :bitstring [private].
-
 (* Signature + blind signtaure *)
-equation forall xsk:bitstring,xprime:bitstring,xrand:bitstring,xmsg:bitstring;
+reduc forall xsk:bitstring,xprime:bitstring,xrand:bitstring,xmsg:bitstring;
   clgetprime(clsign(xsk,xprime,xrand,xmsg)) = xprime.
-equation forall xsk:bitstring,xprime:bitstring,xrand:bitstring,xmsg:bitstring;
+reduc forall xsk:bitstring,xprime:bitstring,xrand:bitstring,xmsg:bitstring;
   clgetnonce(clsign(xsk,xprime,xrand,xmsg)) = xrand.
-equation forall xsk:bitstring,xprime:bitstring,xrand:bitstring,xmsg:bitstring;
+reduc forall xsk:bitstring,xprime:bitstring,xrand:bitstring,xmsg:bitstring;
   checkclsign(pk(xsk),xmsg,clsign(xsk,xprime,xrand,xmsg)) 
 				= accept.
-equation forall x:bitstring,xrand:bitstring,xplain:bitstring;
-  clopen(x,xrand,clcommit(x,xrand,xplain)) = xplain.
-equation forall xsk:bitstring,xrand:bitstring,yprime:bitstring,yrand:bitstring,xmsg:bitstring;
+fun clopen(bitstring,bitstring,bitstring) :bitstring
+reduc forall x:bitstring,xrand:bitstring,xplain:bitstring;
+  clopen(x,xrand,clcommit(x,xrand,xplain)) = xplain
+otherwise forall xsk:bitstring,xrand:bitstring,yprime:bitstring,yrand:bitstring,xmsg:bitstring;
   clopen(pk(xsk),xrand,clsign(xsk,yprime,yrand,
 	clcommit(pk(xsk),xrand,xmsg))) = clsign(xsk,yprime,xrand,xmsg).
 (* ZK of sign *)
-equation forall xzeta:bitstring,xsk:bitstring,xtsk:bitstring,xw:bitstring,xe:bitstring,xv:bitstring,xrand:bitstring,yprime:bitstring,yrand:bitstring,xmsg:bitstring;
+reduc forall xzeta:bitstring,xsk:bitstring,xtsk:bitstring,xw:bitstring,xe:bitstring,xv:bitstring,xrand:bitstring,yprime:bitstring,yrand:bitstring,xmsg:bitstring;
    checkspk(FSign,
             (xzeta,pk(xsk),commit(xtsk,xzeta),
 	        clcommit(pk(xsk),xw,clsign(xsk,xe,xv,xtsk)),xmsg),
             spk(FSign,(xtsk,xw),(xzeta,pk(xsk),commit(xtsk,xzeta),
 	        clcommit(pk(xsk),xw,clsign(xsk,xe,xv,xtsk)),xmsg)))
    = accept.
-
-equation forall privateM:bitstring, publicM:bitstring;
-    getmsgspk(spk(FSign,
-              privateM,
-	      publicM)) = publicM.
 
 (*
 event END().
@@ -85,30 +72,25 @@ let SignerP(cre:bitstring,tsk:bitstring,skI:bitstring)  =
     new zeta :bitstring; (* when bsnv <> \bot, this is hash((one,bsnv)) *)
     let crehat:bitstring = clcommit(pk(skI),w,cre) in 
     let NV:bitstring = commit(tsk,zeta) in
-
-    new newtsk:bitstring;
-    new newcredm:bitstring;
-    new newv':bitstring;
-    new newne:bitstring;
-    out(c, (zeta,pk(skI),NV,crehat,nt,
+    out(c, (zeta,pk(skI),NV,crehat,nt,msg,
             spk(FSign,
 	        (tsk,w),
 		(zeta,pk(skI),NV,crehat,(nt,nv,msg))))).
 
-let VerifierP =
+let VerifierP(pkI:bitstring) =
   new nv :bitstring;
   out(c,nv);
   in(c, x:bitstring);
-  let (xz:bitstring, xpki:bitstring,xNV:bitstring,xcreH:bitstring,xnt:bitstring,xZK:bitstring) = x in
-(* Verify ZK bounds nv (of that session) *)
-  let (=xz,=xpki,=xNV,=xcreH,(=xnt, =nv, xmsg:bitstring)) = getmsgspk(xZK) in
+  let (xz:bitstring, =pkI,xNV:bitstring,xcreH:bitstring,xnt:bitstring,xmsg:bitstring,xZK:bitstring) = x in
 (* Verify ZK *)
-  if checkspk(FSign, (xz, xpki, xNV, xcreH, (xnt,nv,xmsg)), xZK) = accept
-  then out(c,accept).
+  let (=accept) = checkspk(FSign, (xz, pkI, xNV, xcreH, (xnt,nv,xmsg)), xZK) in
+  out(c,accept).
   
 
 let SYSTEM = 
 (* Names from JOIN PROTOCOl *)
+new KI:bitstring;    (* Long-term public key of Issuer *)
+new skI:bitstring;   (* Signature key of Issuer *)
 ! (* ID *)
  new cnt :bitstring;
  new DAASeed :bitstring;
@@ -119,7 +101,7 @@ let SYSTEM =
 (
   SignerP(clsign(skI,r1,r2,credM), hash((hash((DAASeed,hash(KI))),cnt,zero)), skI)
 |
-  VerifierP
+  VerifierP(pk(skI))
 ).
 
 process SYSTEM
