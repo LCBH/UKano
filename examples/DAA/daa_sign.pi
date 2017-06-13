@@ -76,10 +76,19 @@ let SignerP(cre:bitstring,tsk:bitstring,skI:bitstring)  =
     new zeta :bitstring; (* when bsnv <> \bot, this is hash((one,bsnv)) *)
     let crehat:bitstring = clcommit(pk(skI),w,cre) in 
     let NV:bitstring = commit(tsk,zeta) in
-    out(c, (zeta,pk(skI),NV,crehat,nt,msg,
+    new tsk_hole:bitstring;
+    new r1:bitstring;
+    new r2:bitstring;    
+    out(c, choice[
+    	   (zeta,pk(skI),NV,crehat,nt,msg,
             spk(FSign,
 	        (tsk,w),
-		(zeta,pk(skI),NV,crehat,(nt,nv,msg))))).
+		(zeta,pk(skI),NV,crehat,(nt,nv,msg)))),
+    	   (zeta,pk(skI),commit(tsk_hole,zeta), clcommit(pk(skI),w,clsign(skI,r1,r2,tsk_hole)),nt,msg,
+            spk(FSign,
+	        (tsk_hole,w),
+		(zeta,pk(skI),commit(tsk_hole,zeta), clcommit(pk(skI),w,clsign(skI,r1,r2,tsk_hole)),(nt,nv,msg))))
+		]).
 
 let VerifierP(pkI:bitstring) =
   new nv :bitstring;
@@ -98,10 +107,10 @@ let SYSTEM =
  new DAASeed :bitstring;
  new r1 :bitstring;  (* yrand (of cred) *)
  new r2 :bitstring;  (* yprime (of cred) *)
- new credM :bitstring; (* mess (of cred) *)
 ! (* Session *)
 (
-  SignerP(clsign(skI,r1,r2,credM), hash((hash((DAASeed,hash(KI))),cnt,zero)), skI)
+  SignerP(clsign(skI,r1,r2,hash((hash((DAASeed,hash(KI))),cnt,zero))), (* signed credential obtained through DAA join *)
+	  hash((hash((DAASeed,hash(KI))),cnt,zero)), skI)            (* message tsk that has been signed *)
 |
   VerifierP(pk(skI))
 ).
