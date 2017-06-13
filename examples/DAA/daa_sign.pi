@@ -57,8 +57,6 @@ reduc forall xzeta:bitstring,xsk:bitstring,xtsk:bitstring,xw:bitstring,xe:bitstr
 
 fun KI():bitstring.    (* Long-term public key of Issuer *)
 fun skI():bitstring [private].   (* Signature key of Issuer *)
-
-reduc getPubKI() = pk(KI).
 reduc getPubskI() = pk(skI).
 
 (*

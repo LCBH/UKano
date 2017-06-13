@@ -28,8 +28,8 @@ fun one() :bitstring.
 fun FJoin() :bitstring.
 fun FSign() :bitstring.
 fun hash(bitstring) :bitstring.
-fun pk(bitstring) :bitstring.  (* Public key *)
-fun pks(bitstring) :bitstring. (* Signature public key *)
+fun apk(bitstring) :bitstring.  (* Asymmetric Public key *)
+fun pk(bitstring) :bitstring.   (* Signature public key *)
 fun commit(bitstring,bitstring):bitstring.
 fun circ(bitstring,bitstring):bitstring.
 fun clcommit(bitstring,bitstring,bitstring) :bitstring.
@@ -51,21 +51,21 @@ fun hole() :bitstring.
 
 (* Assymetric encryption *)
 equation forall k:bitstring, r:bitstring, m:bitstring;
-   dec(k,penc(pk(k),r,m)) = m.
+   dec(k,penc(apk(k),r,m)) = m.
 (* Signature + blind signtaure *)
 reduc forall xsk:bitstring,xprime:bitstring,xrand:bitstring,xmsg:bitstring;
   clgetprime(clsign(xsk,xprime,xrand,xmsg)) = xprime.
 reduc forall xsk:bitstring,xprime:bitstring,xrand:bitstring,xmsg:bitstring;
   clgetnonce(clsign(xsk,xprime,xrand,xmsg)) = xrand.
 reduc forall xsk:bitstring,xprime:bitstring,xrand:bitstring,xmsg:bitstring;
-  checkclsign(pks(xsk),xmsg,clsign(xsk,xprime,xrand,xmsg)) 
+  checkclsign(pk(xsk),xmsg,clsign(xsk,xprime,xrand,xmsg)) 
 				= accept.
 
 fun clopen(bitstring,bitstring,bitstring):bitstring
 reduc
 forall xsk:bitstring,xrand:bitstring,yprime:bitstring,yrand:bitstring,xmsg:bitstring;
-  clopen(pks(xsk),xrand,clsign(xsk,yprime,yrand,
-  	clcommit(pks(xsk),xrand,xmsg))) = clsign(xsk,yprime,xrand,xmsg)
+  clopen(pk(xsk),xrand,clsign(xsk,yprime,yrand,
+  	clcommit(pk(xsk),xrand,xmsg))) = clsign(xsk,yprime,xrand,xmsg)
 otherwise
 forall x:bitstring,xrand:bitstring,xplain:bitstring;
   clopen(x,xrand,clcommit(x,xrand,xplain)) = xplain.
@@ -84,8 +84,6 @@ reduc forall xzeta:bitstring,xsk:bitstring,xtsk:bitstring,xw:bitstring,xe:bitstr
 
 fun KI():bitstring.    (* Long-term public key of Issuer *)
 fun skI():bitstring [private].   (* Signature key of Issuer *)
-
-reduc getPubKI() = pk(KI).
 reduc getPubskI() = pk(skI).
 
 (*
@@ -140,7 +138,7 @@ let Issuer(skI:bitstring, pkM:bitstring) =
     new r2:bitstring;
     let (xnt:bitstring, xzetaI:bitstring, xspk:bitstring) = z in
     if yau = hash((xU,ne)) then
-    let (=accept) = checkspk(FJoin, (xzetaI, pks(skI),xNi,xU,(xnt,ni)), xspk) in
+    let (=accept) = checkspk(FJoin, (xzetaI, pk(skI),xNi,xU,(xnt,ni)), xspk) in
     out(c, (clsign(skI,r1,r2,xU))).
 
     
@@ -154,9 +152,9 @@ let SYSTEM =
 (
  new cnt :bitstring;
  new bsnI :bitstring; (* basename (of cred) *)
-  join(pks(skI), bsnI, KI, DAASeed, cnt, skM)
+  join(pk(skI), bsnI, KI, DAASeed, cnt, skM)
 |
-  Issuer(skI, pk(skM))
+  Issuer(skI, apk(skM))
 ).
 
 process SYSTEM
