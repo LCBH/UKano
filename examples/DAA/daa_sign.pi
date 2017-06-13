@@ -55,6 +55,12 @@ reduc forall xzeta:bitstring,xsk:bitstring,xtsk:bitstring,xw:bitstring,xe:bitstr
 	        clcommit(pk(xsk),xw,clsign(xsk,xe,xv,xtsk)),xmsg)))
    = accept.
 
+fun KI():bitstring.    (* Long-term public key of Issuer *)
+fun skI():bitstring [private].   (* Signature key of Issuer *)
+
+reduc getPubKI() = pk(KI).
+reduc getPubskI() = pk(skI).
+
 (*
 event END().
 query event(END()).
@@ -89,8 +95,6 @@ let VerifierP(pkI:bitstring) =
 
 let SYSTEM = 
 (* Names from JOIN PROTOCOl *)
-new KI:bitstring;    (* Long-term public key of Issuer *)
-new skI:bitstring;   (* Signature key of Issuer *)
 ! (* ID *)
  new cnt :bitstring;
  new DAASeed :bitstring;

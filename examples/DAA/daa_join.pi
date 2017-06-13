@@ -82,6 +82,12 @@ reduc forall xzeta:bitstring,xsk:bitstring,xtsk:bitstring,xw:bitstring,xe:bitstr
 	     )
 	     = accept.
 
+fun KI():bitstring.    (* Long-term public key of Issuer *)
+fun skI():bitstring [private].   (* Signature key of Issuer *)
+
+reduc getPubKI() = pk(KI).
+reduc getPubskI() = pk(skI).
+
 (*
 event END().
 query event(END()).
@@ -134,14 +140,11 @@ let Issuer(skI:bitstring, pkM:bitstring) =
     new r2:bitstring;
     let (xnt:bitstring, xzetaI:bitstring, xspk:bitstring) = z in
     if yau = hash((xU,ne)) then
-
     let (=accept) = checkspk(FJoin, (xzetaI, pks(skI),xNi,xU,(xnt,ni)), xspk) in
     out(c, (clsign(skI,r1,r2,xU))).
 
     
 let SYSTEM = 
-new KI:bitstring;    (* Long-term public key of Issuer *)
-new skI:bitstring;   (* Signature key of Issuer *)
 (* Names from JOIN PROTOCOl *)
 ! (* ID *)
  new DAASeed :bitstring;
