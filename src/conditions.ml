@@ -463,14 +463,19 @@ let transWA proto p inNameFile nameOutFile =
   let (sessTerm,idTerm) = FunApp (sessName, []), FunApp (idName, []) in (* argument of events describing session and identity *)
   let listEvents = ref [] in
   let iniPrefix, resPrefix = "I", "R" in
+  let lastTestEvents = ref [] in
+
   let nameEvent prefixName nb actionName = Printf.sprintf "%s%s_%d" prefixName actionName nb in
   (* add an event on top of a process with args + in addition [idTerm,sessTerm] *)
   let addEvent name args p = 	
     let newArgs = idTerm :: sessTerm :: args in
     let event = makeEvent name newArgs in
-    listEvents := (name, List.length newArgs) :: !listEvents;
+    let nbArgs = List.length newArgs in
+    listEvents := (name, nbArgs) :: !listEvents;
+    if String.sub name 1 4 = "test"
+    then lastTestEvents := (name, nbArgs) :: !lastTestEvents;
     Event (event, p, makeOcc()) in
-
+  
   (* add all events to a role *)
   let addEventsRole proc prefixName isIni =
     let makeArgs listIn listOut =	(* create the list of arguments of events : terms list *)
@@ -589,10 +594,28 @@ let transWA proto p inNameFile nameOutFile =
 	   (repeat ")" (List.length listEvents+1))^"."
   in
 
+  let rec listArgs = function
+    | 0 -> []
+    | n -> (Printf.sprintf "m%d" n) :: (listArgs (n-1)) in
+  let generateSanityQuery = function
+    | [] -> []
+    | (eventName, nbArgs) :: tl ->
+       begin
+	 let prefix = "(** This is a sanity check (false if the corresponding test is reachable; might also return 'cannot prove') **)\nquery " in
+	 let prefixArgs = String.concat
+			    ", "
+			    (List.map (fun s -> Printf.sprintf "%s:bitstring" s) (listArgs nbArgs)) in
+	 [prefix^prefixArgs^(";\n")^
+	   (Printf.sprintf "event(%s(%s))" eventName (String.concat "," (listArgs nbArgs)))^".\n"];
+       end in
+  
   (* -- 1. -- COMPUTING EVENTS VERSION AND QUERIES *)
   (* Adding events IN roles *)
   let iniEvents,iniTests,iniNbOut = addEventsRole proto.ini iniPrefix true in
+  let testEventsIni = !lastTestEvents in
+  lastTestEvents := [];
   let resEvents,resTests,resNbOut = addEventsRole proto.res resPrefix false in
+  let testEventsRes = !lastTestEvents in
   let protoEvents = { proto with
 		      ini = iniEvents;
 		      res = resEvents;
@@ -603,9 +626,11 @@ let transWA proto p inNameFile nameOutFile =
   then pp "> Note: Since no session name is shared, we create events accordingly.";
 
   (* Generating queries *)
-  let allQueries = (List.map (fun (nb,nbIn) -> generateQuery isShared nb nbIn true) iniTests) @ 
-		     (List.map (fun (nb,nbIn) -> generateQuery isShared nb nbIn false) resTests) in
-
+  let allQueries = (generateSanityQuery testEventsRes) @
+		     (generateSanityQuery testEventsIni) @
+		       (List.map (fun (nb,nbIn) -> generateQuery isShared nb nbIn true) iniTests) @ 
+			 (List.map (fun (nb,nbIn) -> generateQuery isShared nb nbIn false) resTests) in
+  
   (* Generating type declarations of events *)
   let displayEventsDec listEvents =
     let rec nBit = function
@@ -633,7 +658,7 @@ let transWA proto p inNameFile nameOutFile =
   pp "\n\n(* == DECLARATIONS OF EVENTS == *)\n";
   displayEventsDec !listEvents;
   pp "\n\n(* == DECLARATIONS OF QUERIES == *)\n";
-  List.iter (fun s -> Printf.printf "%s\n" s) allQueries;
+  List.iter (fun s -> Printf.printf "%s\n" s) (List.rev allQueries);
   pp "\n\n(* == PROTOCOL WITH EVENTS == *)\n";
   pp "let SYSTEM =\n";
   displayProtocolProcess toDisplay;
