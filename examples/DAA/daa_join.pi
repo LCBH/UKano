@@ -60,6 +60,9 @@ reduc forall xsk:bitstring,xprime:bitstring,xrand:bitstring,xmsg:bitstring;
 reduc forall xsk:bitstring,xprime:bitstring,xrand:bitstring,xmsg:bitstring;
   checkclsign(pk(xsk),xmsg,clsign(xsk,xprime,xrand,xmsg)) 
 				= accept.
+fun snd(bitstring):bitstring.
+equation forall m1:bitstring, m2:bitstring;
+snd((m1,m2)) = m2.
 
 fun clopen(bitstring,bitstring,bitstring):bitstring
 reduc
@@ -139,7 +142,9 @@ let Issuer(skI:bitstring, pkM:bitstring) =
     let (xnt:bitstring, xzetaI:bitstring, xspk:bitstring) = z in
     if yau = hash((xU,ne)) then
     let (=accept) = checkspk(FJoin, (xzetaI, pk(skI),xNi,xU,(xnt,ni)), xspk) in
-    out(c, (clsign(skI,r1,r2,xU))).
+    out(c, choice[
+    	   clsign(skI,r1,r2,xU),
+	   clsign(skI,r1,r2,snd(x))]).
 
     
 let SYSTEM = 
