@@ -189,12 +189,18 @@ let extractProto process =
 	  | Par (p1,p2) ->
 	     let ((iniP,iniN),(resP,resN)) = checkRoles p1 p2 in
 	     let iniPclean,resPclean = (removeRestr iniP, removeRestr resP) in
-	     let sessName0 = { f_name = "sess";
-			       f_type = ([], typeBit);
-			       f_cat = Name {prev_inputs=None; prev_inputs_meaning=[]};
-			       f_initial_cat = Name {prev_inputs=None; prev_inputs_meaning=[]};
-			       f_private = true;
-			       f_options = 0;	} in
+	     let sessNameI0 = { f_name = "sess_I";
+				f_type = ([], typeBit);
+				f_cat = Name {prev_inputs=None; prev_inputs_meaning=[]};
+				f_initial_cat = Name {prev_inputs=None; prev_inputs_meaning=[]};
+				f_private = true;
+				f_options = 0;	} in
+	     let sessNameR0 = { f_name = "sess_R";
+				f_type = ([], typeBit);
+				f_cat = Name {prev_inputs=None; prev_inputs_meaning=[]};
+				f_initial_cat = Name {prev_inputs=None; prev_inputs_meaning=[]};
+				f_private = true;
+				f_options = 0;	} in
 	     let idNamesANO = List.filter (* id names for anonymity are prefixed with 'id' *)
 				(fun s -> (String.length s.f_name) >= 2 && (s.f_name.[0] = 'i') && (s.f_name.[1] = 'd'))
 				idNames in
@@ -220,7 +226,7 @@ let extractProto process =
 	       idNamesShared =idNamesShared ;
 	       idNamesIni = idNamesIni;
 	       idNamesRes = idNamesRes;
-	       sessNames = sessName0 :: (List.rev sessNames) @ (List.rev iniN) @ (List.rev resN);
+	       sessNames = sessNameI0 :: sessNameR0 :: (List.rev sessNames) @ (List.rev iniN) @ (List.rev resN);
 	       ini = iniPclean;
 	       res = resPclean;
 	     }
@@ -347,8 +353,7 @@ let theoryStr inNameFile =
 (************************************************************)
 (* We suppose here that session names are not shared between agents. *)
 let pushNames proto = 
-  let sessNames = List.tl proto.sessNames in
-  let sessNameEvent = List.hd proto.sessNames in
+  let sessNames = proto.sessNames in
   (* Add restriction of names for names in 'names' *)
   let addNames names continuationProc = 
     List.fold_right (fun name proc ->
@@ -415,7 +420,7 @@ let pushNames proto =
     proto with
     ini = pushN sessNames proto.ini;
     res = pushN sessNames proto.res;
-    sessNames = [sessNameEvent];
+    sessNames = [];
   }
 
 (************************************************************)
@@ -453,23 +458,26 @@ let makeEvent name args =
       f_options = 0;
     } in
   FunApp (funSymbEvent, args)
-				      
+	 
 (** Display a whole ProVerif file checking well-authentication except for the theory (to be appended). *)      
 let transWA proto p inNameFile nameOutFile = 
   let proto = cleanChoice proto in
 
-  let (sessName,idName) =
-    try (List.hd proto.sessNames, List.hd proto.idNames) (* 2 funSymb *)
+  let (sessNameI,sessNameR,idName) =
+    try (List.hd proto.sessNames, List.hd (List.tl proto.sessNames), List.hd proto.idNames) (* 2 funSymb *)
     with _ -> errorClass "The protocol should have at least one identity name and one session name." p in
-  let (sessTerm,idTerm) = FunApp (sessName, []), FunApp (idName, []) in (* argument of events describing session and identity *)
+  let sessTermI = FunApp (sessNameI, []) in (* argument of events describing session for I *)
+  let sessTermR = FunApp (sessNameR, []) in (* same for R *)
+  let idTerm = FunApp (idName, []) in (* argument of events describing identity *)
   let listEvents = ref [] in
   let iniPrefix, resPrefix = "I", "R" in
   let lastTestEvents = ref [] in
-
+  let sessTerm = ref sessTermI in (* we start with Initiator *)
+  
   let nameEvent prefixName nb actionName = Printf.sprintf "%s%s_%d" prefixName actionName nb in
   (* add an event on top of a process with args + in addition [idTerm,sessTerm] *)
   let addEvent name args p = 	
-    let newArgs = idTerm :: sessTerm :: args in
+    let newArgs = idTerm :: !sessTerm :: args in
     let event = makeEvent name newArgs in
     let nbArgs = List.length newArgs in
     listEvents := (name, nbArgs) :: !listEvents;
@@ -616,6 +624,7 @@ let transWA proto p inNameFile nameOutFile =
   let iniEvents,iniTests,iniNbOut = addEventsRole proto.ini iniPrefix true in
   let testEventsIni = !lastTestEvents in
   lastTestEvents := [];
+  sessTerm := sessTermR;
   let resEvents,resTests,resNbOut = addEventsRole proto.res resPrefix false in
   let testEventsRes = !lastTestEvents in
   let protoEvents = { proto with
