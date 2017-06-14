@@ -26,10 +26,11 @@ let result = "RESULT"
 let okEquivalence = "RESULT Observational equivalence is true (bad not derivable)."
 let noEquivalence = "RESULT Observational equivalence cannot be proved (bad derivable)."
 let okQuery = "true"
+let falseQuery = "false"
 let noQuery = "proved"
 
 let parseQueryAnswer s =
-  let err _ = ppError "ProVerif was not found or ProVerif crashed. Please pursue manually (launch ProVerif on generated files)." in
+  let err _ = ppError "ProVerif was not found or ProVerif crashed (query). Please pursue manually (launch ProVerif on generated files)." in
   let regexpIs = Str.regexp_string "is" in
   let last = String.length s in
   let cannotBeforeProved _ =
@@ -52,12 +53,20 @@ let parseQueryAnswer s =
 			    s last in (* last position of "true" *)
 	if truePresent > isPresent
 	then true	   (* 'true' after last 'is' -> OK *)
-	else cannotBeforeProved () (* no 'true' after the last 'is', maybe 'false ? *)
-      with Not_found -> cannotBeforeProved ()  (* no 'true', maybe 'false' ? *)
-  with Not_found -> cannotBeforeProved ()	(* no 'is' mayve cannot proved? *)
-
+	else cannotBeforeProved ()
+      with _ ->
+	try
+	  let falsePresent = Str.search_backward
+			       (Str.regexp_string falseQuery)
+			       s last in (* last position of "false" *)
+	  if falsePresent > isPresent
+	  then false
+	  else  cannotBeforeProved () (* no 'true' after the last 'is', maybe 'false ? *)
+	with Not_found -> cannotBeforeProved ()  (* no 'true', maybe 'false' ? *)
+  with Not_found -> cannotBeforeProved ()	(* no 'is' maybe cannot proved? *)
+				       
 let extractEvent s =
-  let err _ = ppError "ProVerif was not found or ProVerif crashed. Please pursue manually (launch ProVerif on generated files)." in
+  let err _ = ppError "ProVerif was not found or ProVerif crashed (event). Please pursue manually (launch ProVerif on generated files)." in
   try 
     let firstTest = (Str.search_forward
 		       (Str.regexp_string "test_")
@@ -65,7 +74,7 @@ let extractEvent s =
     let firstRpar =(Str.search_forward
 		      (Str.regexp_string "==")
 		      s 0) - 15 in (* first position of "=", ugly hack *)  
-    String.sub s firstTest firstRpar
+    (String.sub s firstTest firstRpar)
   with Not_found -> err () 
     
 (***********************************************************)
@@ -103,7 +112,11 @@ let rec lastL = function
   | [x] -> x
   | x :: tl -> lastL tl
   | [] -> failwith ("Critical error [451].")
-		   
+
+let rec subList = function
+  | (l1,l2, 0) -> (l1,l2)
+  | (l1,l2,n) -> subList ((List.hd l2) :: l1, (List.tl l2), n-1)
+			  
 let verifyBoth pathProverif sFO sWA namesIdAno =
   let verbose = not(!Param.shortOutput) in
   let establishedFO = ref false in
@@ -138,7 +151,7 @@ let verifyBoth pathProverif sFO sWA namesIdAno =
 
   if not(!Param.onlyFO)
   then begin
-      if verbose then pp (Display.header "Verification of well-authentication");
+      if verbose then pp (Display.header (Printf.sprintf "Verification of %d sanity checks and well-authentication" !Conditions.nbSanityChecks));
       if verbose then pp (sprintf "We now launch Proverif (path: '%s') on '%s' to verify Well-Authentication ..." pathProverif sWA);
       let outputWA = launchProverif pathProverif sWA in
       if List.length outputWA = 0
@@ -148,25 +161,35 @@ let verifyBoth pathProverif sFO sWA namesIdAno =
 	  let regexpResult = Str.regexp_string result in
 	  let subResults = List.filter (fun l -> Str.string_match regexpResult l 0) outputWA in
 	  if verbose then List.iter (fun l -> pp l) subResults;
-	  let subOk = List.filter (fun l -> parseQueryAnswer l) subResults in
-	  let subNo = List.filter (fun l -> not(parseQueryAnswer l)) subResults in
-	  let okWA = (List.length subResults == List.length subOk) in
+	  let sanityResults, waResults =
+	    try
+	      subList ([], subResults,!Conditions.nbSanityChecks)
+	    with _ -> ppError "Proverif's output could not be parsed. Please pursue manually (launch ProVerif on the generated files)." in
+	  let sanityOk = List.filter (fun l -> not(parseQueryAnswer l)) sanityResults in
+	  let subOk = List.filter (fun l -> parseQueryAnswer l) waResults in
+	  let subNo = List.filter (fun l -> not(parseQueryAnswer l)) waResults in
+	  let okWA = (List.length waResults == List.length subOk) in
 	  let noWA = (List.length subOk == 0) in
-	  if (List.length subResults == 0)
-	  then ppError "Proverif's output could not be parsed. Please pursue manually (launch ProVerif on the generated files)."
-	  else (if okWA
-		then begin
-		    establishedWA := true;
-		    pp (Display.result "Well Authentication has been established.");
-		  end
-		else if List.length subOk = 0 then begin
-		    pp (Display.result (sprintf "Well Authentication could be established for none of the test. It may be the case that all tests are safe though."));
-		  end else begin
-		    establishedWAPart := true;
-		    pp (Display.result (sprintf "Well Authentication has been established for %d over %d tests. Please verify that the following queries correspond to safe conditionals."
-						(List.length subOk) (List.length subResults)));
-		    List.iter (fun l -> pp ("Well-Athentication could not be established for : "^extractEvent(l))) subNo;
-		  end);
+	  begin
+	    (if (List.length sanityResults == List.length sanityOk)
+	     then pp (Display.result "All sanity checks have been established.")
+	     else pp (Printf.sprintf "[WARNING] At least one of the %d sanity checks does not hold (or cannor be proved). This might be because one of the role cannot be fully executed." !Conditions.nbSanityChecks));
+	    if (List.length waResults == 0)
+	    then ppError "Proverif's output could not be parsed. Please pursue manually (launch ProVerif on the generated files)."
+	    else (if okWA
+		  then begin
+		      establishedWA := true;
+		      pp (Display.result "Well Authentication has been established.");
+		    end
+		  else if List.length subOk = 0 then begin
+		      pp (Display.result (sprintf "Well Authentication could be established for none of the test. It may be the case that all tests are safe though."));
+		    end else begin
+		      establishedWAPart := true;
+		      pp (Display.result (sprintf "Well Authentication has been established for %d over %d tests. Please verify that the following queries correspond to safe conditionals."
+						  (List.length subOk) (List.length waResults)));
+		      List.iter (fun l -> pp ("Well-Athentication could not be established for : "^extractEvent(l))) subNo;
+		    end);
+	  end;
 	end;
     end;
   

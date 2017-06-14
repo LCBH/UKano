@@ -31,7 +31,8 @@ open Pervasives
 (* flags *)
 let ideaAssumed = ref false
 let isLastOutputByIni = ref false
-
+let nbSanityChecks = ref 0
+			 
 (* For debugging purpose *)
 let email = " Please report this error with the input file to lucca.hirschi@lsv.ens-cachan.fr'."
 let pp s= Printf.printf "%s" s
@@ -601,6 +602,7 @@ let transWA proto p inNameFile nameOutFile =
     | [] -> []
     | (eventName, nbArgs) :: tl ->
        begin
+	 incr(nbSanityChecks);
 	 let prefix = "(** This is a sanity check (false if the corresponding test is reachable; might also return 'cannot prove') **)\nquery " in
 	 let prefixArgs = String.concat
 			    ", "
@@ -652,7 +654,7 @@ let transWA proto p inNameFile nameOutFile =
   Unix.dup2 (Unix.descr_of_out_channel newstdout) Unix.stdout;
   (* Print (=write in the file) the complete ProVerif file *)
 (*  pp "\n\n(* == THEORY == *)\n"; *)
-  pp "\n(********   This file has been automatically generated using the tool UKano. It encodes the well-authentication condition. ********)\n\n";
+  pp (Printf.sprintf "\n(********   This file has been automatically generated using the tool UKano. It encodes the well-authentication condition as well as %d sanity checks. ********)\n\n" !nbSanityChecks);
   pp theoryStr;
   pp " *)\n";
   pp "\n\n(* == DECLARATIONS OF EVENTS == *)\n";
@@ -1053,11 +1055,11 @@ let transBoth  p inNameFile nameOutFileFO nameOutFileWA =
   if not(!Param.onlyFO)
   then begin
       if !verbose then begin
-	  pp (Display.header "Generation of the model encoding well-authentication");  
+	  pp (Display.header (Printf.sprintf "Generation of the model encoding %d sanity checks and well-authentication" !nbSanityChecks));  
 	  pp "\n";
 	end;
       transWA proto2 p inNameFile nameOutFileWA;
-      pp (Display.result (Printf.sprintf "A ProVerif model encoding the well-authentication condition has been written in %s.\n" nameOutFileWA));
+      pp (Display.result (Printf.sprintf "A ProVerif model encoding %d sanity checks and the well-authentication condition has been written in %s.\n" !nbSanityChecks nameOutFileWA));
       printHelp nameOutFileWA;
     end;
   proto1.idNamesANO

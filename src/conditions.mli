@@ -27,6 +27,8 @@
 
 (** Help message dedicated to Ukano *)
 val helpMess : string
+(** Number of sanity checks in the produced file for checking Well-Authentication *)
+val nbSanityChecks : int ref
 
 (** If the inputted process is not in the "2-agents protocol class" (see [1]). *)
 exception NotInClass of string
