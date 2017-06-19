@@ -9,14 +9,13 @@ free r : channel.
 (* functions *)
 fun h(bitstring) : bitstring.
 
-
 (* ==PROTOCOL== *)
 let LAK = ! new k:bitstring;
           ! (
             (       (* Responder (TAG) *)
   	     in(r, xr1:bitstring);
              new r2:bitstring;
-	     out(r, choice[(r2, h((xr1, r2, k))),(r2,xr1)])
+	     out(r, (r2, h((xr1, r2, k))))
             ) | (   (* Initiator (Reader) *)
              new r1:bitstring;
 	     out(i, choice[r1,r1]);
@@ -24,6 +23,6 @@ let LAK = ! new k:bitstring;
 	     let (xr2:bitstring, xh:bitstring) = x in
 	     let (=h((r1,xr2,k))) = xh in
 	     new nextStep:bitstring;
-             out(i, choice[(nextStep,x),(nextStep,x)])
+             out(i, (nextStep,x))
             )).
 process LAK

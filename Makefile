@@ -50,14 +50,12 @@ examples/tests/%.error: examples/tests/%.pi
 	@echo "$$./ukano --less-verbose $<"
 # we check that ukano returns an error:
 	@$(UKANO) --less-verbose $< ; test $$? -eq 2
-	-@rm $@
 
 examples/tests/%.ok: examples/tests/%.pi
 	@echo "============= UKANO RUN ============="
 	@echo "Should not return any error !"
 	@echo "$$./ukano --less-verbose $<"
 	@$(UKANO) --less-verbose $<
-	-@rm $@
 
 force:
 

@@ -214,10 +214,10 @@ let verifyBoth pathProverif sFO sWA namesIdAno =
 		 ("[RESULT: NO] Frame Opacity or Well-Authentication could not be established.\n"^
 		    "This does not necessarily imply that the input protocol violates unlinkability or anonymity.\n"^
                       "\t1. Indeed, it may be the case that ProVerif could not established the conditions\n"^
-			"\t (due to over-approximations) while they actually hold --- in that case, please refer to the\n"^
+			"\t (due to over-approximations) while they actually hold --- in that case, please refer to\n"^
 			  "\t ProVerif's manual. Or try another idealisation option (list them with './ukano --help').\n"^
 			    "\t2. Or the conditions do not hold. In that case, UKano cannot currently conclude on your protocol.\n"^
-			      "\t If you think that is the case, please send your input protocol at lucca.hirschi@lsv.ens-cachan.fr so\n"^
+			      "\t If you think this is the case, please send your input protocol at lucca.hirschi@lsv.ens-cachan.fr so\n"^
 				"\t that we can investigate further and improve UKano."));
     end;
   
