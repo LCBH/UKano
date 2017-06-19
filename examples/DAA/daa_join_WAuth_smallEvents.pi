@@ -1,0 +1,210 @@
+
+(********   This file has been automatically generated using the tool UKano. It encodes the well-authentication condition as well as 2 sanity checks. ********)
+
+(* MODIFIED TO TEST A STRONG DEF OF UK using UKANO 
+ * MINIMAL VERSION FOR DAA JOIN
+ * Lucca Hirschi
+ * 23/03/2016
+ *)
+
+(* REMARKS:
+If basename may be equal between two sessions, conditions do not hold anymore nor unlinkability.
+*)
+
+(*
+	Based on:
+
+		Smyth, B., Ryan, M., & Chen, L. (2012) Formal analysis of anonymity in Direct Anonymous Attestation schemes.
+
+	The script models the fixed RSA-based Direct Anonymous Attestation process specification <Join_RSA', Sign_RSA'>.
+
+*)
+
+(***************)
+(* ==THEORY==  *)
+(***************)
+free c:channel.
+
+fun accept () :bitstring.
+fun zero() :bitstring.
+fun one() :bitstring.
+fun FJoin() :bitstring.
+fun FSign() :bitstring.
+fun hash(bitstring) :bitstring.
+fun apk(bitstring) :bitstring.  (* Asymmetric Public bitstring *)
+fun pk(bitstring) :bitstring.   (* Signature public bitstring *)
+fun commit(bitstring,bitstring):bitstring.
+fun circ(bitstring,bitstring):bitstring.
+fun clcommit(bitstring,bitstring,bitstring) :bitstring.
+fun spk(bitstring,bitstring,bitstring) :bitstring.
+fun clsign(bitstring,bitstring,bitstring,bitstring):bitstring.
+fun penc(bitstring,bitstring,bitstring) : bitstring.
+fun dec(bitstring,bitstring) : bitstring.
+
+fun bottom() :bitstring.
+fun ok() :bitstring.
+fun hole() :bitstring.
+
+
+(* Assymetric encryption *)
+equation forall k:bitstring, r:bitstring, m:bitstring;
+   dec(k,penc(apk(k),r,m)) = m.
+
+(* Signature + blind signtaure *)
+reduc forall xsk:bitstring,xprime:bitstring,xrand:bitstring,xmsg:bitstring;
+  clgetprime(clsign(xsk,xprime,xrand,xmsg)) = xprime.
+reduc forall xsk:bitstring,xprime:bitstring,xrand:bitstring,xmsg:bitstring;
+  clgetbitstring(clsign(xsk,xprime,xrand,xmsg)) = xrand.
+reduc forall xsk:bitstring,xprime:bitstring,xrand:bitstring,xmsg:bitstring;
+  checkclsign(pk(xsk),xmsg,clsign(xsk,xprime,xrand,xmsg)) 
+				= accept.
+fun clopen(bitstring,bitstring,bitstring):bitstring
+reduc
+forall xsk:bitstring,xrand:bitstring,yprime:bitstring,yrand:bitstring,xmsg:bitstring;
+  clopen(pk(xsk),xrand,clsign(xsk,yprime,yrand,
+  	clcommit(pk(xsk),xrand,xmsg))) = clsign(xsk,yprime,xrand,xmsg)
+otherwise
+forall x:bitstring,xrand:bitstring,xplain:bitstring;
+  clopen(x,xrand,clcommit(x,xrand,xplain)) = xplain.
+
+(* ZK of join *)
+reduc forall xzeta:bitstring,xsk:bitstring,xtsk:bitstring,xw:bitstring,xe:bitstring,xv:bitstring,xrand:bitstring,yprime:bitstring,yrand:bitstring,xmsg:bitstring, xpk:bitstring;
+    checkspk(FJoin,
+             (xzeta,xpk,commit(xtsk,xzeta),clcommit(xpk,xv,xtsk),xmsg),
+             spk(FJoin,
+	         (xtsk,xv),
+		 (xzeta,xpk,commit(xtsk,xzeta),
+		 clcommit(xpk,xv,xtsk),xmsg)
+		 )
+	     )
+	     = accept.
+
+fun KI():bitstring.    (* Long-term public bitstring of Issuer *)
+fun skI():bitstring [private].   (* Signature bitstring of Issuer *)
+reduc getPubskI() = pk(skI).
+
+(*
+event END().
+query event(END()).
+*)
+
+(****************)
+(*  *)
+
+
+(* == DECLARATIONS OF EVENTS == *)
+event Rin_1(bitstring,bitstring,bitstring).
+event Rtest_1(bitstring,bitstring).
+event Rout_1(bitstring,bitstring,bitstring).
+event Rin_2(bitstring,bitstring,bitstring).
+event Rout_2(bitstring,bitstring,bitstring).
+event Rin_3(bitstring,bitstring,bitstring).
+event Rtest_2(bitstring,bitstring).
+event Rout_3(bitstring,bitstring,bitstring).
+event Iout_1(bitstring,bitstring,bitstring).
+event Iin_1(bitstring,bitstring,bitstring).
+event Iout_2(bitstring,bitstring,bitstring).
+event Iin_2(bitstring,bitstring,bitstring).
+event Iout_3(bitstring,bitstring,bitstring).
+event Iin_3(bitstring,bitstring,bitstring).
+event Itest_1(bitstring,bitstring).
+event Iout_4(bitstring,bitstring,bitstring).
+
+(* == DECLARATIONS OF QUERIES == *)
+
+query k:bitstring, n1:bitstring, n2:bitstring,
+      m1:bitstring, m2:bitstring, m3:bitstring, m4:bitstring, m5:bitstring;
+   (event(Rtest_2(k,n2))  ==>
+   (event(Rin_3(k,n2,m5))  ==>
+   (event(Iout_3(k,n1,m5))  ==>
+   (event(Iin_2(k,n1,m4))  ==>
+   (event(Rout_2(k,n2,m4))  ==>
+   (event(Rin_2(k,n2,m3))  ==>
+   (event(Iout_2(k,n1,m3))  ==>
+   (event(Iin_1(k,n1,m2))  ==>
+   (event(Rout_1(k,n2,m2))  ==>
+   (event(Rin_1(k,n2,m1))  ==>
+   (event(Iout_1(k,n1,m1))))))))))))).
+
+query k:bitstring, n1:bitstring, n2:bitstring,
+      m1:bitstring, m2:bitstring, m3:bitstring, m4:bitstring, m5:bitstring, m6:bitstring;
+   (event(Itest_1(k,n1))  ==>
+   (event(Iin_3(k,n1,m6))  ==>
+   (event(Rout_3(k,n2,m6))  ==>
+   (event(Rin_3(k,n2,m5))  ==>
+   (event(Iout_3(k,n1,m5))  ==>
+   (event(Iin_2(k,n1,m4))  ==>
+   (event(Rout_2(k,n2,m4))  ==>
+   (event(Rin_2(k,n2,m3))  ==>
+   (event(Iout_2(k,n1,m3))  ==>
+   (event(Iin_1(k,n1,m2))  ==>
+   (event(Rout_1(k,n2,m2))  ==>
+   (event(Rin_1(k,n2,m1))  ==>
+   (event(Iout_1(k,n1,m1))))))))))))))).
+
+
+(** This is a sanity check (false if the corresponding test is reachable; might also return 'cannot prove') **)
+query m8:bitstring, m7:bitstring, m6:bitstring, m5:bitstring, m4:bitstring, m3:bitstring, m2:bitstring, m1:bitstring;
+event(Itest_1(m8,m7)).
+(** This is a sanity check (false if the corresponding test is reachable; might also return 'cannot prove') **)
+query m3:bitstring, m2:bitstring, m1:bitstring;
+event(Rtest_1(m3,m2)).
+
+(* == PROTOCOL WITH EVENTS == *)
+let SYSTEM =
+( !
+  new skM : bitstring;
+  new DAASeed : bitstring;
+     !
+      ((
+        new sess_I: bitstring;
+        new cnt: bitstring;
+        new bsnI: bitstring;
+        new v': bitstring;
+        event Iout_1(skM,sess_I,(commit(hash((hash((DAASeed,hash(KI))),cnt,zero)),hash((zero,bsnI))),clcommit(pk(skI),v',hash((hash((DAASeed,hash(KI))),cnt,zero)))));
+        out(c, (commit(hash((hash((DAASeed,hash(KI))),cnt,zero)),hash((zero,bsnI))),clcommit(pk(skI),v',hash((hash((DAASeed,hash(KI))),cnt,zero)))));
+        in(c, encNe: bitstring);
+        event Iin_1(skM,sess_I,encNe);
+        event Iout_2(skM,sess_I,hash((clcommit(pk(skI),v',hash((hash((DAASeed,hash(KI))),cnt,zero))),dec(skM,encNe))));
+        out(c, hash((clcommit(pk(skI),v',hash((hash((DAASeed,hash(KI))),cnt,zero))),dec(skM,encNe))));
+        in(c, ni: bitstring);
+        event Iin_2(skM,sess_I,ni);
+        new nt: bitstring;
+        event Iout_3(skM,sess_I,(nt,hash((zero,bsnI)),spk(FJoin,(hash((hash((DAASeed,hash(KI))),cnt,zero)),v'),(hash((zero,bsnI)),pk(skI),commit(hash((hash((DAASeed,hash(KI))),cnt,zero)),hash((zero,bsnI))),clcommit(pk(skI),v',hash((hash((DAASeed,hash(KI))),cnt,zero))),(nt,ni)))));
+        out(c, (nt,hash((zero,bsnI)),spk(FJoin,(hash((hash((DAASeed,hash(KI))),cnt,zero)),v'),(hash((zero,bsnI)),pk(skI),commit(hash((hash((DAASeed,hash(KI))),cnt,zero)),hash((zero,bsnI))),clcommit(pk(skI),v',hash((hash((DAASeed,hash(KI))),cnt,zero))),(nt,ni)))));
+        in(c, sig: bitstring);
+        event Iin_3(skM,sess_I,sig);
+        let (cre: bitstring) = clopen(pk(skI),v',sig) in
+        let (=accept) = checkclsign(pk(skI),hash((hash((DAASeed,hash(KI))),cnt,zero)),cre) in
+        event Itest_1(skM,sess_I);
+        event Iout_4(skM,sess_I,ok);
+        out(c, ok)
+      )|(
+        in(c, x_141: bitstring);
+        new sess_R: bitstring;
+        event Rin_1(skM,sess_R,x_141);
+        let ((xNi: bitstring,xU: bitstring)) = x_141 in
+        event Rtest_1(skM,sess_R);
+        new n: bitstring;
+        new ne: bitstring;
+        event Rout_1(skM,sess_R,penc(apk(skM),n,ne));
+        out(c, penc(apk(skM),n,ne));
+        in(c, yau: bitstring);
+        event Rin_2(skM,sess_R,yau);
+        new ni_142: bitstring;
+        event Rout_2(skM,sess_R,ni_142);
+        out(c, ni_142);
+        in(c, z: bitstring);
+        event Rin_3(skM,sess_R,z);
+        let ((xnt: bitstring,xzetaI: bitstring,xspk: bitstring)) = z in
+        if (yau = hash((xU,ne))) then
+        let (=accept) = checkspk(FJoin,(xzetaI,pk(skI),xNi,xU,(xnt,ni_142)),xspk) in
+        event Rtest_2(skM,sess_R);
+        new r1: bitstring;
+        new r2: bitstring;
+        event Rout_3(skM,sess_R,clsign(skI,r1,r2,xU));
+        out(c, clsign(skI,r1,r2,xU))
+      ))
+)
+.
+process SYSTEM
