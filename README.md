@@ -23,7 +23,6 @@ your ProVerif executable with the option `--proverif <path>`.
 
 
 ## Quick Test
-
 To quickly test the tool on our case studies: build it, choose an example
 in the examples folder (e.g., [`./examples/Feldhofer/feldhofer.pi`](./examples/Feldhofer/feldhofer.pi))
 and type `./ukano <path-example>`.
@@ -36,14 +35,14 @@ To run UKano on a protocol written in `filename` (compliant with ProVerif typed 
 ```bash
 ./ukano <filename>
 ```
-The tool describes the main steps it follows and conlcudes whether unlinkability
+The tool describes the main steps it follows and concludes whether unlinkability
 and anonymity could be established or not. Type `./ukano --help` to see the list
 of options of UKano.
 
 
-## How it works?
+## How Does It Work?
 We have proved in [HBD16](#references) and [H17](#references) that, for 2-party protocols,
-unlinkability and anonmyity  follow from two sufficent conditions we
+unlinkability and anonymity follow from two sufficent conditions we
 called *Frame Opacity* (FO) and *Well-Authentication* (WA). We also show
 how to verify those two conditions relying on dedicated encodings.
 UKAno mechanizes all those encodings.
@@ -51,9 +50,9 @@ UKAno mechanizes all those encodings.
 After parsing your file, the tool creates two other files in the same
 directory. Each file encodes one of our two sufficient conditions. 
 The one encoding FO is suffixed with `_FOpa.pi`. The second suffixed
-with `_WAuth.pi` can be used to check WA. The latter contains a query
+with `_WAuth.pi` can be used to check WA. The latter contains one query
 per conditional.
-UKano then launches `proverif` on those two files and parse the results
+UKano then launches `proverif` on those two files and parses the results
 in order to conclude whether both conditions have been established. In such
 a case, the tool concludes that the input protocol ensures unlinkability and
 anonymity.
@@ -65,13 +64,13 @@ They can be used as a starting point to write your own protocols.
 
 ## Links
 
-A complete manual of the tool can be found at https://github.com/LCBH/UKano/wiki. It notably
+A complete manual for the tool can be found at https://github.com/LCBH/UKano/wiki. It notably
 describes the expected format for input files of UKano.
 You can find a comprehensive list of case studies and benchmarks described in the corresponding
 section of the manual: https://github.com/LCBH/UKano/wiki#our-case-studies.
 
 
-Finally, the underlying theory behind UKano are described in [HBD16] and [H17].
+Finally, the underlying theory behind UKano is described in [HBD16] and [H17].
 
 
 > [HBD16]: L. Hirschi, D. Baelde and S. Delaune.
