@@ -838,10 +838,11 @@ let transFO proto p inNameFile nameOutFile =
       then begin
 	  incr(countHoles);
 	  Printf.sprintf "hole__%d" !countHoles;
-	end else (if not(List.mem_assoc funSymb.f_name !listNameNames)
+	end else (if not(isName funSymb && List.mem_assoc funSymb.f_name !listNameNames)
 		  then begin
-		      let s = Printf.sprintf "%s_%s" funSymb.f_name !suffix in (* need to avoid clash between two roles e.g., *)
+		      let s = Printf.sprintf "%s_%s_%d" funSymb.f_name !suffix !countHoles in (* need to avoid clash between two roles e.g., *)
 		      listNameNames := (funSymb.f_name,s) :: !listNameNames;
+		      incr(countHoles);
 		      s
 		    end else List.assoc funSymb.f_name !listNameNames ) in 
     let newFunSymb =
