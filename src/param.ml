@@ -38,7 +38,7 @@ let onlyWA = ref false
 let ideaGreedy = ref false
 let ideaAutomatic = ref false
 let ideaFullSyntax = ref false
-
+let letCatchFO = ref false
 
 let lib_name = ref ""
 

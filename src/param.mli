@@ -48,6 +48,8 @@ val ideaAutomatic : bool ref
 (* idea full syntax ? that means that idealizations will go through all functions
    even the oens in equations and only replace identity names and let variables by holes *)
 val ideaFullSyntax : bool ref		       
+(* old encoding with nested let to catch failures on the right ? *)
+val letCatchFO : bool ref		       
  
 		      
 val lib_name : string ref

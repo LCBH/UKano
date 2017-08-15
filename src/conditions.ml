@@ -927,7 +927,7 @@ let transFO proto p inNameFile nameOutFile =
   if !verbose && !ideaChecked
   then (if !ideaAssumed
 	then log "Remember that we do not check that idealisations are conform (option '--idea-no-check'). You should check this yourself by inspecting the produced file."
-	else log "All idealisations (including the ones you gave as input) have been checked (i.e., only constants, session names, holes, variables bind by inputs and functions not in E) and at least one hole or a session name in each idealised output (except in else branches and last honest output).");
+	else log "All idealisations (including the ones you gave as input) have been checked (i.e., only constants, session names, holes, variables bind by inputs and function symbols) and, in the shared case, at least one hole or a session name in each idealised output with no destructor or constructor in E above it (except in else branches and last honest output).");
 
   if !verbose && !Param.ideaFullSyntax
   then (let isShared = List.length proto.idNamesShared > 0 in
@@ -935,7 +935,10 @@ let transFO proto p inNameFile nameOutFile =
 	then log "WARNING: you used the option '--idea-full-syntax' for a protocol in the shared case. Therefore, you should check condition Well-Authentication item (ii) separately.");
 	 
 	 
-  (* -- 2. -- Deal with conditionals (should not create false attacks for diff-equivalence) *)
+  (* -- 2. -- Deal with conditionals (should not create false attacks for diff-equivalence).
+              Two different encodings are available: 2.1: letCatch (enabled with option 'fo-with-let')
+              and 2.2: biProj (default). *)
+  (* 2.1: -ENCODING letCatch: this is the encoding described in the Oakland'16 paper:*)
   (* a) we push conditionals (Test and Let) and put them just before Output (when needed)
      b) we use a hack to be sure the 'Let' construct will never fail:
              let yn = dec(x,k) in
@@ -1000,11 +1003,40 @@ let transFO proto p inNameFile nameOutFile =
 	   cleanTest accTest accLet pe)
     | Test (t,pt,pe,occ)-> Par(cleanTest (t::accTest) accLet pt, cleanTest accTest accLet pe)
     | p -> errorClass ("Critical error, should never happen."^email) p in
+
+  (* 2.2: -ENCODING biProj: this is the new encoding using the new feature in ProVerif to put 'choice' in input.*)
+  (* some helping functions: create diff[x,xid]; apply subst to terms *)
+  let diffIn vLeft vRight = PatTuple(choiceSymb, [vLeft; vRight]) in
+  let rec applySub sub = function
+    | FunApp (f,tl) -> FunApp (f, List.map (applySub sub) tl)
+    | Var b ->
+       try Var {b with sname = List.assoc b.sname sub} 
+       with Not_found -> Var b in
+  (* biproc accIn proc replaces input in proc by "bi-input" creating a new fresh variable for the right side, stores this renaming
+     in the association list accIn and propagates the renaming in each u_ideal from out(choice[u,u_ideal]). *)
+  let rec biproj accIn = function
+    | Nil -> Nil
+    | Input (tc,((PatVar bx) as varLeft), p,occ) ->
+       let nameRight = bx.sname^"id" in
+       let varRight = PatVar { bx with
+			       sname = nameRight
+			     } in
+       let accInNext = (bx.sname, nameRight) :: accIn in
+       (* Create fresh input variable for the right side, add it to an association list to store the association, replace x by diff[x,newX]*)
+       Input(tc,diffIn varLeft varRight, biproj accInNext p, occ)
+    | Output (tc, FunApp(symb, [t; tid]), p,occ)  when isChoice symb ->
+       let newOut =  FunApp(symb, [t; applySub accIn tid])  in
+       Output(tc, newOut, biproj accIn p, occ)
+    | Let (patx,t,pt,pe,occ) -> Let (patx,t,biproj accIn pt, biproj accIn pe, occ)
+    | Test (t,pt,pe,occ) -> Test(t, biproj accIn pt, biproj accIn pe, occ)
+    | p -> errorClass ("Critical error, should never happen."^email) p in
+      
+  let encoding = if !Param.letCatchFO then cleanTest [] [] else biproj [] in
   let condFOProto = 
     { noncesProto with
       sessNames = proto.sessNames @ (List.rev !listNewNames);
-      ini = cleanTest [] [] noncesProto.ini;
-      res = cleanTest [] [] noncesProto.res;
+      ini = encoding noncesProto.ini;
+      res = encoding noncesProto.res;
     } in
 
   (* -- 3. -- GET the theory part of inNameFile *)
