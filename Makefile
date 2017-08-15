@@ -2,7 +2,7 @@
 
 #### BUILD#####
 
-PROVERIF =proverif1.92
+PROVERIF =proverif1.97
 UKANO =./ukano
 UKANO_S =src
 
@@ -16,7 +16,7 @@ ukano-short:
 	$(MAKE) short -C $(UKANO_S)
 	cp $(UKANO_S)/ukano .
 proverif:
-	@echo "#### Building ProVerif v1.92 ...."
+	@echo "#### Building ProVerif v1.97 ...."
 	cd $(PROVERIF) && ./build && cd ..
 	cp $(PROVERIF)/proverif .
 
