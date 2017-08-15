@@ -120,7 +120,10 @@ and funcats =
   | General_var
   | General_mayfail_var
   | Choice
+  | BiProj of side
   | Failure
+
+and side = Left | Right
 
 and rewrite_rule = term list * term * (term * term) list
 

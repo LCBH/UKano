@@ -290,6 +290,10 @@ let rec term_evaluation side = function
 		  term_evaluation side t2
 	    | _ -> Parsing_helper.internal_error "Choice should have two arguments"
 	  end
+      | BiProj Left ->
+          begin match l with [t] -> term_evaluation 1 t | _ -> assert false end
+      | BiProj Right ->
+          begin match l with [t] -> term_evaluation 2 t | _ -> assert false end
       | Red redl ->
 	  let l' = List.map (term_evaluation side) l in
 	  let rec try_red_list = function

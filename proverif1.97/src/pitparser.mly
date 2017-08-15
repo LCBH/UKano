@@ -34,6 +34,13 @@ open Ptree
 open Pitptree
 exception Syntax
 
+let fresh_biproj_var =
+  let c = ref 0 in
+    fun () ->
+      incr c ;
+      Printf.sprintf "_biproj_%d" !c,
+      Parsing_helper.dummy_ext
+
 %}
 
 %token CHOICE
@@ -643,6 +650,15 @@ tprocess:
 	{ PTest($2,$4,$5) }
 |	IN LPAREN pterm COMMA tpattern RPAREN opttprocess
 	{ PInput($3,$5,$7) }
+|	IN LPAREN pterm COMMA CHOICE LBRACKET IDENT COMMA IDENT RBRACKET COLON typeid RPAREN opttprocess
+	{ let z = fresh_biproj_var () in
+        PInput($3,PPatVar (z,Some $12),
+        let z : Pitptree.pterm_e = PPIdent (fst z,snd z), parse_extent () in
+        let fst : ident = ("biproj_fst",parse_extent ()) in
+        let snd : ident = ("biproj_snd",parse_extent ()) in
+        PLet (PPatVar ($7,None),(PPFunApp(fst,[z]),parse_extent ()),
+        PLet (PPatVar ($9,None),(PPFunApp(snd,[z]),parse_extent ()),
+        $14,PNil),PNil)) }
 |	OUT LPAREN pterm COMMA pterm RPAREN opttprocess
 	{ POutput($3,$5,$7) }
 | 	LET tpattern EQUAL pterm 

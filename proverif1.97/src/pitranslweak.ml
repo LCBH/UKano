@@ -360,6 +360,15 @@ let rec transl_term next_f cur_state term = match term with
 		  ) cur_state t1
 		| _ -> Parsing_helper.internal_error "Choice should have two arguments"
 	    end
+        | BiProj side ->
+            begin match args with
+              | [t] ->
+                  transl_term (fun cur_state1 t1 t2 ->
+                    let t = match side with Left -> t1 | Right -> t2 in
+                      next_f cur_state1 t t
+                  ) cur_state t
+              | _ -> assert false
+            end
 	| Failure -> next_f cur_state (FunApp(f,[]))  (FunApp(f,[]))
 	
 	| _ ->

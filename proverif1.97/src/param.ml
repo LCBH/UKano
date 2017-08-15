@@ -403,6 +403,17 @@ let has_choice = ref false
 let has_barrier = ref false
 let equivalence = ref false
 
+let biproj_fun_memo side = memo (fun t ->
+  { f_name = "biproj_" ^ (if side = Left then "fst" else "snd") ;
+    f_type = [t],t;
+    f_cat = BiProj side;
+    f_initial_cat = BiProj side;
+    f_private = true;
+    f_options = 0 })
+
+let biproj_fun side t =
+  biproj_fun_memo side (get_type t)
+
 (* Values computed from the input file *)
 
 let all_types = ref [channel_type; bitstring_type; bool_type]

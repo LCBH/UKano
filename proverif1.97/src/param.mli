@@ -227,6 +227,8 @@ val has_choice : bool ref
 val has_barrier : bool ref
 val equivalence : bool ref
 
+val biproj_fun : Types.side -> Types.typet -> Types.funsymb
+
 (* Values computed from the input file *)
 
 val all_types : Types.typet list ref
