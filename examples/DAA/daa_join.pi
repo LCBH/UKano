@@ -76,6 +76,11 @@ reduc forall xzeta:bitstring,xsk:bitstring,xtsk:bitstring,xw:bitstring,xe:bitstr
 	     )
 	     = accept.
 
+reduc forall x1:bitstring, x2:bitstring;
+   fst((x1,x2)) = x1.
+reduc forall x1:bitstring, x2:bitstring;
+   snd((x1,x2)) = x2.
+
 fun KI():bitstring.    (* Long-term public key of Issuer *)
 fun skI():bitstring [private].   (* Signature key of Issuer *)
 reduc getPubskI() = pk(skI).
@@ -135,7 +140,7 @@ let Issuer(skI:bitstring, pkM:bitstring) =
     let (=accept) = checkspk(FJoin, (xzetaI, pk(skI),xNi,xU,(xnt,ni)), xspk) in
     out(c, choice[
     	   clsign(skI,r1,r2,xU),
-	   clsign(skI,r1,r2,r2)]).
+	   clsign(skI,r1,r2,snd(x))]).
 
     
 let SYSTEM = 
