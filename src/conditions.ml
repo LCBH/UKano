@@ -742,7 +742,7 @@ let debugFunSymb f =
 (** Display a whole ProVerif file checking the first condition except for the theory (to be appended). *)      
 let transFO proto p inNameFile nameOutFile = 
 
-  (* -- 1. -- Build idealized versions of outputson the right and check conformity *)
+  (* -- 1. -- Build idealized versions of outputs on the right and check conformity *)
   let nonTransparentSymbList = ["enc"; "aenc"; "dec"; "adec"; "h"; "hash"; "xor"; "dh"; "exp"; "mac"] in
   let isArity0 funSymb = match funSymb.f_type with | ([], _) -> true | _ -> false in
   let isName funSymb = match funSymb.f_cat with Name _ -> true | _ -> false in
@@ -753,6 +753,11 @@ let transFO proto p inNameFile nameOutFile =
   let isTuple funSymb = match funSymb.f_cat with Tuple -> true | _ -> false in
   let isChoice funSymb = funSymb.f_name = "choice" in
   let isHole funSymb = funSymb.f_cat = Hole || funSymb.f_name = "hole" in
+  let isDestr funSymb = match funSymb.f_cat with
+    | Red _ -> true
+    | _ -> false in
+  let equOrDestr funSymb = isDestr funSymb ||  (* if there is a match with a destructor or function in equation *)
+			     (List.exists (fun s -> funSymb.f_name = s) !Pitsyntax.funSymb_equation) in
   (* Given a term, tries to guess an idealization *)
   let rec guessIdeal listVarIn = function
     | FunApp (f, []) as t
@@ -764,7 +769,7 @@ let transFO proto p inNameFile nameOutFile =
 	 when isTuple f -> FunApp (f, List.map (guessIdeal listVarIn) listT) (* tuple *)
     | FunApp (f, listT) as t ->
        let recT =		(* try to go through if f\notin E *)
-	 if List.exists (fun s -> f.f_name = s) !Pitsyntax.funSymb_equation (* if there is a match with a function in equation *)
+	 if equOrDestr f
 	 then hole
 	 else FunApp (f, List.map (guessIdeal listVarIn) listT)  in
        if !Param.ideaFullSyntax
@@ -804,10 +809,9 @@ let transFO proto p inNameFile nameOutFile =
       | FunApp (f, tl) ->
 	 (* For debugging purposes: *)
 	 (* List.iter (fun f -> Printf.printf "%s, " (\* Display.Text.display_function_name *\) f) !Pitsyntax.funSymb_equation; *)
-	 if not(!Param.ideaFullSyntax) &&
-	      List.exists (fun s -> f.f_name = s) !Pitsyntax.funSymb_equation (* if there is a match with a function in equation *)
-	 then false		(* function in E *)
-	 else List.for_all checkSyntax tl (* ok, pursue *)
+	 (* if not(!Param.ideaFullSyntax) && equOrDestr f *)
+	 (* then false		(\* function in E *\) else *)
+	 List.for_all checkSyntax tl (* ok, pursue *)
       | Var b when List.mem b.sname listVarIn -> true  (* variable of input *)
       | Var b -> false	in	              	       (* variable of let *)
     let rec checkOneName = function
@@ -817,6 +821,7 @@ let transFO proto p inNameFile nameOutFile =
 	-> true   (* session name *)
       | FunApp (f, []) when isName f -> false   (* (private) names *)
       | FunApp (f, []) when isConstant f -> false (* public constants *)
+      | FunApp (f, tl) when equOrDestr f -> false (* even if sub-terms contain session name, they may disappear because of red rule or equation *)
       | FunApp (f, tl) -> List.exists checkOneName tl in (* ok, pursue *)
     if checkSyntax t
     then if !Param.ideaFullSyntax
