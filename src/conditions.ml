@@ -712,9 +712,10 @@ let hole_of_str s =
 	f_options = 0;		(* CHECK* *)
       }
     , [])
-let hole = hole_of_str ""
 let hole_of_name f = hole_of_str f.f_name
-
+let countHoles = ref 0
+let hole () = incr(countHoles);
+	      hole_of_str (Printf.sprintf "%d" !countHoles)
 let mergeOut = {
     sname = "mergeOut";
     vname = 0;
@@ -748,6 +749,7 @@ let transFO proto p inNameFile nameOutFile =
   let isName funSymb = match funSymb.f_cat with Name _ -> true | _ -> false in
   let isSessName funSymb = List.mem funSymb proto.sessNames in
   let isName funSymb = List.mem funSymb (proto.comNames @ proto.idNames @ proto.sessNames) in
+  let isFunction funSymb = (List.length (fst funSymb.f_type)) > 0 in
   let isConstant funSymb = isArity0 funSymb && not(isName funSymb) in
   let isPrivate funSymb = funSymb.f_private in
   let isTuple funSymb = match funSymb.f_cat with Tuple -> true | _ -> false in
@@ -770,12 +772,12 @@ let transFO proto p inNameFile nameOutFile =
     | FunApp (f, listT) as t ->
        let recT =		(* try to go through if f\notin E *)
 	 if equOrDestr f
-	 then hole
+	 then hole()
 	 else FunApp (f, List.map (guessIdeal listVarIn) listT)  in
        if !Param.ideaFullSyntax
        then FunApp (f, List.map (guessIdeal listVarIn) listT)
        else (if !Param.ideaGreedy (* depends on options *)
-	     then  hole
+	     then  hole()
 	     (* (if List.mem f.f_name nonTransparentSymbList (* should be non-transparent *)
 	         then hole
    	         else recT) *)
@@ -794,7 +796,7 @@ let transFO proto p inNameFile nameOutFile =
 	 Display.Text.display_term term;
 	 Printf.printf "   ";
 	 pp "be a hole (i.e., fresh session name variable).\n";
-	 hole;
+	 hole ();
        end in
   (* Given a term, check that its corresponds to a conform idealization.
    [insidehonest] describes if this output is inside the honest execution (i.e., not in else nor at
@@ -844,7 +846,7 @@ let transFO proto p inNameFile nameOutFile =
 	  incr(countHoles);
 	  Printf.sprintf "hole__%d" !countHoles;
 	end
-      else (if not(List.mem_assoc funSymb.f_name !listNameNames)
+      else (if isFunction funSymb || not(List.mem_assoc funSymb.f_name !listNameNames)
 	    then begin
 		let s = Printf.sprintf "%s_%s_%d" funSymb.f_name !suffix !countHoles in (* need to avoid clash between two roles e.g., *)
 		listNameNames := (funSymb.f_name,s) :: !listNameNames;
