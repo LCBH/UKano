@@ -138,7 +138,7 @@ let _ =
       "--only-wa",  Arg.Unit (fun () -> Param.onlyWA := true),
       "\t\tverifies the well-authentication condition only";
       "--fo-with-let",  Arg.Unit (fun () -> Param.letCatchFO := true),
-      "\t\tverifies the frame opacity condition using old encodings based on nested 'let' constructs ";
+      "\tverifies the frame opacity condition using old encodings based on nested 'let' constructs ";
       "--clean",  Arg.Unit (fun () -> Param.cleanFiles := true),
       "\t\tremove generated files after successful verification";
       "--less-verbose",  Arg.Unit (fun () -> Param.shortOutput := true),

@@ -1,4 +1,4 @@
-# UKano: UnlinKability and ANOnymity verifier
+# UKano: UnlinKability and ANOnymity verifier v0.3
 > - Landing page: http://projects.lsv.ens-cachan.fr/ukano
 > - Manual: https://github.com/LCBH/UKano/wiki
 
@@ -18,8 +18,8 @@ Just type: `make`.
 The executable program `ukano` and `proverif` have been built.
 
 You can also build UKano only by typing `make ukano`.
-UKano needs an exectuable of ProVerif though. You can specify the path of
-your ProVerif executable with the option `--proverif <path>`.
+UKano needs an exectuable of ProVerif though. Refer to the manual
+for the required version.
 
 
 ## Quick Test
@@ -41,10 +41,10 @@ of options of UKano.
 
 
 ## How Does It Work?
-We have proved in [HBD16](#references) and [H17](#references) that, for 2-party protocols,
-unlinkability and anonymity follow from two sufficent conditions we
-called *Frame Opacity* (FO) and *Well-Authentication* (WA). We also show
-how to verify those two conditions relying on dedicated encodings.
+We have proved in [HBD17](#references) (preliminary versions in [HBD16](#references),[H17](#references))
+that, for 2-party protocols, unlinkability and anonmyity follow from two sufficent conditions we
+called *Frame Opacity* (FO) and *Well-Authentication* (WA). We also show how to verify those two
+conditions relying on dedicated encodings.
 UKAno mechanizes all those encodings.
 
 After parsing your file, the tool creates two other files in the same
@@ -73,13 +73,18 @@ section of the manual: https://github.com/LCBH/UKano/wiki#our-case-studies.
 Finally, the underlying theory behind UKano is described in [HBD16] and [H17].
 
 
-> [HBD16]: L. Hirschi, D. Baelde and S. Delaune.
->      A Method for Verifying Privacy-Type Properties : The Unbounded Case.
->      In IEEE Symposium on Security and Privacy (Oakland), 2016.
->      A copy can be found at http://projects.lsv.ens-cachan.fr/ukano/.
->
+## References
+> [HBD17]: L. Hirschi, D. Baelde and S. Delaune.
+>     A method for unbounded verification of privacy-type properties.
+>     A copy will soon be available at http://projects.lsv.ens-cachan.fr/ukano/.
+> 
 > [H17]: L. Hirschi.
->      PhD Thesis.
->	   Automated Verification of Privacy in Security Protocols:
->	   Back and Forth Between Theory & Practice.
->	   A copy is available at http://www.lsv.fr/~hirschi/defense.php.
+>     PhD Thesis.
+>     Automated Verification of Privacy in Security Protocols:
+>     Back and Forth Between Theory & Practice.
+>     A copy is available at http://www.lsv.fr/~hirschi/defense.php.
+> 
+> [HBD16]: L. Hirschi, D. Baelde and S. Delaune.
+>     A Method for Verifying Privacy-Type Properties : The Unbounded Case.
+>     In IEEE Symposium on Security and Privacy (Oakland), 2016. To appear.
+>     A copy can be found at http://projects.lsv.ens-cachan.fr/ukano/.

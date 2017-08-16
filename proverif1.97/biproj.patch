@@ -1,0 +1,150 @@
+diff --git a/src/param.ml b/src/param.ml
+index 490774f..5d7162e 100644
+--- a/src/param.ml
++++ b/src/param.ml
+@@ -403,6 +403,17 @@ let has_choice = ref false
+ let has_barrier = ref false
+ let equivalence = ref false
+ 
++let biproj_fun_memo side = memo (fun t ->
++  { f_name = "biproj_" ^ (if side = Left then "fst" else "snd") ;
++    f_type = [t],t;
++    f_cat = BiProj side;
++    f_initial_cat = BiProj side;
++    f_private = true;
++    f_options = 0 })
++
++let biproj_fun side t =
++  biproj_fun_memo side (get_type t)
++
+ (* Values computed from the input file *)
+ 
+ let all_types = ref [channel_type; bitstring_type; bool_type]
+diff --git a/src/param.mli b/src/param.mli
+index 4b094d9..e10be90 100644
+--- a/src/param.mli
++++ b/src/param.mli
+@@ -227,6 +227,8 @@ val has_choice : bool ref
+ val has_barrier : bool ref
+ val equivalence : bool ref
+ 
++val biproj_fun : Types.side -> Types.typet -> Types.funsymb
++
+ (* Values computed from the input file *)
+ 
+ val all_types : Types.typet list ref
+diff --git a/src/pitparser.mly b/src/pitparser.mly
+index 7db8306..6fff49d 100644
+--- a/src/pitparser.mly
++++ b/src/pitparser.mly
+@@ -34,6 +34,13 @@ open Ptree
+ open Pitptree
+ exception Syntax
+ 
++let fresh_biproj_var =
++  let c = ref 0 in
++    fun () ->
++      incr c ;
++      Printf.sprintf "_biproj_%d" !c,
++      Parsing_helper.dummy_ext
++
+ %}
+ 
+ %token CHOICE
+@@ -643,6 +650,15 @@ tprocess:
+ 	{ PTest($2,$4,$5) }
+ |	IN LPAREN pterm COMMA tpattern RPAREN opttprocess
+ 	{ PInput($3,$5,$7) }
++|	IN LPAREN pterm COMMA CHOICE LBRACKET IDENT COMMA IDENT RBRACKET COLON typeid RPAREN opttprocess
++	{ let z = fresh_biproj_var () in
++        PInput($3,PPatVar (z,Some $12),
++        let z : Pitptree.pterm_e = PPIdent (fst z,snd z), parse_extent () in
++        let fst : ident = ("biproj_fst",parse_extent ()) in
++        let snd : ident = ("biproj_snd",parse_extent ()) in
++        PLet (PPatVar ($7,None),(PPFunApp(fst,[z]),parse_extent ()),
++        PLet (PPatVar ($9,None),(PPFunApp(snd,[z]),parse_extent ()),
++        $14,PNil),PNil)) }
+ |	OUT LPAREN pterm COMMA pterm RPAREN opttprocess
+ 	{ POutput($3,$5,$7) }
+ | 	LET tpattern EQUAL pterm 
+diff --git a/src/pitranslweak.ml b/src/pitranslweak.ml
+index 9af1371..56e541f 100644
+--- a/src/pitranslweak.ml
++++ b/src/pitranslweak.ml
+@@ -360,6 +360,15 @@ let rec transl_term next_f cur_state term = match term with
+ 		  ) cur_state t1
+ 		| _ -> Parsing_helper.internal_error "Choice should have two arguments"
+ 	    end
++        | BiProj side ->
++            begin match args with
++              | [t] ->
++                  transl_term (fun cur_state1 t1 t2 ->
++                    let t = match side with Left -> t1 | Right -> t2 in
++                      next_f cur_state1 t t
++                  ) cur_state t
++              | _ -> assert false
++            end
+ 	| Failure -> next_f cur_state (FunApp(f,[]))  (FunApp(f,[]))
+ 	
+ 	| _ ->
+diff --git a/src/pitsyntax.ml b/src/pitsyntax.ml
+index 78f72c4..2bb91b6 100644
+--- a/src/pitsyntax.ml
++++ b/src/pitsyntax.ml
+@@ -200,6 +200,10 @@ let get_apply_symb env (s,ext) tl =
+ 	input_error ("function " ^ s ^ " expects two arguments of same type but is here given " ^ 
+     		     (args_to_string tl)) ext;
+       (EFun (Param.choice_fun t1), t1)
++  | "biproj_fst", [t] ->
++      (EFun (Param.biproj_fun Left t), t)
++  | "biproj_snd", [t] ->
++      (EFun (Param.biproj_fun Right t), t)
+   | ("=" | "<>" | "choice"), _ ->
+       input_error (s ^ "expects two arguments") ext
+   | _ ->
+diff --git a/src/reduction_bipro.ml b/src/reduction_bipro.ml
+index 2a9e5f3..1a260b0 100644
+--- a/src/reduction_bipro.ml
++++ b/src/reduction_bipro.ml
+@@ -290,6 +290,10 @@ let rec term_evaluation side = function
+ 		  term_evaluation side t2
+ 	    | _ -> Parsing_helper.internal_error "Choice should have two arguments"
+ 	  end
++      | BiProj Left ->
++          begin match l with [t] -> term_evaluation 1 t | _ -> assert false end
++      | BiProj Right ->
++          begin match l with [t] -> term_evaluation 2 t | _ -> assert false end
+       | Red redl ->
+ 	  let l' = List.map (term_evaluation side) l in
+ 	  let rec try_red_list = function
+diff --git a/src/simplify.ml b/src/simplify.ml
+index afbc6c2..9591513 100644
+--- a/src/simplify.ml
++++ b/src/simplify.ml
+@@ -537,6 +537,10 @@ let rec fst_snd_term next_f = function
+           next_f t11 t22
+         ) t2
+       ) t1
++  | FunApp({f_cat = BiProj s},[t]) ->
++      fst_snd_term (fun t1 t2 ->
++        let t' = match s with Left -> t1 | Right -> t2 in
++          next_f t' t') t
+   | FunApp(f,args) -> 
+       fst_snd_term_list (fun q1 q2 ->
+         next_f (FunApp(f,q1)) (FunApp(f,q2))
+diff --git a/src/types.mli b/src/types.mli
+index 07fd293..ba48bd5 100644
+--- a/src/types.mli
++++ b/src/types.mli
+@@ -120,8 +120,11 @@ and funcats =
+   | General_var
+   | General_mayfail_var
+   | Choice
++  | BiProj of side
+   | Failure
+ 
++and side = Left | Right
++
+ and rewrite_rule = term list * term * (term * term) list
+ 
+ and rewrite_rules = rewrite_rule list
