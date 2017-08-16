@@ -138,9 +138,7 @@ let Issuer(skI:bitstring, pkM:bitstring) =
     let (xnt:bitstring, xzetaI:bitstring, xspk:bitstring) = z in
     if yau = hash((xU,ne)) then
     let (=accept) = checkspk(FJoin, (xzetaI, pk(skI),xNi,xU,(xnt,ni)), xspk) in
-    out(c, choice[
-    	   clsign(skI,r1,r2,xU),
-	   clsign(skI,r1,r2,snd(x))]).
+    out(c, clsign(skI,r1,r2,snd(x))).
 
     
 let SYSTEM = 
