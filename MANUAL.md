@@ -228,10 +228,8 @@ heuristics implemented in  UKano to build idealisations:
 - "syntax" corresponds to the option `--ideal-full-syntax`
 - "user-defined" when a user-defined idealisation is necessary
 
-| Protocol    | Better time (total) | Time for WA | Time for FO (greedy) | Time for FO (default) | 
-Time for FO (syntax)  | Time for FO (user-defined) |
-|:------------|:-------------:|:-------------------:|:-------------------:|:---------------------:|:
---------------------:|:---------------------------|
+| Protocol    | Better time (total) | Time for WA | Time for FO (greedy) | Time for FO (default) | Time for FO (syntax)  | Time for FO (user-defined) |
+|:------------|:-------------:|:-------------------:|:-------------------:|:---------------------:|:--------------------:|:---------------------------|
 | Hash-Lock      | 0.00s  | 0.00s | 0.00s  | 0.00s   | 0.00s   | --    |
 | Fixed LAK      | 0.00s  | 0.00s | 0.00s  | 0.00s   | 0.00s   | --    |
 | BAC            | 8.41s  | 0.02s | 8.39s | 17.24s  | 17.20s  | --    |
@@ -255,10 +253,8 @@ We also report on the table below the time needed to find an attack (on well-aut
 
 
 #### Out-of-date benchmarks using old encoding for proving FO
-| Protocol    | Better time (total) | Time for WA | Time for FO (greedy) | Time for FO (default) | 
-Time for FO (syntax)  | Time for FO (user-defined) |
-|:------------|:-------------:|:-------------------:|:-------------------:|:---------------------:|:
---------------------:|:---------------------------|
+| Protocol    | Better time (total) | Time for WA | Time for FO (greedy) | Time for FO (default) | Time for FO (syntax)  | Time for FO (user-defined) |
+|:------------|:-------------:|:-------------------:|:-------------------:|:---------------------:|:--------------------:|:---------------------------|
 | Hash-Lock      | 0.00s  | 0.00s | 0.00s  | 0.00s   | 0.00s   | --    |
 | Fixed LAK      | 0.00s  | 0.00s | 0.00s  | 0.00s   | 0.00s   | --    |
 | BAC            | 8.41s  | 0.02s | 8.39s | 17.24s  | 17.20s  | --    |
