@@ -254,6 +254,7 @@ We also report on the table below the time needed to find an attack (on well-aut
 
 #### Out-of-date benchmarks using old encoding for proving FO (to remove before release of v0.3)
 (DAA case studies were flawed and are now fixed, this also explain differences with the previous table)
+
 | Protocol    | Best time (total) | Time for WA | Time for FO (greedy) | Time for FO (default) | Time for FO (syntax)  | Time for FO (user-defined) |
 |:------------|:-------------:|:-------------------:|:-------------------:|:---------------------:|:--------------------:|:---------------------------|
 | Hash-Lock      | 0.00s  | 0.00s | 0.00s  | 0.00s   | 0.00s   | --    |
