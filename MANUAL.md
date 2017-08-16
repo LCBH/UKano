@@ -228,20 +228,20 @@ heuristics implemented in  UKano to build idealisations:
 - "syntax" corresponds to the option `--ideal-full-syntax`
 - "user-defined" when a user-defined idealisation is necessary
 
-| Protocol    | Better time (total) | Time for WA | Time for FO (greedy) | Time for FO (default) | Time for FO (syntax)  | Time for FO (user-defined) |
+| Protocol    | Best time (total) | Time for WA | Time for FO (greedy) | Time for FO (default) | Time for FO (syntax)  | Time for FO (user-defined) |
 |:------------|:-------------:|:-------------------:|:-------------------:|:---------------------:|:--------------------:|:---------------------------|
 | Hash-Lock      | 0.00s  | 0.00s | 0.00s  | 0.00s   | 0.00s   | --    |
 | Fixed LAK      | 0.00s  | 0.00s | 0.00s  | 0.00s   | 0.00s   | --    |
-| BAC            | 8.41s  | 0.02s | 8.39s | 17.24s  | 17.20s  | --    |
-| BAC+AA+PA      | 198.28s| 0.42s |197.86s | 1013.56s    | 998.81s    | --    |
-| BAC+PA+AA      | 183.40s| 0.33s |183.07s|  1068.79s | 1191.04s   | --    |
-| PACE with tags | 169.91 | 62.99s| 106.92s (*) | :curly_loop:   | :curly_loop: |106.92s |
-| DAA simplified [HBD17]| 0.02s |0.01s| :x: | 0.01s  | 0.00s   | --    |
-| DAA sign       | 2.94s  | 0.01s | :x:    | :x:     | 2.76s   | --    |
-| DAA join       | 4.68s  | 1.82s | 2.30s  | 2.30s   | 28.85s  | --    |
-| abcdh (irma)   | 8479.76| 9060 | :x: | :x: |  2389.76s* |  2389.76s |
+| BAC            | 0.03s  | 0.02s | 0.01s  | 0.04s   | 0.04s   | --    |
+| BAC+AA+PA      | 0.46s  | 0.42s | 0.04s  | 0.22s   | 0.22s   | --    |
+| BAC+PA+AA      | 0.40s  | 0.36s | 0.04s  | 0.52s   | 0.50s   | --    |
+| PACE with tags | 78.40s | 72.40s| 6.00s  | 6.19s   | 16.44s  | --    |
+| DAA simplified [HBD17]| 0.02s | 0.01s | :x:| 0.01s | 0.01s   | --    |
+| DAA sign       | 3.77s  | 0.03s | :x:    | :x:     | :x:     | 3.74s |
+| DAA join       | 31.38s | 29.57s (*)| :x:| :x:     | 2.29s   | 1.79s |
+| abcdh (irma)   |  ? (running) | ? | ? | ? |  ? | ? |
 
-(*) indicates that we had to slightly modify the produced file.
+(*) indicates that we had to slightly modify the produced file, refer to [HBD17](#references) for more details.
 
 We also report on the table below the time needed to find an attack (on well-authentication):
 
@@ -252,8 +252,9 @@ We also report on the table below the time needed to find an attack (on well-aut
 | PACE                                 | 83.72s  |
 
 
-#### Out-of-date benchmarks using old encoding for proving FO
-| Protocol    | Better time (total) | Time for WA | Time for FO (greedy) | Time for FO (default) | Time for FO (syntax)  | Time for FO (user-defined) |
+#### Out-of-date benchmarks using old encoding for proving FO (to remove before release of v0.3)
+(DAA case studies were flawed and are now fixed, this also explain differences with the previous table)
+| Protocol    | Best time (total) | Time for WA | Time for FO (greedy) | Time for FO (default) | Time for FO (syntax)  | Time for FO (user-defined) |
 |:------------|:-------------:|:-------------------:|:-------------------:|:---------------------:|:--------------------:|:---------------------------|
 | Hash-Lock      | 0.00s  | 0.00s | 0.00s  | 0.00s   | 0.00s   | --    |
 | Fixed LAK      | 0.00s  | 0.00s | 0.00s  | 0.00s   | 0.00s   | --    |
