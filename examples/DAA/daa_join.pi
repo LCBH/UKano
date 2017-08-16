@@ -98,26 +98,27 @@ let join(pkI:bitstring, bsnI:bitstring,KI:bitstring,DAASeed:bitstring,cnt:bitstr
     new DAASeeN:bitstring;
     new zetaIN:bitstring;
     new tskN:bitstring;
-
+    let tsk:bitstring = hash((hash((DAASeed,hash(KI))),cnt,zero)) in
+    let zeta:bitstring = hash((zero,bsnI)) in
     new v':bitstring;
 
     out(c, choice[
-               (commit(hash((hash((DAASeed,hash(KI))),cnt,zero)),hash((zero,bsnI))), clcommit(pkI,v',hash((hash((DAASeed,hash(KI))),cnt,zero)))),
+               (commit(tsk,zeta), clcommit(pkI,v',tsk)),
                (commit(tskN,zetaIN), clcommit(pkI,v',tskN))]);
     in(c,encNe:bitstring);
     out(c, choice[
-               hash((clcommit(pkI,v',hash((hash((DAASeed,hash(KI))),cnt,zero))), dec(skM,encNe))),
+               hash((clcommit(pkI,v',tsk), dec(skM,encNe))),
                hash((clcommit(pkI,v',tskN), hole))]);
 
     in(c,ni:bitstring);
     new nt:bitstring;
     out(c, choice[
-             (nt,hash((zero,bsnI)), spk(FJoin,(hash((hash((DAASeed,hash(KI))),cnt,zero)),v'),(hash((zero,bsnI)),pkI,commit(hash((hash((DAASeed,hash(KI))),cnt,zero)),hash((zero,bsnI))), clcommit(pkI,v',hash((hash((DAASeed,hash(KI))),cnt,zero))),(nt,ni)))),
-             (nt,zetaIN,            spk(FJoin,(tskN,v'),(zetaIN,pkI,commit(tskN,zetaIN), clcommit(pkI,v',tskN),(nt,ni))))]);
+             (nt,zeta,   spk(FJoin,(tsk,v'), (zeta,pkI,commit(tsk,zeta), clcommit(pkI,v',tsk),(nt,ni)))),
+             (nt,zetaIN, spk(FJoin,(tskN,v'),(zetaIN,pkI,commit(tskN,zetaIN), clcommit(pkI,v',tskN),(nt,ni))))]);
 
     in(c,sig:bitstring);
     let cre = clopen(pkI,v',sig) in
-    let (=accept) = checkclsign(pkI,hash((hash((DAASeed,hash(KI))),cnt,zero)),cre) in
+    let (=accept) = checkclsign(pkI,tsk,cre) in
     out(c,ok).
     
 let Issuer(skI:bitstring, pkM:bitstring) =
