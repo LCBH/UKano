@@ -701,17 +701,18 @@ let letCatchSymb = {
     f_private = true;		(* CHECK* *)
     f_options = 0;		(* CHECK* *)
   }
+
+let holeSymb_of_str s = 
+  {
+    f_name = "hole__"^s;
+    f_type = ([], typeBit);
+    f_cat = Hole;
+    f_initial_cat = Hole;
+    f_private = true;
+    f_options = 0;		(* CHECK* *)
+  }  
 let hole_of_str s =
-  FunApp
-    ( {
-	f_name = "hole__"^s;
-	f_type = ([], typeBit);
-	f_cat = Hole;
-	f_initial_cat = Hole;
-	f_private = true;
-	f_options = 0;		(* CHECK* *)
-      }
-    , [])
+  FunApp (holeSymb_of_str s , [])
 let hole_of_name f = hole_of_str f.f_name
 let countHoles = ref 0
 let hole () = incr(countHoles);
@@ -755,6 +756,8 @@ let transFO proto p inNameFile nameOutFile =
   let isTuple funSymb = match funSymb.f_cat with Tuple -> true | _ -> false in
   let isChoice funSymb = funSymb.f_name = "choice" in
   let isHole funSymb = funSymb.f_cat = Hole || funSymb.f_name = "hole" in
+  let isUserHole term = match term with
+    | FunApp(funSymb, _) when funSymb.f_name = "hole" -> true | _ -> false in
   let isDestr funSymb = match funSymb.f_cat with
     | Red _ -> true
     | _ -> false in
@@ -895,7 +898,11 @@ let transFO proto p inNameFile nameOutFile =
 	    else failwith ("Critial Error [458]."^email)
 	 | FunApp (funSymb, tm1 :: tm2 :: tl) when (not(!Param.ideaAutomatic) && isChoice funSymb) ->
 	    if !ideaAssumed || checkIdeal inHonest listVarIn tm2
-	    then begin ideaChecked := true; (tm1, tm2); end (* user already built idealization and no option 'ideaAutomatic' *)
+	    then begin ideaChecked := true;
+		       if isUserHole tm2 (* tm2 is 'hole' and should be renamed (different occurences mapped to different names) *)
+		       then let tm2New = hole () in
+			    (tm1, tm2New)      (* user already built idealization and no option 'ideaAutomatic' *)
+		       else (tm1, tm2); end (* user already built idealization and no option 'ideaAutomatic' *)
 	    else begin pp "[ERROR] The following idealisation you built is not conform: ";
 		       Display.Text.display_term tm2;
 		       pp ".\n";
