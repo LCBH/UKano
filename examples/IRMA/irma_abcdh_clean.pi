@@ -85,6 +85,11 @@ otherwise forall O:bitstring, U:bitstring, Attr:bitstring, R:bitstring;
 reduc forall O:bitstring, xU:bitstring, Attr:bitstring, R:bitstring, O2:bitstring, Attr2:bitstring;
         getPublicSD(SD(cred(skS(O), xU, Attr), O2, xU, R, Attr2)) = (O2,R,Attr2).
 
+reduc forall x1:bitstring, x2:bitstring;
+   fst((x1,x2)) = x1.
+reduc forall x1:bitstring, x2:bitstring;
+   snd((x1,x2)) = x2.
+
 (* For defining idealizations *)
 free hole:bitstring.
 
@@ -96,7 +101,7 @@ let verifier(u:bitstring, Overifier:bitstring, Oprover:bitstring, credV:bitstrin
     new xv:bitstring;
     new NEWu:bitstring;
     out(c, choice[(exp(g,xv), SD(credV, Overifier, MS(u), f1(exp(g,xv)), movieTheater)),
-      	          (xv, SD(cred(skS(OrgaCheckAge),MS(NEWu),movieTheater), Overifier, MS(NEWu), f1(xv), movieTheater))
+      	          (exp(g,xv), SD(cred(skS(OrgaCheckAge),MS(NEWu),movieTheater), OrgaCheckAge, MS(NEWu), f1(exp(g,xv)), movieTheater))
                  ]); 
     in(c,x:bitstring);
     let (xhc:bitstring,xsc:bitstring) = x in
@@ -124,7 +129,7 @@ let prover(u:bitstring, Overifier:bitstring, Oprover:bitstring, credP:bitstring)
     let (=accept) = verifySD(xsv) in
     let (=Overifier, =f1(xhv), =movieTheater) = getPublicSD(xsv) in
     out(c, choice[(exp(g, xc), SD(credP, empty, MS(u), f1((xhv, exp(g, xc))), empty)),
-      	          (xc, SD(cred(skS(OrgaAge),MS(NEWu),isOver18), empty, MS(NEWu), f1((hole,xc)), empty))
+      	          (exp(g, xc), SD(cred(skS(OrgaAge),MS(NEWu),isOver18), empty, MS(NEWu), f1((fst(x),xc)), empty))
                  ]);
     in(c, y:bitstring);
     let (=c1, =OK) = sdec(y, f2(exp(xhv,xc))) in

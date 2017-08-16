@@ -85,6 +85,11 @@ otherwise forall O:b, U:b, Attr:b, R:b;
 reduc forall O:b, xU:b, Attr:b, R:b, O2:b, Attr2:b;
         getPublicSD(SD(cred(skS(O), xU, Attr), O2, xU, R, Attr2)) = (O2,R,Attr2).
 
+reduc forall x1:b, x2:b;
+   fst((x1,x2)) = x1.
+reduc forall x1:b, x2:b;
+   snd((x1,x2)) = x2.
+
 (* For defining idealizations *)
 free hole:b.
 
@@ -96,7 +101,7 @@ let verifier(u:b, Overifier:b, Oprover:b, credV:b) =
     new xv:b;
     new NEWu:b;
     out(c, choice[(exp(g,xv), SD(credV, Overifier, MS(u), f1(exp(g,xv)), movieTheater)),
-      	          (xv, SD(cred(skS(OrgaCheckAge),MS(NEWu),movieTheater), Overifier, MS(NEWu), f1(xv), movieTheater))
+      	          (exp(g,xv), SD(cred(skS(OrgaCheckAge),MS(NEWu),movieTheater), OrgaCheckAge, MS(NEWu), f1(exp(g,xv)), movieTheater))
                  ]); 
     in(c,x:b);
     let (xhc:b,xsc:b) = x in
@@ -124,7 +129,7 @@ let prover(u:b, Overifier:b, Oprover:b, credP:b) =
     let (=accept) = verifySD(xsv) in
     let (=Overifier, =f1(xhv), =movieTheater) = getPublicSD(xsv) in
     out(c, choice[(exp(g, xc), SD(credP, empty, MS(u), f1((xhv, exp(g, xc))), empty)),
-      	          (xc, SD(cred(skS(OrgaAge),MS(NEWu),isOver18), empty, MS(NEWu), f1((hole,xc)), empty))
+      	          (exp(g, xc), SD(cred(skS(OrgaAge),MS(NEWu),isOver18), empty, MS(NEWu), f1((fst(x),xc)), empty))
                  ]);
     in(c, y:b);
     let (=c1, =OK) = sdec(y, f2(exp(xhv,xc))) in
