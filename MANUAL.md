@@ -239,7 +239,7 @@ heuristics implemented in  UKano to build idealisations:
 | DAA simplified [HBD17]| 0.02s | 0.01s | :x:| 0.01s | 0.01s   | --    |
 | DAA sign       | 3.77s  | 0.03s | :x:    | :x:     | :x:     | 3.74s |
 | DAA join       | 31.38s | 29.57s (*)| :x:| :x:     | 2.29s   | 1.79s |
-| abcdh (irma)   |  ? (running) | ? | ? | ? |  ? | ? |
+| abcdh (irma)   |  ? (running) | ? (running) | :x: | :x: |  ? (running) | ? (running) |
 
 (*) indicates that we had to slightly modify the produced file, refer to [HBD17](#references) for more details.
 
