@@ -238,8 +238,8 @@ heuristics implemented in  UKano to build idealisations:
 | PACE with tags | 78.40s | 72.40s| 6.00s  | 6.19s   | 16.44s  | --    |
 | DAA simplified [HBD17]| 0.02s | 0.01s | :x:| 0.01s | 0.01s   | --    |
 | DAA sign       | 3.77s  | 0.03s | :x:    | :x:     | :x:     | 3.74s |
-| DAA join       | 31.38s | 29.57s (*)| :x:| :x:     | 2.29s   | 1.79s |
-| abcdh (irma)   |  ? (running) | ? (running) | :x: | :x: |  ? (running) | ? (running) |
+| DAA join       | 31.38s | 29.57s*  | :x: | :x:     | 2.29s   | 1.79s |
+| abcdh (irma)   | 9072.75s |  9060s* | :x:| :x:     | 38.20   | 12.75s|
 
 (*) indicates that we had to slightly modify the produced file, refer to [HBD17](#references) for more details.
 
@@ -266,7 +266,7 @@ We also report on the table below the time needed to find an attack (on well-aut
 | DAA simplified [HBD17]| 0.02s |0.01s| :x: | 0.01s  | 0.00s   | --    |
 | DAA sign       | 2.94s  | 0.01s | :x:    | :x:     | 2.76s   | --    |
 | DAA join       | 4.68s  | 1.82s | 2.30s  | 2.30s   | 28.85s  | --    |
-| abcdh (irma)   | 8479.76| 9060 | :x: | :x: |  2389.76s* |  2389.76s |
+| abcdh (irma)   | 8479.76| 9060* | :x: | :x: |  2389.76s* |  2389.76s |
 
 
 ## References
