@@ -128,8 +128,8 @@ let prover(u:bitstring, Overifier:bitstring, Oprover:bitstring, credP:bitstring)
     let (xhv:bitstring, xsv:bitstring) = x in
     let (=accept) = verifySD(xsv) in
     let (=Overifier, =f1(xhv), =movieTheater) = getPublicSD(xsv) in
-    out(c, choice[(exp(g, xc), SD(credP, empty, MS(u), f1((xhv, exp(g, xc))), empty)),
-      	          (exp(g, xc), SD(cred(skS(OrgaAge),MS(NEWu),isOver18), empty, MS(NEWu), f1((fst(x),xc)), empty))
+    out(c, choice[(exp(g, xc), SD(credP, empty, MS(u), f1((fst(x), exp(g, xc))), empty)),
+      	          (exp(g, xc), SD(cred(skS(OrgaAge),MS(NEWu),isOver18), empty, MS(NEWu), f1((fst(x),exp(g,xc))), empty))
                  ]);
     in(c, y:bitstring);
     let (=c1, =OK) = sdec(y, f2(exp(xhv,xc))) in
