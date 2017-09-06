@@ -238,7 +238,7 @@ heuristics implemented in  UKano to build idealisations:
 | PACE with tags | 78.40s | 72.40s| 6.00s  | 6.19s   | 16.44s  | --    |
 | DAA simplified [HBD17]| 0.02s | 0.01s | :x:| 0.01s | 0.01s   | --    |
 | DAA sign       | 3.77s  | 0.03s | :x:    | :x:     | :x:     | 3.74s |
-| DAA join       | 31.38s | 29.57s*  | :x: | :x:     | 2.29s   | 1.79s |
+| DAA join       | 31.81s | 29.57s*  | :x: | 1.24s   | 2.29s   | 1.79s |
 | abcdh (irma)   | 9072.75s |  9060s* | :x:| :x:     | 38.20s  | 12.75s|
 
 (*) indicates that we had to slightly modify the produced file, refer to [HBD17](#references) for more details.

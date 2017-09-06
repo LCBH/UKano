@@ -761,8 +761,8 @@ let transFO proto p inNameFile nameOutFile =
   let isDestr funSymb = match funSymb.f_cat with
     | Red _ -> true
     | _ -> false in
-  let equOrDestr funSymb = isDestr funSymb ||  (* if there is a match with a destructor or function in equation *)
-			     (List.exists (fun s -> funSymb.f_name = s) !Pitsyntax.funSymb_equation) in
+  let isEqu funSymb = List.exists (fun s -> funSymb.f_name = s) !Pitsyntax.funSymb_equation in
+  let equOrDestr funSymb = isDestr funSymb || isEqu funSymb in 
   (* Given a term, tries to guess an idealization *)
   let rec guessIdeal listVarIn = function
     | FunApp (f, []) as t
@@ -774,7 +774,7 @@ let transFO proto p inNameFile nameOutFile =
 	 when isTuple f -> FunApp (f, List.map (guessIdeal listVarIn) listT) (* tuple *)
     | FunApp (f, listT) as t ->
        let recT =		(* try to go through if f\notin E *)
-	 if equOrDestr f
+	 if isEqu f
 	 then hole()
 	 else FunApp (f, List.map (guessIdeal listVarIn) listT)  in
        if !Param.ideaFullSyntax
