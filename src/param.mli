@@ -39,14 +39,15 @@ val ideaAssumed : bool ref
 val onlyFO : bool ref		       
 (* only verifies WA ? *)
 val onlyWA : bool ref		       
-(* idea greedy ? that means that idealizations will try to put as much holes
-   as possible (always when f(..) and f\neq tuple)  *)
+(* idea greedy ? GREEDY heuristic = SEMANTIC heuristic.
+   Idealizations will try to put as much holes as possible
+   (always when f(..) and f\neq tuple)  *)
 val ideaGreedy : bool ref		       
-(* idea automatic ? that means that we bypass given idealizations and compute
-   new idealizations using our heuristics *)
+(* idea automatic ?
+   We bypass given idealizations and compute new idealizations using the default heuristic (quasi-syntaxic) *)
 val ideaAutomatic : bool ref		      
-(* idea full syntax ? that means that idealizations will go through all functions
-   even the oens in equations and only replace identity names and let variables by holes *)
+(* idea full syntax ? FullSyntax heuristic = syntaxic heuristic. 
+   Idealizations will go through all functions even the ones in equations and only replace identity names and let variables by holes *)
 val ideaFullSyntax : bool ref		       
 (* old encoding with nested let to catch failures on the right ? *)
 val letCatchFO : bool ref		       

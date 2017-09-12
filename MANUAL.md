@@ -4,7 +4,7 @@
 
 *UKano* is a modified version of the [ProVerif](http://proverif.inria.fr)
 tool including automatic verification of anonymity and unlinkability of 2-agents protocols.
-See references [HBD16](#references) & [H17](#references) given below for more details on
+See references [HBD17](#references) & [HBD16](#references) given below for more details on
 the underlying theory.
 
 <img align="center" 
@@ -46,7 +46,7 @@ and anonymity could be established or not.
 
 
 ### How it works?
-We have proved in [HBD17](#references) (preliminary versions in [HBD16](#references),[H17](#references))
+We have proved in [HBD17](#references) (preliminary versions in [HBD16](#references) and [H17](#references))
 that, for 2-party protocols, unlinkability and anonmyity follow from two sufficent conditions we
 called *Frame Opacity* (FO) and *Well-Authentication* (WA). We also show how to verify those two
 conditions relying on dedicated encodings.
@@ -76,10 +76,10 @@ Blanchet and Vincent Cheval.
   --proverif            path of the ProVerif executable to use (optional, default: './proverif')
   --ideal-no-check      assume the idealisation is conform (requires manual checks)
   --ideal-automatic     do not take given idealisations into account, generate them automatically 
-instead
-  --ideal-greedy        modifies the idealisation heuristic: put fresh names for all non-tuple 
+instead (using the default quasi-syntaxic heuristic)
+  --ideal-semantic      modifies the idealisation heuristic: put fresh names for all non-tuple 
 sub-terms
-  --ideal-full-syntax   modifies the idealisation heuristic: go through all functions (including 
+  --ideal-syntaxic      modifies the idealisation heuristic: go through all functions (including 
 ones in equations) and replace identity names and let variables by holes. Conformity checks are 
 modified accordingly.
   --only-fo             verifies the frame opacity condition only
@@ -94,7 +94,8 @@ modified accordingly.
 Some options are described in the next section.
 
 ### Idealisations Heuristics
-We now describe the heuristic UKano uses by default to guess idealisations automatically.
+We now describe the heuristic UKano uses by default to guess idealisations automatically (corresponding
+to the *quasi-syntaxic heuristic* from [HBD17](#references)).
 Given a syntactic output `u` in some role, we recursively build an idealisation by case analysis on 
 `u`:
  1. a constant, we let `u` be its idealisation
@@ -109,10 +110,10 @@ the same variable will be idealised with the same session name)
  7. `u=f(u1,...,un)` and `f` does occur in equations then we let a fresh session name be the 
 idealisation of `u`
 
-The options `--ideal-greedy` and `--ideal-full-syntax` allows to modify the above heuristic:
- - `--ideal-greedy` replaces the cases 6. and 7. as follows: when `f` is not a tuple then the 
+The options `--ideal-semantic` and `--ideal-syntaxic` allow to modify the above heuristic:
+ - `--ideal-semantic` replaces the cases 6. and 7. as follows: when `f` is not a tuple then the 
 idealisation is a fresh session name, otherwise we proceed as in 6.
- - `--ideal-full-syntax` removes the case 7 and removes the condition "`f` does not occur in 
+ - `--ideal-syntaxic` removes the case 7 and removes the condition "`f` does not occur in 
 equations " in case 6. In case the protocol is in the shared case, UKano then displays a warning 
 message saying that the user should verify WA item (ii) separately.
 
@@ -223,12 +224,12 @@ could not be established, :curly_loop: when the verification took too much time 
 much memory (>20GO of RAM), and, -- when it was not necessary to build idealisations manually
 (i.e., user defined). The different columns for FO (i.e., frame opacity) refers to the different
 heuristics implemented in  UKano to build idealisations:
-- "greedy" corresponds to the option `--ideal-greedy`
-- "default" corresponds to the default heuristic of UKano
-- "syntax" corresponds to the option `--ideal-full-syntax`
-- "user-defined" when a user-defined idealisation is necessary
+- "semantic" corresponds to the option `--ideal-semantic`
+- "default" corresponds to the default heuristic of UKano (quasi-syntaxic in [HBD17])
+- "syntaxic" corresponds to the option `--ideal-syntaxic`
+- "user-defined" when a user-defined idealisation was given to the tool.
 
-| Protocol    | Best time (total) | Time for WA | Time for FO (greedy) | Time for FO (default) | Time for FO (syntax)  | Time for FO (user-defined) |
+| Protocol    | Best time (total) | Time for WA | Time for FO (semantic) | Time for FO (default) | Time for FO (syntaxic)  | Time for FO (user-defined) |
 |:------------|:-------------:|:-------------------:|:-------------------:|:---------------------:|:--------------------:|:---------------------------|
 | Hash-Lock      | 0.00s  | 0.00s | 0.00s  | 0.00s   | 0.00s   | --    |
 | Fixed LAK      | 0.00s  | 0.00s | 0.00s  | 0.00s   | 0.00s   | --    |
@@ -255,7 +256,7 @@ We also report on the table below the time needed to find an attack (on well-aut
 #### Out-of-date benchmarks using old encoding for proving FO (to remove before release of v0.3)
 (DAA case studies were flawed and are now fixed, this also explain differences with the previous table)
 
-| Protocol    | Best time (total) | Time for WA | Time for FO (greedy) | Time for FO (default) | Time for FO (syntax)  | Time for FO (user-defined) |
+| Protocol    | Best time (total) | Time for WA | Time for FO (semantic) | Time for FO (default) | Time for FO (syntaxic)  | Time for FO (user-defined) |
 |:------------|:-------------:|:-------------------:|:-------------------:|:---------------------:|:--------------------:|:---------------------------|
 | Hash-Lock      | 0.00s  | 0.00s | 0.00s  | 0.00s   | 0.00s   | --    |
 | Fixed LAK      | 0.00s  | 0.00s | 0.00s  | 0.00s   | 0.00s   | --    |

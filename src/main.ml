@@ -128,10 +128,10 @@ let _ =
       "--ideal-no-check",  Arg.Unit (fun () -> Param.ideaAssumed := true),
       "\tassume the idealisation is conform (requires manual checks)";
       "--ideal-automatic",  Arg.Unit (fun () -> Param.ideaAutomatic  := true),
-      "\tdo not take given idealisations into account, generate them automatically instead";
-      "--ideal-greedy",  Arg.Unit (fun () -> Param.ideaGreedy  := true),
+      "\tdo not take given idealisations into account, generate them automatically instead (using the default quasi-syntaxic heuristic)";
+      "--ideal-semantic",  Arg.Unit (fun () -> Param.ideaGreedy  := true),
       "\tmodifies the idealisation heuristic: put fresh names for all non-tuple sub-terms";
-      "--ideal-full-syntax",  Arg.Unit (fun () -> Param.ideaFullSyntax  := true),
+      "--ideal-syntaxic",  Arg.Unit (fun () -> Param.ideaFullSyntax  := true),
       "\tmodifies the idealisation heuristic: go through all functions (including ones in equations) and replace identity names and let variables by holes. Conformity checks are modified accordingly.";
       "--only-fo",  Arg.Unit (fun () -> Param.onlyFO := true),
       "\t\tverifies the frame opacity condition only";

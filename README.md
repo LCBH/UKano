@@ -5,7 +5,7 @@
 *UKano* is a modified version of the [ProVerif](http://proverif.inria.fr)
 tool including automatic verification of anonymity and unlinkability of 2-agents protocols.
 See the [UKAno webpage](http://projects.lsv.ens-cachan.fr/ukano/) for more details about the tools
-and references [HBD16](#links) & [H17](#links) given below for more details on
+and references [HBD17](#links) & [HBD16](#links) given below for more details on
 the underlying theory.
 
 <img align="center" src="http://projects.lsv.ens-cachan.fr/ukano/pictures/International_justice_and_privacy.jpg" width="100" />
@@ -70,7 +70,7 @@ You can find a comprehensive list of case studies and benchmarks described in th
 section of the manual: https://github.com/LCBH/UKano/wiki#our-case-studies.
 
 
-Finally, the underlying theory behind UKano is described in [HBD16] and [H17].
+Finally, the underlying theory behind UKano is described in [HBD17] and [HBD16].
 
 
 ## References
