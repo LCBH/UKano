@@ -272,8 +272,8 @@ We also report on the table below the time needed to find an attack (on well-aut
 
 ## References
 [HBD17]: L. Hirschi, D. Baelde and S. Delaune.
-	A method for unbounded verification of privacy-type properties.
-    A copy will soon be available at http://projects.lsv.ens-cachan.fr/ukano/.
+	A method for unbounded verification of privacy-type properties (journal).
+    A copy is available at http://www.lsv.fr/~hirschi/pdfs/UK_journal.pdf.
 
 [H17]: L. Hirschi.
     PhD Thesis.
