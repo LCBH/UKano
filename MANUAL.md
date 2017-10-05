@@ -253,23 +253,6 @@ We also report on the table below the time needed to find an attack (on well-aut
 | PACE                                 | 83.72s  |
 
 
-#### Out-of-date benchmarks using old encoding for proving FO (to remove before release of v0.3)
-(DAA case studies were flawed and are now fixed, this also explain differences with the previous table)
-
-| Protocol    | Best time (total) | Time for WA | Time for FO (semantic) | Time for FO (default) | Time for FO (syntaxic)  | Time for FO (user-defined) |
-|:------------|:-------------:|:-------------------:|:-------------------:|:---------------------:|:--------------------:|:---------------------------|
-| Hash-Lock      | 0.00s  | 0.00s | 0.00s  | 0.00s   | 0.00s   | --    |
-| Fixed LAK      | 0.00s  | 0.00s | 0.00s  | 0.00s   | 0.00s   | --    |
-| BAC            | 8.41s  | 0.02s | 8.39s | 17.24s  | 17.20s  | --    |
-| BAC+AA+PA      | 198.28s| 0.42s |197.86s | 1013.56s    | 998.81s    | --    |
-| BAC+PA+AA      | 183.40s| 0.33s |183.07s|  1068.79s | 1191.04s   | --    |
-| PACE with tags | 169.91 | 62.99s| 106.92s (*) | :curly_loop:   | :curly_loop: |106.92s |
-| DAA simplified [HBD17]| 0.02s |0.01s| :x: | 0.01s  | 0.00s   | --    |
-| DAA sign       | 2.94s  | 0.01s | :x:    | :x:     | 2.76s   | --    |
-| DAA join       | 4.68s  | 1.82s | 2.30s  | 2.30s   | 28.85s  | --    |
-| abcdh (irma)   | 8479.76| 9060* | :x: | :x: |  2389.76s* |  2389.76s |
-
-
 ## References
 [HBD17]: L. Hirschi, D. Baelde and S. Delaune.
     A method for unbounded verification of privacy-type properties (journal paper under submission).
