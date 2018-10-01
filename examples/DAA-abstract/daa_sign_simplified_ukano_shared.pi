@@ -1,4 +1,4 @@
-(* MINIMAL SIMPLIFIED VERSION FOF DAA SIGN, variant (a) (i.e., sKI is a private constant)
+(* MINIMAL SIMPLIFIED VERSION FOF DAA SIGN, variant (b) (i.e., sKI is an identity parameter)
  * MODIFIED TO TEST A STRONG DEF OF UK using UKANO 
  * Lucca Hirschi
  * 01/10/2018
@@ -49,13 +49,6 @@ reduc forall Ktpm: bitstring , id:bitstring, kI:bitstring, nV:bitstring, nt:bits
               (nV,nt,m,spk(kI))
 	  )) = (nV,nt,m,spk(kI)).
 
-(* Secret key of the issuer and corresponding public key given to the attacker.
-   We model a single issuer but unbounded many clients having credentials from this issuer.
-   Anonymity set=those users.
-*)
-fun skI(): bitstring [private]. (* Signature key of Issuer *)
-reduc getkI() = spk(skI).
-      
 (* constant used by UKano *)
 fun hole() :bitstring.
 
@@ -63,20 +56,21 @@ fun hole() :bitstring.
 (* ==PROTOCOL== *)
 (****************)
 
-let SignerP(cred:bitstring, Ktpm:bitstring,   skI:bitstring) =
+let SignerP(cred:bitstring, Ktpm:bitstring, skI:bitstring) =
 (* args:    credential,     TPM's secret key, issuer's public key *)
     new m: bitstring; (* the message TPM is willing to sign m with cred *)
     in(c, nv:bitstring);
     new nt: bitstring;
     new newKtpm:bitstring;
     new newIDtpm:bitstring;
-    out(c, choice[ZK( (cred,Ktpm),
-                      (nv,nt,m,spk(skI))
-                    ),
-		  ZK( (sign((newKtpm,newIDtpm), skI), newKtpm),
+    out(c, ZK( (cred,Ktpm),
+               (nv,nt,m,spk(skI))
+             )).
+(* The following idealization is not conform:
+   		  ZK( (sign((newKtpm,newIDtpm), skI), newKtpm),
 		      (nv,nt,m,spk(skI))
 		    )
-		  ]).
+*)
 (* Danity check:  out(c, Ktpm).*)
 
 let VerifierP(pkI:bitstring) =
@@ -93,8 +87,12 @@ let VerifierP(pkI:bitstring) =
 
 let SYSTEM = 
 ! (* ID *)
- new Ktpm :bitstring; (* TPM's secret internal key *)
+ new Ktpm :bitstring;    (* TPM's secret internal key *)
  new IDtpm :bitstring;   (* TPM's identity *)
+ new skI :bitstring;     (* Issuer's identity (as an identity parameter: case(b))*)
+(* We model unbounded many issuers with unbounded many clients having credentials from pairwise different issuers.
+   Anonymity set=all users.
+*)
 ! (* SESSION *)
 (
   SignerP(sign((Ktpm,IDtpm),skI), Ktpm, skI)
