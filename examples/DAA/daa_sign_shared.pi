@@ -1,4 +1,4 @@
-(* MODIFIED TO TEST A STRONG DEF OF UK using UKANO, variant (a) (i.e., sKI is a private constant)
+(* MODIFIED TO TEST A STRONG DEF OF UK using UKANO, variant (b) (i.e., sKI is an identity parameter)
  * MINIMAL VERSION FOR DAA SIGN
  * Lucca Hirschi
  * 23/03/2016
@@ -56,12 +56,6 @@ reduc forall xzeta:bitstring,xsk:bitstring,xtsk:bitstring,xw:bitstring,xe:bitstr
    = accept.
 
 fun KI():bitstring.    (* Long-term public key of Issuer *)
-(* Below: secret key of the issuer and corresponding public key given to the attacker.
-   We model a single issuer but unbounded many clients having credentials from this issuer.
-   Anonymity set=those users.
-*)
-fun skI():bitstring [private].
-reduc getPubskI() = pk(skI).
 
 (*
 event END().
@@ -83,16 +77,16 @@ let SignerP(cre:bitstring,tsk:bitstring,skI:bitstring)  =
     new tsk_hole:bitstring;
     new r1:bitstring;
     new r2:bitstring;    
-    out(c, choice[
-    	   (zeta,pk(skI),NV,crehat,nt,msg,
+    out(c,(zeta,pk(skI),NV,crehat,nt,msg,
             spk(FSign,
 	        (tsk,w),
-		(zeta,pk(skI),NV,crehat,(nt,nv,msg)))),
+		(zeta,pk(skI),NV,crehat,(nt,nv,msg))))).
+(* The following idealization is not conform:		
     	   (zeta,pk(skI),commit(tsk_hole,zeta), clcommit(pk(skI),w,clsign(skI,r1,r2,tsk_hole)),nt,msg,
             spk(FSign,
 	        (tsk_hole,w),
 		(zeta,pk(skI),commit(tsk_hole,zeta), clcommit(pk(skI),w,clsign(skI,r1,r2,tsk_hole)),(nt,nv,msg))))
-		]).
+*)
 
 let VerifierP(pkI:bitstring) =
   new nv :bitstring;
@@ -111,6 +105,7 @@ let SYSTEM =
  new DAASeed :bitstring;
  new r1 :bitstring;  (* yrand (of cred) *)
  new r2 :bitstring;  (* yprime (of cred) *)
+ new skI :bitstring; (* Issuer's identity (as an identity parameter: case(b))*)
 ! (* Session *)
 (
   SignerP(clsign(skI,r1,r2,hash((hash((DAASeed,hash(KI))),cnt,zero))), (* signed credential obtained through DAA join *)
