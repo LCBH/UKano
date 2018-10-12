@@ -19,7 +19,7 @@ UKano detects some attacks on variations of protocols that do not satisfy our co
 (corresponding files end with `-attack.pi`).
 
 Finally, the folder [`./examples/tamarin/`](./tamarin/) contains
-some Tamarin models mentioned in [H17]; they are obviously not valid
+some Tamarin models mentioned in [H17] and in [HBD19]; they are obviously not valid
 UKano files.
 
 ## List of Case Studies
@@ -43,7 +43,7 @@ Legend:
 | PACE | -- | :x: | :fire: |
 | PACE with tags | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: |
 | DAA sign | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: |
-| DAA sign (shared) | :x: | :heavy_check_mark: | :fire: |
+| DAA sign (shared, as in Ex11 in [HBD19]) | :x: | :heavy_check_mark: | :fire: |
 | DAA join | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: |
 | abcdh (irma) | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: |
 
@@ -93,17 +93,22 @@ We also report on the table below the time needed to find an attack (on well-aut
 | PACE (as in [BFK-09](#references))   | 61.43s  |
 | PACE                                 | 83.72s  |
 
-Finally, the attack on Frame Opacity in DAA sign (shared) was found in 1.35s. The attack was found with all heuristics and the attack can be quickly translated into an attack on unlinkability or anonymity.
+Finally, the attack on Frame Opacity in DAA sign shared variant (as in Example 11 in [HBD19]) was found in 1.35s. The attack was found with all heuristics and the attack can be quickly translated into an attack on unlinkability or anonymity.
 
 
 
 ## References
 
+[HBD19]: L. Hirschi, D. Baelde, S. Delaune
+    A method for unbounded verication of privacy-type properties.
+	Under submission.
+	A copy can be found on [ARXIV](https://arxiv.org/pdf/1710.02049.pdf).
+
 [H17]: L. Hirschi.
     PhD Thesis.
     Automated Verification of Privacy in Security Protocols:
     Back and Forth Between Theory & Practice.
-    A copy will soon be distributed at http://projects.lsv.ens-cachan.fr/ukano/.
+    A copy can be found at on [HAL](https://tel.archives-ouvertes.fr/tel-01534145/document).
 
 [BFK-09]: J. Bender, M. Fischlin, and D. Kügler.
     Security analysis of the pace key-agreement protocol.
