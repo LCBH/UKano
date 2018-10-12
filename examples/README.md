@@ -43,6 +43,7 @@ Legend:
 | PACE | -- | :x: | :fire: |
 | PACE with tags | :white_check_mark: | :white_check_mark: | :white_check_mark: |
 | DAA sign | :white_check_mark: | :white_check_mark: | :white_check_mark: |
+| DAA sign (shared) | :x: | :white_check_mark: | :fire: |
 | DAA join | :white_check_mark: | :white_check_mark: | :white_check_mark: |
 | abcdh (irma) | :white_check_mark: | :white_check_mark: | :white_check_mark: |
 
@@ -84,7 +85,6 @@ heuristics implemented in  UKano to build idealisations:
 
 (*) indicates that we had to slightly modify the produced file.
 
-
 We also report on the table below the time needed to find an attack (on well-authentication):
 
 | Protocol    | Time to find an attack in WA |
@@ -92,6 +92,9 @@ We also report on the table below the time needed to find an attack (on well-aut
 | PACE (faillible dec)                 | 31.81s  |
 | PACE (as in [BFK-09](#references))   | 61.43s  |
 | PACE                                 | 83.72s  |
+
+Finally, the attack on Frame Opacity in DAA sign (shared) was found in 1.35s. The attack was found with all heuristics and the attack can be quickly translated into an attack on unlinkability or anonymity.
+
 
 
 ## References
