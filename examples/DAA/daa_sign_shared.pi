@@ -68,7 +68,9 @@ query event(END()).
 
 let SignerP(cre:bitstring,tsk:bitstring,skI:bitstring)  = 
     new msg :bitstring;  (* message to sign *)
-    in(c,nv:bitstring);
+    in(c,x:bitstring);
+    let (nv:bitstring,xpkI:bitstring) = x in
+    if xpkI = pk(skI) then (* safe tets *)
     new nt :bitstring;
     new w :bitstring;
     new zeta :bitstring; (* when bsnv <> \bot, this is hash((one,bsnv)) *)
@@ -90,7 +92,7 @@ let SignerP(cre:bitstring,tsk:bitstring,skI:bitstring)  =
 
 let VerifierP(pkI:bitstring) =
   new nv :bitstring;
-  out(c,nv);
+  out(c,(nv,pkI));   (* Verifier sends pkI so that attacker gets the isser's public key *)
   in(c, x:bitstring);
   let (xz:bitstring, =pkI,xNV:bitstring,xcreH:bitstring,xnt:bitstring,xmsg:bitstring,xZK:bitstring) = x in
 (* Verify ZK *)
