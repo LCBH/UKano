@@ -1,4 +1,4 @@
-(* MINIMAL SIMPLIFIED VERSION FOF DAA SIGN, variant (b) (i.e., sKI is an identity parameter)
+(* MINIMAL SIMPLIFIED VERSION FOF DAA SIGN, variant (Example 11) (i.e., sKI is an identity parameter)
  * MODIFIED TO TEST A STRONG DEF OF UK using UKANO 
  * Lucca Hirschi
  * 01/10/2018
@@ -59,7 +59,9 @@ fun hole() :bitstring.
 let SignerP(cred:bitstring, Ktpm:bitstring, skI:bitstring) =
 (* args:    credential,     TPM's secret key, issuer's public key *)
     new m: bitstring; (* the message TPM is willing to sign m with cred *)
-    in(c, nv:bitstring);
+    in(c, x:bitstring);
+    let (nv:bitstring,xpkI:bitstring) = x in
+    if xpkI = spk(skI) then  (* safe test *)
     new nt: bitstring;
     new newKtpm:bitstring;
     new newIDtpm:bitstring;
@@ -76,7 +78,7 @@ let SignerP(cred:bitstring, Ktpm:bitstring, skI:bitstring) =
 let VerifierP(pkI:bitstring) =
 (* args:      issuer's public key *)
     new nv :bitstring;
-    out(c,nv);
+    out(c,(nv,pkI));  (* Verifier sends pkI so that attacker gets the isser's public key *)
     in(c, xZK:bitstring);
 (* Verify ZK bounds nv (of that session) and contains credential of issuer I*)
     let (=nv, nt:bitstring, xmsg:bitstring, =pkI) = publicZK(xZK) in

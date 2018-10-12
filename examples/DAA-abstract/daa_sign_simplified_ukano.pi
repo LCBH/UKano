@@ -1,4 +1,4 @@
-(* MINIMAL SIMPLIFIED VERSION FOF DAA SIGN, variant (a) (i.e., sKI is a private constant)
+(* MINIMAL SIMPLIFIED VERSION FOF DAA SIGN, variant (Example 10) (i.e., sKI is a private constant)
  * MODIFIED TO TEST A STRONG DEF OF UK using UKANO 
  * Lucca Hirschi
  * 01/10/2018
