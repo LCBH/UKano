@@ -1,8 +1,11 @@
 # Protocol:
-Basically an abstraction of DAA sign with simplified credentials and ZK proofs. See file `daa_sign_simplified_UK-directly.pv` for a docummented description.
+Basically an abstraction of DAA sign with simplified credentials and ZK proofs (Example 10 in the paper). See file `daa_sign_simplified_UK-directly.pv` for a docummented description.
+
+We also model the shared version (Example 11 in the paper).
 
 # Files:
 - `daa_sign_simplified_UK-directly.pv`: specification of the protocol (with many explanatory commentaries) and modelization of UK directly in PV -> verification in 0.03s directly in PV.
 - `daa_join_simplified_ukano.pi`: this model can be def to UKano producing: `daa_join_simplified_ukano_FOpa.pi` and `daa_join_simplified_ukano_WAuth.pi`. Everything can be checked via UKano in 0.03s.
 - `daa_sign_simplified_sanityCheck1-full.pv` is a sanity check showing that the protocol can be fully executed.
+- `daa_sign_simplified_ukano_shared.pi` modified version of `daa_sign_simplified_ukano.pi` to reflect a different modeling choice expplained in Example 11 in the paper. Ukano takes 0.27s (attack on Frame Opacity and proof of Well-Authentication).
 
