@@ -1,7 +1,7 @@
-(* MODIFIED TO TEST A STRONG DEF OF UK using UKANO, variant (b) (i.e., sKI is an identity parameter)
+(* MODIFIED TO TEST A STRONG DEF OF UK using UKANO, variant (b) in Section 6.6.2 (i.e., sKI is an identity parameter)
  * MINIMAL VERSION FOR DAA SIGN
  * Lucca Hirschi
- * 23/03/2016
+ * 01/10/2018
  *)
 
 (*

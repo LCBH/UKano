@@ -1,4 +1,4 @@
-(* MINIMAL SIMPLIFIED VERSION FOF DAA SIGN, variant (Example 11) (i.e., sKI is an identity parameter)
+(* MINIMAL SIMPLIFIED VERSION FOF DAA SIGN, Example 11 (i.e., sKI is an identity parameter)
  * MODIFIED TO TEST A STRONG DEF OF UK using UKANO 
  * Lucca Hirschi
  * 01/10/2018
