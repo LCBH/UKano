@@ -1,11 +1,11 @@
-# UKano: UnlinKability and ANOnymity verifier v0.3
+# UKano: UnlinKability and ANOnymity verifier v0.4
 > - Landing page: http://projects.lsv.ens-cachan.fr/ukano
 > - Manual: https://github.com/LCBH/UKano/wiki
 
 *UKano* is a modified version of the [ProVerif](http://proverif.inria.fr)
 tool including automatic verification of anonymity and unlinkability of 2-agents protocols.
-See the [UKAno webpage](http://projects.lsv.ens-cachan.fr/ukano/) for more details about the tools
-and references [HBD17](#links) & [HBD16](#links) given below for more details on
+See the [UKano webpage](http://projects.lsv.ens-cachan.fr/ukano/) for more details about the tools
+and references [HBD18](#links) & [HBD16](#links) given below for more details on
 the underlying theory.
 
 <img align="center" src="http://projects.lsv.ens-cachan.fr/ukano/pictures/International_justice_and_privacy.jpg" width="100" />
@@ -41,7 +41,7 @@ of options of UKano.
 
 
 ## How Does It Work?
-We have proved in [HBD17](#references) (preliminary versions in [HBD16](#references),[H17](#references))
+We have proved in [HBD18](#references) (preliminary versions in [HBD16](#references),[H17](#references))
 that, for 2-party protocols, unlinkability and anonmyity follow from two sufficent conditions we
 called *Frame Opacity* (FO) and *Well-Authentication* (WA). We also show how to verify those two
 conditions relying on dedicated encodings.
@@ -70,11 +70,11 @@ You can find a comprehensive list of case studies and benchmarks described in th
 section of the manual: https://github.com/LCBH/UKano/wiki#our-case-studies.
 
 
-Finally, the underlying theory behind UKano is described in [HBD17] and [HBD16].
+Finally, the underlying theory behind UKano is described in [HBD18] and [HBD16].
 
 
 ## References
-> [HBD17]: L. Hirschi, D. Baelde and S. Delaune.
+> [HBD18]: L. Hirschi, D. Baelde and S. Delaune.
 >     A method for unbounded verification of privacy-type properties (journal paper under submission).
 >     A copy is available at http://www.lsv.fr/~hirschi/pdfs/UK_journal.pdf.
 
