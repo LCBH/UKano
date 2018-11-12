@@ -12,7 +12,6 @@ the underlying theory.
 
 
 ## Install
-
 You need OCaml >=3.00 (you can find Objective Caml at http://ocaml.org).
 Just type: `make`.
 The executable program `ukano` and `proverif` have been built.

@@ -4,7 +4,7 @@
  *                                                           *
  *  Lucca Hirschi                                            *
  *  http://projects.lsv.ens-cachan.fr/ukano/                 *
- *  Copyright (C) Lucca Hirschi 2015-2017                    *
+ *  Copyright (C) Lucca Hirschi 2015-2018                    *
  *  Copyright (C) Bruno Blanchet, Vincent Cheval,            *
  *                INRIA, CNRS 2000-2015                      *
  *                                                           *
@@ -44,7 +44,7 @@ let helpMess =
    "of files in the correct format. They can be used to bootsrap your own file. For more details, see the README file at the root of\n"^
    "the project or the manual of UKano at https://github.com/LCBH/UKano/wiki.\n")
 let welcomeMess =
-  "UKano v0.2 : Cryptographic privacy verifier, by Lucca Hirschi. Based on Proverif v1.91, by Bruno Blanchet and Vincent Cheval."
+  "UKano v0.4 : Cryptographic privacy verifier, by Lucca Hirschi. Based on Proverif v1.91, by Bruno Blanchet and Vincent Cheval."
     
 (*********************************************
                  Interface

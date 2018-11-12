@@ -1,10 +1,11 @@
-# Manual of UKano v0.3
+# Manual of UKano v0.4
 > Lucca Hirschi
 > http://projects.lsv.ens-cachan.fr/ukano/
 
 *UKano* is a modified version of the [ProVerif](http://proverif.inria.fr)
 tool including automatic verification of anonymity and unlinkability of 2-agents protocols.
-See references [HBD18](#references) & [HBD16](#references) given below for more details on
+See the [UKano webpage](http://projects.lsv.ens-cachan.fr/ukano/) for more details about the tools
+and references [HBD18](#links) & [HBD16](#links) given below for more details on
 the underlying theory.
 
 <img align="center" 
@@ -71,7 +72,7 @@ They can be used as a starting point to write your own protocols.
 Here are the options you may use:
 ```bash
 $ ./ukano --help
-UKano v0.2 : Cryptographic privacy verifier, by Lucca Hirschi. Based on Proverif v1.91, by Bruno 
+UKano v0.4 : Cryptographic privacy verifier, by Lucca Hirschi. Based on Proverif v1.91, by Bruno 
 Blanchet and Vincent Cheval.
   --proverif            path of the ProVerif executable to use (optional, default: './proverif')
   --ideal-no-check      assume the idealisation is conform (requires manual checks)
@@ -181,34 +182,34 @@ We also list in section [Benchmarks](#benchmarks) the different results
 
 
 ### List of Case Studies
-See the table below. References to the protocols can be found in [HBD18] and models that can be fed 
+See the table below. References to the protocols can be found in [HBD18](#references) and models that can be fed 
 to UKano can be found in the folder 
 [`./examples`](https://github.com/LCBH/UKano/tree/master/examples).
 
 Legend:
-- :white_check_mark: : means that the corresponding condition or property could be automaticaly 
-established using UKano
+- :heavy_check_mark: : means that the corresponding condition or property could be automaticaly established using UKano
 - :x: : when a condition fails to hold or could not be established
 - :fire: : when an attack has been found
 
 | Protocol | Frame-Opacity | Well-Authentication | Unlinkability |
 |:---------|:-------------:|:-------------------:|:-------------:|
-| Hash-Lock | :white_check_mark: | :white_check_mark: | :white_check_mark: |
+| Hash-Lock | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: |
 | LAK (stateless) | --  | :x: | :fire: |
-| Fixed LAK | :white_check_mark: | :white_check_mark: | :white_check_mark: |
-| BAC       | :white_check_mark: | :white_check_mark: | :white_check_mark: |
-| BAC+ PA+ AA | :white_check_mark: | :white_check_mark: | :white_check_mark: |
-| BAC+ AA+ PA | :white_check_mark: | :white_check_mark: | :white_check_mark: |
+| Fixed LAK | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: |
+| BAC       | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: |
+| BAC+ PA+ AA | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: |
+| BAC+ AA+ PA | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: |
 | PACE (faillible dec) |  -- | :x: | :fire: |
 | PACE (as in~[BFK-09](#references))     |  -- | :x: | :fire: |
 | PACE | -- | :x: | :fire: |
-| PACE with tags | :white_check_mark: | :white_check_mark: | :white_check_mark: |
-| DAA sign | :white_check_mark: | :white_check_mark: | :white_check_mark: |
-| DAA join | :white_check_mark: | :white_check_mark: | :white_check_mark: |
-| abcdh (irma) | :white_check_mark: | :white_check_mark: | :white_check_mark: |
+| PACE with tags | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: |
+| DAA sign | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: |
+| DAA sign (shared, as in Ex11 in [HBD19]) | :x: | :heavy_check_mark: | :fire: |
+| DAA join | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: |
+| abcdh (irma) | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: |
 
 
-### Benchmarks
+### Benchmarks (outdated)
 All benchmarks are performed using UKano v0.3 (with ProVerif v1.97 as backend)
 without user-defined idealisations (except for some cases indicated with (*)).
 For most cases, the verification is thus truly fully automatic.

@@ -48,15 +48,15 @@ Legend:
 | abcdh (irma) | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: |
 
 
-## Benchmarks
-All benchmarks are performed using UKano v0.2 (with ProVerif v1.92 as backend)
+## Benchmarks (outdated)
+All benchmarks are performed using UKano v0.3 (with ProVerif v1.97 as backend)
 without user-defined idealisations (except for some cases indicated with (*)).
 For most cases, the verification is thus truly fully automatic.
 
 Here are the specs of the machine we used:
-We performed those benchmarks on this machine:
 - OS: Linux sume 3.10-2-amd64 #1 SMP Debian 3.10.5-1 (2013-08-07) x86_64 GNU/Linux
-- CPU: Intel(R) Xeon(R) CPU X5650 @ 2.67GHz / stepping: 2 / microcode: 0x13 / cpu MHz: 2659.937 / cache size: 12288 KB
+- CPU: Intel(R) Xeon(R) CPU X5650 @ 2.67GHz / stepping: 2 / microcode: 0x13 / cpu MHz: 2659.937 / 
+cache size: 12288 KB
 - RAM: 47GO
 	    
 Legend: time in seconds when verification was successful, :x: when condition
@@ -64,26 +64,25 @@ could not be established, :curly_loop: when the verification took too much time 
 much memory (>20GO of RAM), and, -- when it was not necessary to build idealisations manually
 (i.e., user defined). The different columns for FO (i.e., frame opacity) refers to the different
 heuristics implemented in  UKano to build idealisations:
-- "greedy" corresponds to the option `--ideal-greedy`
-- "default" corresponds to the default heuristic of UKano
-- "syntax" corresponds to the option `--ideal-full-syntax`
-- "user-defined" when a user-defined idealisation is necessary
+- "semantic" corresponds to the option `--ideal-semantic`
+- "default" corresponds to the default heuristic of UKano (quasi-syntaxic in [HBD18])
+- "syntaxic" corresponds to the option `--ideal-syntaxic`
+- "user-defined" when a user-defined idealisation was given to the tool.
 
-
-| Protocol    | Better time (total) | Time for WA | Time for FO (greedy) | Time for FO (default) | Time for FO (syntax)  | Time for FO (user-defined) |
+| Protocol    | Best time (total) | Time for WA | Time for FO (semantic) | Time for FO (default) | Time for FO (syntaxic)  | Time for FO (user-defined) |
 |:------------|:-------------:|:-------------------:|:-------------------:|:---------------------:|:--------------------:|:---------------------------|
 | Hash-Lock      | 0.00s  | 0.00s | 0.00s  | 0.00s   | 0.00s   | --    |
 | Fixed LAK      | 0.00s  | 0.00s | 0.00s  | 0.00s   | 0.00s   | --    |
-| BAC            | 8.41s  | 0.02s | 8.39s | 17.24s  | 17.20s  | --    |
-| BAC+AA+PA      | 198.28s| 0.42s |197.86s | 1013.56s    | 998.81s    | --    |
-| BAC+PA+AA      | 183.40s| 0.33s |183.07s|  1068.79s | 1191.04s   | --    |
-| PACE with tags | 169.91 | 62.99s| 106.92s (*) | :curly_loop:   | :curly_loop: |106.92s |
-| DAA simplified [HBD17]| 0.02s |0.01s| :x: | 0.01s  | 0.00s   | --    |
-| DAA sign       | 2.94s  | 0.01s | :x:    | :x:     | 2.76s   | --    |
-| DAA join       | 4.68s  | 1.82s | 2.30s  | 2.30s   | 28.85s  | --    |
-| abcdh (irma)   | 8479.76| 9060 | :x: | :x: |  2389.76s* |  2389.76s |
+| BAC            | 0.03s  | 0.02s | 0.01s  | 0.04s   | 0.04s   | --    |
+| BAC+AA+PA      | 0.46s  | 0.42s | 0.04s  | 0.22s   | 0.22s   | --    |
+| BAC+PA+AA      | 0.40s  | 0.36s | 0.04s  | 0.52s   | 0.50s   | --    |
+| PACE with tags | 78.40s | 72.40s| 6.00s  | 6.19s   | 16.44s  | --    |
+| DAA simplified [HBD18]| 0.02s | 0.01s | :x:| 0.01s | 0.01s   | --    |
+| DAA sign       | 3.77s  | 0.03s | :x:    | :x:     | :x:     | 3.74s |
+| DAA join       | 31.81s | 29.57s*  | :x: | 1.24s   | 2.29s   | 1.79s |
+| abcdh (irma)   | 9072.75s |  9060s* | :x:| :x:     | 38.20s  | 12.75s|
 
-(*) indicates that we had to slightly modify the produced file.
+(*) indicates that we had to slightly modify the produced file, refer to [HBD18](#references) for more details.
 
 We also report on the table below the time needed to find an attack (on well-authentication):
 
@@ -92,9 +91,6 @@ We also report on the table below the time needed to find an attack (on well-aut
 | PACE (faillible dec)                 | 31.81s  |
 | PACE (as in [BFK-09](#references))   | 61.43s  |
 | PACE                                 | 83.72s  |
-
-Finally, the attack on Frame Opacity in DAA sign shared variant (as in Example 11 in [HBD19]) was found in 1.35s. The attack was found with all heuristics and the attack can be quickly translated into an attack on unlinkability or anonymity.
-
 
 
 ## References
