@@ -76,7 +76,7 @@ Finally, the underlying theory behind UKano is described in [HBD18] and [HBD16].
 ## References
 > [HBD18]: L. Hirschi, D. Baelde and S. Delaune.
 >     A method for unbounded verification of privacy-type properties (journal paper under submission).
->     A copy is available at http://www.lsv.fr/~hirschi/pdfs/UK_journal.pdf.
+>     A copy can be found on [ARXIV](https://arxiv.org/pdf/1710.02049.pdf).
 
 > 
 > [H17]: L. Hirschi.
