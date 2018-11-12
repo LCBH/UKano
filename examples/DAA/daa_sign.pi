@@ -1,4 +1,4 @@
-(* MODIFIED TO TEST A STRONG DEF OF UK using UKANO, variant (a) (i.e., sKI is a private constant)
+(* MODIFIED TO TEST A STRONG DEF OF UK using UKANO, variant (a) in Section 6.2.2 (i.e., sKI is a private constant)
  * MINIMAL VERSION FOR DAA SIGN
  * Lucca Hirschi
  * 23/03/2016
