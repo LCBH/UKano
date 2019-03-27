@@ -34,7 +34,7 @@ let isLastOutputByIni = ref false
 let nbSanityChecks = ref 0
 			 
 (* For debugging purpose *)
-let email = " Please report this error with the input file to lucca.hirschi@lsv.ens-cachan.fr'."
+let email = " Please report this error with the input file to lucca.hirschi@inria.fr'."
 let pp s= Printf.printf "%s" s
 let log s = Printf.printf "> %s\n%!" s
 let debug = ref false
