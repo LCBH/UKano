@@ -185,7 +185,7 @@ let verifyBoth pathProverif sFO sWA namesIdAno =
 		      pp (Display.result (sprintf "Well Authentication could be established for none of the test. It may be the case that all tests are safe though."));
 		    end else begin
 		      establishedWAPart := true;
-		      pp (Display.result (sprintf "Well Authentication has been established for %d over %d tests. Please verify that the following queries correspond to safe conditionals."
+		      pp (Display.result (sprintf "Well Authentication has been established for %d over %d tests. Please verify that the following queries correspond to safe conditionals that are not right after the first responder input (#)."
 						  (List.length subOk) (List.length waResults)));
 		      List.iter (fun l -> pp ("Well-Athentication could not be established for : "^extractEvent(l))) subNo;
 		    end);
@@ -200,14 +200,14 @@ let verifyBoth pathProverif sFO sWA namesIdAno =
       if !establishedFO && (!establishedWA || !establishedWAPart)
       then begin
 	  if not(!establishedWA)
-	  then (if verbose then pp "Frame Opacity and Well-Authentication have been established (providing the conditionals listed above are safe).")
+	  then (if verbose then pp "Frame Opacity and Well-Authentication have been established providing the conditionals listed above are safe (#).")
 	  else (if verbose then pp "Frame Opacity and Well-Authentication have been established.");
 	  if List.length namesIdAno == 0
-	  then pp (Display.result "[RESULT: OK] Therefore, the input protocol ensures Unlinkability.")
+	  then pp (Display.result "[RESULT: OK] Therefore, the input protocol ensures Unlinkability providing the conditionals listed above are safe.")
 	  else begin
 	      Printf.printf "%s" (Display.result "[RESULT: OK] Therefore, the input protocol ensures Unlinkability and Anonymity w.r.t. identity names: (");
 	      List.iter (fun s -> Display.Text.display_function_name s; printf ", ") namesIdAno;
-	      pp ").";
+	      pp "), providing the conditionals listed above are safe.";
 	    end;
 	end
       else pp (Display.result

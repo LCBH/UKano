@@ -606,9 +606,9 @@ let transWA proto p inNameFile nameOutFile =
   let rec listArgs = function
     | 0 -> []
     | n -> (Printf.sprintf "m%d" n) :: (listArgs (n-1)) in
-  let generateSanityQuery = function
+  let rec generateSanityQuery = function
     | [] -> []
-    | (eventName, nbArgs) :: tl ->
+    | [(eventName, nbArgs)] ->
        begin
 	 incr(nbSanityChecks);
 	 let prefix = "(** This is a sanity check (false if the corresponding test is reachable; might also return 'cannot prove') **)\nquery " in
@@ -616,8 +616,9 @@ let transWA proto p inNameFile nameOutFile =
 			    ", "
 			    (List.map (fun s -> Printf.sprintf "%s:bitstring" s) (listArgs nbArgs)) in
 	 [prefix^prefixArgs^(";\n")^
-	   (Printf.sprintf "event(%s(%s))" eventName (String.concat "," (listArgs nbArgs)))^".\n"];
-       end in
+	    (Printf.sprintf "event(%s(%s))" eventName (String.concat "," (listArgs nbArgs)))^".\n"];
+       end
+    | a :: tl -> generateSanityQuery tl in
   
   (* -- 1. -- COMPUTING EVENTS VERSION AND QUERIES *)
   (* Adding events IN roles *)
@@ -1112,7 +1113,7 @@ let transBoth  p inNameFile nameOutFileFO nameOutFileWA =
   if not(!Param.onlyFO)
   then begin
       if !verbose then begin
-	  pp (Display.header (Printf.sprintf "Generation of the model encoding %d sanity checks and well-authentication" !nbSanityChecks));  
+	  pp (Display.header (Printf.sprintf "Generation of the model encoding sanity checks and well-authentication"));  
 	  pp "\n";
 	end;
       transWA proto2 p inNameFile nameOutFileWA;
