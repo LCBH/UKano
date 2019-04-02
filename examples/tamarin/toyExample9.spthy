@@ -1,0 +1,155 @@
+theory ToySeqTheory
+begin
+
+section{* ToySeq *}
+
+	 
+builtins: hashing
+
+functions: mac/2
+
+/****************/
+/* Whole system */
+/****************/
+
+rule RepId:
+ [ Fr(~k) ] --[NewId(~k)]-> [!RepSess(~k)]
+
+rule RepSess:
+ [ !RepSess(~k), Fr(~s),Fr(~nr),Fr(~nt) ]
+ --[NewSess(~k, ~s), TagInit(~k, ~s, ~nt), ReaderInit(~k, ~s, ~nr) ]->
+ [Tag2(~nt, ~k, ~s), Reader2(~nr, ~k, ~s)]
+
+
+/**********/
+/* READER */
+/**********/
+
+rule Rout_1: // out nR
+ [Reader2(~n, ~k, ~s)]
+ --[PlayR(~k,~s), OutR1(~k,~s,~n)]->
+ [Out(~n), Reader3(~n, ~k, ~s)]
+
+rule Rin_1: // in nT
+ [Reader3(~nr, ~k, ~s), In(x1)]
+ --[Neq(x1,~nr),PlayR(~k,~s), InR1(~k,~s,x1)]->
+ [Reader4(~nr, ~k, ~s, x1)]
+
+rule Rout_2: // out mac(<nt,nr>,k)
+ [Reader4(~nr, ~k, ~s, nt)]
+ --[PlayR(~k,~s), OutR2(~k,~s,mac(<nt,~nr>,~k))]-> 
+ [Out(mac(<nt,~nr>,~k)), Reader5(~nr, ~k, ~s, nt)]
+
+rule Rin_2: // in mac(<nr,nt>,k)
+ let x2 = mac(<~nr,nt>,~k) in
+ [Reader5(~nr, ~k, ~s, nt), In(x2)]
+ --[PlayR(~k,~s), InR2(~k,~s,x2), TestR2(~k,~s)]->
+ [Reader6(~nr, ~k, ~s, nt)]
+
+rule Rout_3: // out ok
+ [Reader6(~nr, ~k, ~s, nt)]
+ --[PlayR(~k,~s), OutR3(~k,~s,'ok'), CompleteR(~k, ~s)]->
+ [Out('ok')]
+
+
+/**********/
+/* Tag */
+/**********/
+
+rule Tin_1: // in nR
+ [Tag2(~nt, ~k, ~s), In(y1)]
+ --[PlayT(~k,~s), InT1(~k,~s,y1)]->
+ [Tag3(~nt, ~k, ~s, y1)]
+
+rule Tout_1: // out nT
+ [Tag3(~nt, ~k, ~s, y1)]
+ --[PlayT(~k,~s), OutT1(~k,~s,~nt)]-> 
+ [Out(~nt), Tag4(~nt, ~k, ~s, y1)]
+
+rule Tin_2: // in y2 
+ let y2 = mac(<~nt,n>,~k) in
+ [Tag4(~nt, ~k, ~s, n), In(y2)]
+ --[PlayT(~k,~s), InT2(~k,~s,y2), TestT1(~k,~s)]->
+ [Tag5(~nt, ~k, ~s, n)]
+
+rule Tout_2: // out mac(<nr,nt>,k)
+ let m = mac(<nr,~nt>,~k) in
+ [Tag5(~nt, ~k, ~s, nr)]
+ --[PlayR(~k,~s), OutT2(~k,~s,m),CompleteT(~k,~s)]->
+ [Out(m)]
+
+
+/****************/
+/* Restrictions */
+/****************/
+
+restriction predicate_Neq:
+	"All #i a b. Neq(a,b)@i ==> not(a = b)"
+
+// The following restriction gets rid some executions, but all those executions cannot be produced when sessions of tags and readers are only sequentially executed
+restriction seq_sessionR: // for having sessions in sequence only
+	"not (Ex k s1 s2 #i1 #i2 #i3.
+	        PlayR(k,s1) @ i1 & 
+                PlayR(k,s2) @ i2 &
+                PlayR(k,s1) @ i3 &
+                i1 < i2 &
+                i2 < i3 &
+                not(s1=s2)
+              )"
+
+/**********/
+/* Lemmas */
+/**********/
+
+/* Easy lemmas for sanity check */
+lemma secrecyTag1 :
+"	not( Ex k s b #t1. ((TagInit(k, s, b)@t1 & Ex #t2. K(k)@t2)))"
+lemma secrecyTag2 :
+"	not( Ex k s b #t1. ((TagInit(k, s, b)@t1 & Ex #t2. K(s)@t2)))"
+
+lemma secrecyReader1 :
+"	not( Ex k s a #t1 #t2. ((ReaderInit(k, s, a)@t1 &  K(k)@t2)))"
+lemma secrecyReader2 :
+"	not( Ex k s a #t1 #t2. ((ReaderInit(k, s, a)@t1 &  K(s)@t2)))"
+
+lemma tagComplete: //for sanity
+	exists-trace 
+	"Ex #t k s. CompleteR(k,s)@t"
+
+lemma readerComplete: //for sanity
+	exists-trace
+	"Ex #t k s. CompleteT(k,s)@t"
+
+
+/* WA */
+
+lemma TestR2 :
+"
+   All k s2 #t1.
+     TestR2(k,s2)@t1 ==>
+                     (Ex mT2. InR2(k,s2,mT2)@t1 &
+                       Ex s1 #t9. OutT2(k,s1,mT2)@t9 &
+                         Ex mR1 #t10. InT2(k,s1,mR1)@t10 &
+                           Ex #t11. OutR2(k,s2,mR1)@t11 &
+                             Ex mT1 #t12. InR1(k,s2,mT1)@t12 &
+                               Ex #t13. OutT1(k,s1,mT1)@t13 &
+                                 Ex mR0 #t14. InT1(k, s1, mR0)@t14 &
+                                   Ex #t15. OutR1(k, s2, mR0)@t15 
+& (t15 < t14 & t14 <t13 & t13 < t12 & t12 < t11 & t11 < t10 & t10 < t9 & t9 < t1))
+"
+
+
+lemma TestT1 :
+"
+   All k s2 #t1.
+     TestT1(k,s2)@t1 ==>
+                     (Ex mT2. InT2(k,s2,mT2)@t1 &
+                       Ex s1 #t9. OutR2(k,s1,mT2)@t9 &
+                         Ex mR1 #t10. InR1(k,s1,mR1)@t10 &
+                           Ex #t11. OutT1(k,s2,mR1)@t11 &
+                             Ex mT1 #t12. InT1(k,s2,mT1)@t12 &
+                               Ex #t13. OutR1(k,s1,mT1)@t13
+& (t13 < t12 & t12 <t11 & t11 < t10 & t10 < t9 & t9 < t1))
+"
+
+end

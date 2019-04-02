@@ -1,0 +1,59 @@
+(**********)
+(* THEORY *)
+(**********)
+
+free ct : channel.
+free cr : channel.
+free ok : bitstring.
+
+fun kdf (bitstring, bitstring): bitstring.
+fun mac (bitstring, bitstring): bitstring.
+fun enc (bitstring, bitstring) : bitstring.
+reduc forall x : bitstring, y : bitstring;
+  dec(enc(x,y),y) = x.
+
+free tag2:bitstring.
+free tag3:bitstring.
+free tag4:bitstring.
+free tag5:bitstring.
+
+(* ==PROTOCOL== *)
+
+(* Description with Alice & Bob notations:
+  R -> T: nR
+  T -> R: nT    -- Test of inequality between message 1 and message 2
+  R -> T: MAC((nT, nR), k) -- MAC Test
+  T -> R: MAC((nR, nT), k) -- MAC Test
+
+This protocol is subject to an unlinkability attack when sessions can be executed
+in parallel (as it is modelled here) but we show that it is safe otherwise using
+Tamarin (see dedicated folder ../Tamarin/).
+
+*)
+
+let T (k:bitstring) =
+    new nT:bitstring;
+    in(ct, x1:bitstring);
+    out(ct, nT);
+    (* --- *)
+    in(ct, x2:bitstring);
+    if x2 = mac((nT,x1), k) then
+    out(ct, mac((x1,nT), k)).
+ 
+let R (k:bitstring) =
+    new nR:bitstring;
+    out(cr, nR);
+    in(cr, y2:bitstring);
+    if y2 <> nR then
+    (* --- *)
+    out(cr, mac((y2,nR), k));
+    in(cr, y3:bitstring);
+    if y3 = mac((nR,y2), k) then
+    out(cr, ok).
+
+(* WHOLE SYSTEM *)
+let seqToy =
+  ! new k:bitstring;
+    ! (T(k) | R(k)).
+
+process seqToy

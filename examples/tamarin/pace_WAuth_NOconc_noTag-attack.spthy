@@ -1,4 +1,4 @@
-theory PaceTheory
+theory PaceTheorySeq
 begin
 
 section{* PACE *}
@@ -8,12 +8,12 @@ section{* PACE *}
  * Modeler:  Lucca Hirschi
  * Date:     Janurary 2016
  * Source:   ICAO Spec: http://www.icao.int/publications/pages/publication.aspx?docnum=9303
- * Property: Unlinkability: this file contains sanity checks and the Well-Authentication for the
- *           first unsafe test of the Tag's role. It does not hold.
+ * Property: Unlinkability when sessions are in sequence: this file contains sanity checks and the Well-Authentication for the
+ *           first unsafe test of the Tag's role. It does not hold because the MAC does not include the full transcript.
  *
  * Status:   - modelization of prototocol: done
  *           - sanity check: done
- *           - WA on the first unsafe test of Tag's role does not hold
+ *           - WA on the first unsafe test of Tag's role does not hold.
 */
 	 
 builtins: symmetric-encryption, diffie-hellman
@@ -35,42 +35,42 @@ rule RepSess: //Rep, new s, Par
 /* TAG (ePassport) */
 /*******************/
 rule Tout_1: //out senc(s, k) 
- [ Tag2(~b1, ~b2, ~k, ~s)] --[OutT1(~k,~s,senc(~s,~k))]-> [Out(senc(~s, ~k)), Tag3(~b1, ~b2, ~k, ~s)]
+ [ Tag2(~b1, ~b2, ~k, ~s)] --[OutT1(~k,~s,senc(~s,~k)), PlayT(~k,~s)]-> [Out(senc(~s, ~k)), Tag3(~b1, ~b2, ~k, ~s)]
 
 rule Tin_1: //in x1 
- [ Tag3(~b1, ~b2, ~k, ~s), In(x1)] --[InT1(~k,~s,x1)]-> [Tag4(~b1, ~b2, ~k, ~s, x1)]
+ [ Tag3(~b1, ~b2, ~k, ~s), In(x1)] --[InT1(~k,~s,x1), PlayT(~k,~s)]-> [Tag4(~b1, ~b2, ~k, ~s, x1)]
 
 rule Tout_2: //out ('g') ^ (b1) 
- [ Tag4(~b1, ~b2, ~k, ~s, x1)] --[OutT2(~k,~s,'g'^(~b1))]-> [Out('g'^(~b1)), Tag5(~b1, ~b2, ~k, ~s, x1)]
+ [ Tag4(~b1, ~b2, ~k, ~s, x1)] --[OutT2(~k,~s,'g'^(~b1)), PlayT(~k,~s)]-> [Out('g'^(~b1)), Tag5(~b1, ~b2, ~k, ~s, x1)]
 
 rule Tin_2: //in x2 
- [ Tag5(~b1, ~b2, ~k, ~s, x1), In(x2)] --[InT2(~k,~s,x2)]-> [Tag6(~b1, ~b2, ~k, ~s, x1, x2)]
+ [ Tag5(~b1, ~b2, ~k, ~s, x1), In(x2)] --[InT2(~k,~s,x2), PlayT(~k,~s)]-> [Tag6(~b1, ~b2, ~k, ~s, x1, x2)]
 
 rule Tout_3: //out (gen(('g') ^ (s), (x1) ^ (b1))) ^ (b2) 
 let newG = gen('g'^(~s), x1^(~b1))
 in
-[ Tag6(~b1, ~b2, ~k, ~s, x1, x2)] --[OutT3(~k,~s,newG^(~b2))]-> [Out(newG^(~b2)), Tag7(~b1, ~b2, ~k, ~s, x1, x2)]
+[ Tag6(~b1, ~b2, ~k, ~s, x1, x2)] --[OutT3(~k,~s,newG^(~b2)), PlayT(~k,~s)]-> [Out(newG^(~b2)), Tag7(~b1, ~b2, ~k, ~s, x1, x2)]
 
 rule Tin_3: //in x3 
- [ Tag7(~b1, ~b2, ~k, ~s, x1, x2), In(x3)] --[InT3(~k,~s,x3)]-> [Tag8(~b1, ~b2, ~k, ~s, x1, x2, x3)]
+ [ Tag7(~b1, ~b2, ~k, ~s, x1, x2), In(x3)] --[InT3(~k,~s,x3), PlayT(~k,~s)]-> [Tag8(~b1, ~b2, ~k, ~s, x1, x2, x3)]
 
 rule TtestMac_then: //if eq(mac((gen(('g') ^ (s), (x1) ^ (b1))) ^ (b2), (x2) ^ (b2)), x3) 
 let newG = gen('g'^(~s), x1^(~b1))
     newKey = x2^(~b2)
 in
-[ Tag8(~b1, ~b2, ~k, ~s, x1, x2, x3)] --[TestT1(~k,~s), Pred_eq(mac(newG^(~b2), newKey), x3)]-> [Tag9(~b1, ~b2, ~k, ~s, x1, x2, x3)]
+[ Tag8(~b1, ~b2, ~k, ~s, x1, x2, x3)] --[TestT1(~k,~s), Pred_eq(mac(newG^(~b2), newKey), x3), PlayT(~k,~s)]-> [Tag9(~b1, ~b2, ~k, ~s, x1, x2, x3)]
 
 rule TtestMac_else: //else, if eq(mac((gen(('g') ^ (s), (x1) ^ (b1))) ^ (b2), (x2) ^ (b2)), x3) 
 let newG = gen('g'^(~s), x1^(~b1))
     newKey = x2^(~b2)
 in
-[ Tag8(~b1, ~b2, ~k, ~s, x1, x2, x3)] --[]-> [EndTag(~k)]
+[ Tag8(~b1, ~b2, ~k, ~s, x1, x2, x3)] --[PlayT(~k,~s)]-> [EndTag(~k)]
 
 rule Tout4: //out mac(x2, (x2) ^ (b2)) 
 let newG = gen('g'^(~s), x1^(~b1))
     newKey = x2^(~b2)
 in
- [ Tag9(~b1, ~b2, ~k, ~s, x1, x2, x3)] --[SessionT(~k, ~s)]-> [Out(mac(x2, newKey)), EndTag(~k)]
+ [ Tag9(~b1, ~b2, ~k, ~s, x1, x2, x3)] --[SessionT(~k, ~s), PlayT(~k,~s)]-> [Out(mac(x2, newKey)), EndTag(~k)]
 
 
 
@@ -78,92 +78,82 @@ in
 /* Reader */
 /**********/
 rule Rin_1: //in y1 
- [ Reader2(~a1, ~a2, ~k, ~s), In(y1)] --[InR1(~k,~s,y1)]-> [Reader3(~a1, ~a2, ~k, ~s, y1)]
+ [ Reader2(~a1, ~a2, ~k, ~s), In(y1)] --[InR1(~k,~s,y1), PlayR(~k,~s)]-> [Reader3(~a1, ~a2, ~k, ~s, y1)]
 
 rule Rout_1: //out ('g') ^ (a1) 
- [ Reader3(~a1, ~a2, ~k, ~s, y1)] --[OutR1(~k,~s,'g'^(~a1))]-> [Out('g'^(~a1)), Reader4(~a1, ~a2, ~k, ~s, y1)]
+ [ Reader3(~a1, ~a2, ~k, ~s, y1)] --[OutR1(~k,~s,'g'^(~a1)), PlayR(~k,~s)]-> [Out('g'^(~a1)), Reader4(~a1, ~a2, ~k, ~s, y1)]
 
 rule Rin_2: //in y2 
- [ Reader4(~a1, ~a2, ~k, ~s, y1), In(y2)] --[InR2(~k,~s,y2)]-> [Reader5(~a1, ~a2, ~k, ~s, y1, y2)]
+ [ Reader4(~a1, ~a2, ~k, ~s, y1), In(y2)] --[InR2(~k,~s,y2), PlayR(~k,~s)]-> [Reader5(~a1, ~a2, ~k, ~s, y1, y2)]
 
 rule Rout_2: //out (gen(('g') ^ (sdec(y1, ~k)), (y2) ^ (a1))) ^ (a2) 
 let xs = sdec(y1, ~k)
     newG = gen('g'^xs, y2^(~a1))
 in
-[ Reader5(~a1, ~a2, ~k, ~s, y1, y2)] --[OutR2(~k,~s,newG^(~a2))]-> [Out(newG^(~a2)), Reader6(~a1, ~a2, ~k, ~s, y1, y2)]
+[ Reader5(~a1, ~a2, ~k, ~s, y1, y2)] --[OutR2(~k,~s,newG^(~a2)), PlayR(~k,~s)]-> [Out(newG^(~a2)), Reader6(~a1, ~a2, ~k, ~s, y1, y2)]
 
 rule Rin_3: //in y3 
- [ Reader6(~a1, ~a2, ~k, ~s, y1, y2), In(y3)] --[InR3(~k,~s,y3)]-> [Reader7(~a1, ~a2, ~k, ~s, y1, y2, y3)]
+ [ Reader6(~a1, ~a2, ~k, ~s, y1, y2), In(y3)] --[InR3(~k,~s,y3), PlayR(~k,~s)]-> [Reader7(~a1, ~a2, ~k, ~s, y1, y2, y3)]
 
 rule RtestRefl_then: //if neq(y3, (gen(('g') ^ (sdec(y1, ~k)), (y2) ^ (a1))) ^ (a2)) 
 let xs = sdec(y1, ~k)
     newG = gen('g'^xs, y2^(~a1))
 in
-[ Reader7(~a1, ~a2, ~k, ~s, y1, y2, y3)] --[Pred_not_eq(y3, newG^(~a2))]-> [Reader8(~a1, ~a2, ~k, ~s, y1, y2, y3)]
+[ Reader7(~a1, ~a2, ~k, ~s, y1, y2, y3)] --[Pred_not_eq(y3, newG^(~a2)), PlayR(~k,~s)]-> [Reader8(~a1, ~a2, ~k, ~s, y1, y2, y3)]
 
 rule RtestRefl_else: //else, if neq(y3, (gen(('g') ^ (sdec(y1, ~k)), (y2) ^ (a1))) ^ (a2)) 
 let xs = sdec(y1, ~k)
     newG = gen('g'^xs, y2^(~a1))
 in
-[ Reader7(~a1, ~a2, ~k, ~s, y1, y2, y3)] --[Pred_eq(y3, newG^(~a2))]-> [EndReader(~k)]
+[ Reader7(~a1, ~a2, ~k, ~s, y1, y2, y3)] --[Pred_eq(y3, newG^(~a2)), PlayR(~k,~s)]-> [EndReader(~k)]
 
 rule Rout_3: //out mac(y3, (y3) ^ (a2)) 
-[ Reader8(~a1, ~a2, ~k, ~s, y1, y2, y3)] --[OutR3(~k,~s,mac(y3, y3^(~a2)))]-> [Out(mac(y3, y3^(~a2))), Reader9(~a1, ~a2, ~k, ~s, y1, y2, y3)]
+[ Reader8(~a1, ~a2, ~k, ~s, y1, y2, y3)] --[OutR3(~k,~s,mac(y3, y3^(~a2))), PlayR(~k,~s)]-> [Out(mac(y3, y3^(~a2))), Reader9(~a1, ~a2, ~k, ~s, y1, y2, y3)]
 
 rule Rin_4: //in y4 
- [ Reader9(~a1, ~a2, ~k, ~s, y1, y2, y3), In(y4)] --[]-> [Reader10(~a1, ~a2, ~k, ~s, y1, y2, y3, y4)]
+ [ Reader9(~a1, ~a2, ~k, ~s, y1, y2, y3), In(y4)] --[PlayR(~k,~s)]-> [Reader10(~a1, ~a2, ~k, ~s, y1, y2, y3, y4)]
 
 rule RtestMac_then: //if eq(mac((gen(('g') ^ (sdec(y1, ~k)), (y2) ^ (a1))) ^ (a2), (y3) ^ (a2)), y4) 
 let xs = sdec(y1, ~k)
     newG = gen('g'^xs, y2^(~a1))
     newKey = y3^(~a2)
 in
-[ Reader10(~a1, ~a2, ~k, ~s, y1, y2, y3, y4)] --[Pred_eq(mac(newG^(~a2), newKey), y4)]-> [Reader11(~a1, ~a2, ~k, ~s, y1, y2, y3, y4)]
+[ Reader10(~a1, ~a2, ~k, ~s, y1, y2, y3, y4)] --[Pred_eq(mac(newG^(~a2), newKey), y4), PlayR(~k,~s)]-> [Reader11(~a1, ~a2, ~k, ~s, y1, y2, y3, y4)]
 
 rule RtestMac_else: //else, if eq(mac((gen(('g') ^ (sdec(y1, ~k)), (y2) ^ (a1))) ^ (a2), (y3) ^ (a2)), y4) 
 let xs = sdec(y1, ~k)
     newG = gen('g'^xs, y2^(~a1))
     newKey = y3^(~a2)
 in
-[ Reader10(~a1, ~a2, ~k, ~s, y1, y2, y3, y4)] --[]-> [EndReader(~k)]
+[ Reader10(~a1, ~a2, ~k, ~s, y1, y2, y3, y4)] --[PlayR(~k,~s)]-> [EndReader(~k)]
 
 rule Rout_4: //out 'ok' 
- [ Reader11(~a1, ~a2, ~k, ~s, y1, y2, y3, y4)] --[SessionR(~k, ~s)]-> [Out('ok'), EndReader(~k)]
+ [ Reader11(~a1, ~a2, ~k, ~s, y1, y2, y3, y4)] --[SessionR(~k, ~s), PlayR(~k,~s)]-> [Out('ok'), EndReader(~k)]
 
 
 
 /**********/
 /* Axioms */
 /**********/
-axiom predicate_not_eq:
+restriction predicate_not_eq:
 	"All #i a b. Pred_not_eq(a,b)@i ==> not(a = b)"
 
-axiom predicate_eq:
+restriction predicate_eq:
 	"All #i a b. Pred_eq(a,b)@i ==> a = b"
 
-axiom single_session: // for a single session
+restriction single_session: // for a single session
 	"All #i #j. Init()@i & Init()@j ==> #i=#j"
 
-
-/*
-axiom immeadiate_in:
-	"All t #i . ChannelInEvent(t)@i
-		==> Ex #j. K(t)@j & #j<#i
-			& (All #k. Event()@k  ==> #k<#j | #i<#k)
-			& (All #k t2 . K(t2)@k  ==> #k<#j | #i<#k | #k=#j)
-                                     "
-                
-axiom locking:
-	"All n x np #i #j . Lock(n,x)@i & Lock(np,x)@j 
-		==> 
-		( #i<#j 
-			& (Ex #k. Unlock(n,x)@k & #i<#k & #k<#j 
-                         & (All  #m . Unlock(n,x)@m ==> #m=#k) 
-                         & (All np #m . Lock(np,x)@m ==> #m<#i | #m=#i | #k<#m) 
-			 & (All np #m . Unlock(np,x)@m ==> #m<#i | #k<#m | #k=#m )
-			))
-		| #j<#i | #i=#j "
-*/
+// The following restriction gets rid some executions, but all those executions cannot be produced when sessions of tags and readers are only sequentially executed
+restriction seq_sessionR: // for having sessions in sequence only
+	"not (Ex k s1 s2 #i1 #i2 #i3.
+	        PlayR(k,s1) @ i1 & 
+                PlayR(k,s2) @ i2 &
+                PlayR(k,s1) @ i3 &
+                i1 < i2 &
+                i2 < i3 &
+                not(s1=s2)
+              )"
 
 
 /**********/
