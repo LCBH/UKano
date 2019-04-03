@@ -19,36 +19,41 @@ free tag5:bitstring.
 
 (* ==PROTOCOL== *)
 
-(* Description with Alice & Bob notations:
-  R -> T: nR
-  T -> R: nT    -- Test of inequality between message 1 and message 2
-  R -> T: MAC((nT, nR), k) -- MAC Test
+(* This file models the protocol described in Example 15 (that continues Example 9)
+from the journal paper on UKano (JCS'19).
+
+Description with Alice & Bob notations:
+  T -> R: nT
+  R -> T: nR    -- Test of inequality between message 1 and message 2
   T -> R: MAC((nR, nT), k) -- MAC Test
+  R -> T: MAC((nT, nR), k) -- MAC Test
 
 This protocol is subject to an unlinkability attack when sessions can be executed
 in parallel (as it is modelled here) but we show that it is safe otherwise using
 Tamarin (see dedicated folder ../Tamarin/).
 
+--> Ukano finds the attack from this file.
+
 *)
 
-let T (k:bitstring) =
-    new nT:bitstring;
-    in(ct, x1:bitstring);
-    out(ct, nT);
-    (* --- *)
-    in(ct, x2:bitstring);
-    if x2 = mac((nT,x1), k) then
-    out(ct, mac((x1,nT), k)).
- 
 let R (k:bitstring) =
     new nR:bitstring;
-    out(cr, nR);
-    in(cr, y2:bitstring);
-    if y2 <> nR then
+    in(ct, x1:bitstring);
+    out(ct, nR);
     (* --- *)
-    out(cr, mac((y2,nR), k));
+    in(ct, x2:bitstring);
+    if x2 = mac((nR,x1), k) then
+    out(ct, mac((x1,nR), k)).
+ 
+let T (k:bitstring) =
+    new nT:bitstring;
+    out(cr, nT);
+    in(cr, y2:bitstring);
+    if y2 <> nT then
+    (* --- *)
+    out(cr, mac((y2,nT), k));
     in(cr, y3:bitstring);
-    if y3 = mac((nR,y2), k) then
+    if y3 = mac((nT,y2), k) then
     out(cr, ok).
 
 (* WHOLE SYSTEM *)

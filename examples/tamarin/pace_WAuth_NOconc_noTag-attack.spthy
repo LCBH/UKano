@@ -5,15 +5,11 @@ section{* PACE *}
 
 /*
  * Protocol: PACE
- * Modeler:  Lucca Hirschi
- * Date:     Janurary 2016
  * Source:   ICAO Spec: http://www.icao.int/publications/pages/publication.aspx?docnum=9303
- * Property: Unlinkability when sessions are in sequence: this file contains sanity checks and the Well-Authentication for the
- *           first unsafe test of the Tag's role. It does not hold because the MAC does not include the full transcript.
- *
- * Status:   - modelization of prototocol: done
- *           - sanity check: done
- *           - WA on the first unsafe test of Tag's role does not hold.
+ * Property: Unlinkability: this file contains sanity checks and the Well-Authentication for the
+ *           first unsafe test of the Tag's role.  It does not hold because the two MAC messages
+ *           do not include the full transcript. See the discussion in Section 7.1.2 from the
+ *           journal paper on UKano (JCS'19).
 */
 	 
 builtins: symmetric-encryption, diffie-hellman
@@ -141,10 +137,7 @@ restriction predicate_not_eq:
 restriction predicate_eq:
 	"All #i a b. Pred_eq(a,b)@i ==> a = b"
 
-restriction single_session: // for a single session
-	"All #i #j. Init()@i & Init()@j ==> #i=#j"
-
-// The following restriction gets rid some executions, but all those executions cannot be produced when sessions of tags and readers are only sequentially executed
+// The following restriction gets rid some executions, but all those executions cannot be produced when sessions of readers are only sequentially executed
 restriction seq_sessionR: // for having sessions in sequence only
 	"not (Ex k s1 s2 #i1 #i2 #i3.
 	        PlayR(k,s1) @ i1 & 

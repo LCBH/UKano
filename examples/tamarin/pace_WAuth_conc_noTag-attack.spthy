@@ -5,15 +5,11 @@ section{* PACE *}
 
 /*
  * Protocol: PACE
- * Modeler:  Lucca Hirschi
- * Date:     Janurary 2016
  * Source:   ICAO Spec: http://www.icao.int/publications/pages/publication.aspx?docnum=9303
  * Property: Unlinkability: this file contains sanity checks and the Well-Authentication for the
- *           first unsafe test of the Tag's role. It does not hold.
+ *           first unsafe test of the Tag's role. It does not hold. See the discussion in 
+ *           Section 7.1.2 from the journal paper on UKano (JCS'19).
  *
- * Status:   - modelization of prototocol: done
- *           - sanity check: done
- *           - WA on the first unsafe test of Tag's role does not hold
 */
 	 
 builtins: symmetric-encryption, diffie-hellman
@@ -140,31 +136,6 @@ axiom predicate_not_eq:
 
 axiom predicate_eq:
 	"All #i a b. Pred_eq(a,b)@i ==> a = b"
-
-axiom single_session: // for a single session
-	"All #i #j. Init()@i & Init()@j ==> #i=#j"
-
-
-/*
-axiom immeadiate_in:
-	"All t #i . ChannelInEvent(t)@i
-		==> Ex #j. K(t)@j & #j<#i
-			& (All #k. Event()@k  ==> #k<#j | #i<#k)
-			& (All #k t2 . K(t2)@k  ==> #k<#j | #i<#k | #k=#j)
-                                     "
-                
-axiom locking:
-	"All n x np #i #j . Lock(n,x)@i & Lock(np,x)@j 
-		==> 
-		( #i<#j 
-			& (Ex #k. Unlock(n,x)@k & #i<#k & #k<#j 
-                         & (All  #m . Unlock(n,x)@m ==> #m=#k) 
-                         & (All np #m . Lock(np,x)@m ==> #m<#i | #m=#i | #k<#m) 
-			 & (All np #m . Unlock(np,x)@m ==> #m<#i | #k<#m | #k=#m )
-			))
-		| #j<#i | #i=#j "
-*/
-
 
 /**********/
 /* Lemmas */
