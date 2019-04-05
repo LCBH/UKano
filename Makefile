@@ -8,11 +8,11 @@ UKANO_S =src
 
 all: ukano proverif
 ukano:
-	@echo "#### Building UKano v0.4 ...."
+	@echo "#### Building UKano v0.5 ...."
 	$(MAKE) all -C $(UKANO_S)
 	cp $(UKANO_S)/ukano .
 ukano-short:
-	@echo "#### Building UKano v0.4 ...."
+	@echo "#### Building UKano v0.5 ...."
 	$(MAKE) short -C $(UKANO_S)
 	cp $(UKANO_S)/ukano .
 proverif:

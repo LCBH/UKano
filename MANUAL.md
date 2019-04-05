@@ -72,7 +72,7 @@ They can be used as a starting point to write your own protocols.
 Here are the options you may use:
 ```bash
 $ ./ukano --help
-UKano v0.4 : Cryptographic privacy verifier, by Lucca Hirschi. Based on Proverif v1.91, by Bruno 
+UKano v0.5 : Cryptographic privacy verifier, by Lucca Hirschi. Based on Proverif v1.97, by Bruno 
 Blanchet and Vincent Cheval.
   --proverif            path of the ProVerif executable to use (optional, default: './proverif')
   --ideal-no-check      assume the idealisation is conform (requires manual checks)
