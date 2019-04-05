@@ -1,0 +1,74 @@
+(**********)
+(* THEORY *)
+(**********)
+
+free ct : channel.
+free cr : channel.
+free ok : bitstring.
+
+fun kdf (bitstring, bitstring): bitstring.
+fun mac (bitstring, bitstring): bitstring.
+fun enc (bitstring, bitstring) : bitstring.
+reduc forall x : bitstring, y : bitstring;
+  dec(enc(x,y),y) = x.
+
+free tag2:bitstring.
+free tag3:bitstring.
+free tag4:bitstring.
+free tag5:bitstring.
+
+free k1: bitstring [private].
+free k2: bitstring [private].
+
+
+(* ==PROTOCOL== *)
+
+(* This file models the protocol described in Example 15 (that continues Example 9)
+from the journal paper on UKano (JCS'19).
+
+Description with Alice & Bob notations:
+  T -> R: nT
+  R -> T: nR    -- Test of inequality between message 1 and message 2
+  T -> R: MAC((nR, nT), k) -- MAC Test
+  R -> T: MAC((nT, nR), k) -- MAC Test
+
+This protocol is subject to an unlinkability attack when sessions can be executed
+in parallel (as it is modelled here) but we show that it is safe otherwise using
+Tamarin (see dedicated folder ../Tamarin/). This file models unlinkability using
+a two-agents game as described in Section 3.3.
+
+--> ProVerif fails to find the unlinkability attack for reasons explained in Section 3.3.
+*)
+
+let R (k:bitstring) =
+    new nR:bitstring;
+    in(ct, x1:bitstring);
+    out(ct, nR);
+    (* --- *)
+    in(ct, x2:bitstring);
+    if x2 = mac((nR,x1), k) then
+    out(ct, mac((x1,nR), k)).
+ 
+let T (k:bitstring) =
+    new nT:bitstring;
+    out(cr, nT);
+    in(cr, y2:bitstring);
+    if y2 <> nT then
+    (* --- *)
+    out(cr, mac((y2,nT), k));
+    in(cr, y3:bitstring);
+    if y3 = mac((nT,y2), k) then
+    out(cr, ok).
+
+(* WHOLE SYSTEM *)
+let seqToy =
+  ! new k:bitstring;
+    !  (T(k)| R(k))
+ | !T(k1) | ! T(k1)
+ | !T(k2) | ! T(k2)
+ |
+(phase 1;
+let k0 = choice[k1,k2] in (!T(k0) | !R(k0))).
+	
+
+process seqToy
