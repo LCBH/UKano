@@ -1,11 +1,11 @@
-# UKano: UnlinKability and ANOnymity verifier v0.4
+# UKano: UnlinKability and ANOnymity verifier v0.5
 > - Landing page: http://projects.lsv.ens-cachan.fr/ukano
 > - Manual: https://github.com/LCBH/UKano/wiki
 
 *UKano* is a modified version of the [ProVerif](http://proverif.inria.fr)
 tool including automatic verification of anonymity and unlinkability of 2-agents protocols.
 See the [UKano webpage](http://projects.lsv.ens-cachan.fr/ukano/) for more details about the tools
-and references [HBD18](#links) & [HBD16](#links) given below for more details on
+and references [HBD19](#links) & [HBD16](#links) given below for more details on
 the underlying theory.
 
 <img align="center" src="http://projects.lsv.ens-cachan.fr/ukano/pictures/International_justice_and_privacy.jpg" width="100" />
@@ -40,7 +40,7 @@ of options of UKano.
 
 
 ## How Does It Work?
-We have proved in [HBD18](#references) (preliminary versions in [HBD16](#references),[H17](#references))
+We have proved in [HBD19](#references) (preliminary versions in [HBD16](#references),[H17](#references))
 that, for 2-party protocols, unlinkability and anonmyity follow from two sufficent conditions we
 called *Frame Opacity* (FO) and *Well-Authentication* (WA). We also show how to verify those two
 conditions relying on dedicated encodings.
@@ -69,12 +69,13 @@ You can find a comprehensive list of case studies and benchmarks described in th
 section of the manual: https://github.com/LCBH/UKano/wiki#our-case-studies.
 
 
-Finally, the underlying theory behind UKano is described in [HBD18] and [HBD16].
+Finally, the underlying theory behind UKano is described in [HBD19](#references) and [HBD16](#references).
 
 
 ## References
-> [HBD18]: L. Hirschi, D. Baelde and S. Delaune.
->     A method for unbounded verification of privacy-type properties (journal paper under submission).
+> [HBD19]: L. Hirschi, D. Baelde and S. Delaune.
+>     A method for unbounded verification of privacy-type properties.
+>     Will appear in the [Journal of Computer Security](https://www.iospress.nl/journal/journal-of-computer-security/).
 >     A copy can be found on [ARXIV](https://arxiv.org/pdf/1710.02049.pdf).
 
 > 
@@ -86,5 +87,5 @@ Finally, the underlying theory behind UKano is described in [HBD18] and [HBD16].
 > 
 > [HBD16]: L. Hirschi, D. Baelde and S. Delaune.
 >     A Method for Verifying Privacy-Type Properties : The Unbounded Case.
->     In IEEE Symposium on Security and Privacy (Oakland), 2016. To appear.
+>     In IEEE Symposium on Security and Privacy (Oakland), 2016.
 >     A copy can be found at http://projects.lsv.ens-cachan.fr/ukano/.

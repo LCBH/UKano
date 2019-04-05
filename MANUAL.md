@@ -1,11 +1,11 @@
-# Manual of UKano v0.4
+# Manual of UKano v0.5
 > Lucca Hirschi
 > http://projects.lsv.ens-cachan.fr/ukano/
 
 *UKano* is a modified version of the [ProVerif](http://proverif.inria.fr)
 tool including automatic verification of anonymity and unlinkability of 2-agents protocols.
 See the [UKano webpage](http://projects.lsv.ens-cachan.fr/ukano/) for more details about the tools
-and references [HBD18](#links) & [HBD16](#links) given below for more details on
+and references [HBD19](#links) & [HBD16](#links) given below for more details on
 the underlying theory.
 
 <img align="center" 
@@ -47,7 +47,7 @@ and anonymity could be established or not.
 
 
 ### How it works?
-We have proved in [HBD18](#references) (preliminary versions in [HBD16](#references) and [H17](#references))
+We have proved in [HBD19](#references) (preliminary versions in [HBD16](#references) and [H17](#references))
 that, for 2-party protocols, unlinkability and anonmyity follow from two sufficent conditions we
 called *Frame Opacity* (FO) and *Well-Authentication* (WA). We also show how to verify those two
 conditions relying on dedicated encodings.
@@ -96,7 +96,7 @@ Some options are described in the next section.
 
 ### Idealisations Heuristics
 We now describe the heuristic UKano uses by default to guess idealisations automatically (corresponding
-to the *quasi-syntaxic heuristic* from [HBD18](#references)).
+to the *quasi-syntaxic heuristic* from [HBD19](#references)).
 Given a syntactic output `u` in some role, we recursively build an idealisation by case analysis on 
 `u`:
  1. a constant, we let `u` be its idealisation
@@ -139,7 +139,7 @@ events), the inputted file should contain a commentary:
 ```
 and then define only one process corresponding to the whole multiple
 sessions system. This process should satisfy the syntactical
-restrictions described in [HBD18](#references). However, multiple tests (conditional or
+restrictions described in [HBD19](#references). However, multiple tests (conditional or
 evaluation) can be performed in a row between an input and an output
 if the corresponding `else` branches are the same. You can also use most
 of syntactical sugars allowed by ProVerif (e.g., modular definitions
@@ -182,7 +182,7 @@ We also list in section [Benchmarks](#benchmarks) the different results
 
 
 ### List of Case Studies
-See the table below. References to the protocols can be found in [HBD18](#references) and models that can be fed 
+See the table below. References to the protocols can be found in [HBD19](#references) and models that can be fed 
 to UKano can be found in the folder 
 [`./examples`](https://github.com/LCBH/UKano/tree/master/examples).
 
@@ -226,7 +226,7 @@ much memory (>20GO of RAM), and, -- when it was not necessary to build idealisat
 (i.e., user defined). The different columns for FO (i.e., frame opacity) refers to the different
 heuristics implemented in  UKano to build idealisations:
 - "semantic" corresponds to the option `--ideal-semantic`
-- "default" corresponds to the default heuristic of UKano (quasi-syntaxic in [HBD18])
+- "default" corresponds to the default heuristic of UKano (quasi-syntaxic in [HBD19])
 - "syntaxic" corresponds to the option `--ideal-syntaxic`
 - "user-defined" when a user-defined idealisation was given to the tool.
 
@@ -238,12 +238,12 @@ heuristics implemented in  UKano to build idealisations:
 | BAC+AA+PA      | 0.46s  | 0.42s | 0.04s  | 0.22s   | 0.22s   | --    |
 | BAC+PA+AA      | 0.40s  | 0.36s | 0.04s  | 0.52s   | 0.50s   | --    |
 | PACE with tags | 78.40s | 72.40s| 6.00s  | 6.19s   | 16.44s  | --    |
-| DAA simplified [HBD18]| 0.02s | 0.01s | :x:| 0.01s | 0.01s   | --    |
+| DAA simplified [HBD19]| 0.02s | 0.01s | :x:| 0.01s | 0.01s   | --    |
 | DAA sign       | 3.77s  | 0.03s | :x:    | :x:     | :x:     | 3.74s |
 | DAA join       | 31.81s | 29.57s*  | :x: | 1.24s   | 2.29s   | 1.79s |
 | abcdh (irma)   | 9072.75s |  9060s* | :x:| :x:     | 38.20s  | 12.75s|
 
-(*) indicates that we had to slightly modify the produced file, refer to [HBD18](#references) for more details.
+(*) indicates that we had to slightly modify the produced file, refer to [HBD19](#references) for more details.
 
 We also report on the table below the time needed to find an attack (on well-authentication):
 
@@ -255,8 +255,9 @@ We also report on the table below the time needed to find an attack (on well-aut
 
 
 ## References
-[HBD18]: L. Hirschi, D. Baelde and S. Delaune.
-    A method for unbounded verification of privacy-type properties (journal paper under submission).
+[HBD19]: L. Hirschi, D. Baelde, S. Delaune.
+    A method for unbounded verication of privacy-type properties.
+    Will appear in the [Journal of Computer Security](https://www.iospress.nl/journal/journal-of-computer-security/).
     A copy can be found on [ARXIV](https://arxiv.org/pdf/1710.02049.pdf).
 
 [H17]: L. Hirschi.

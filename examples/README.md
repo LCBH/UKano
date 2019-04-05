@@ -65,7 +65,7 @@ much memory (>20GO of RAM), and, -- when it was not necessary to build idealisat
 (i.e., user defined). The different columns for FO (i.e., frame opacity) refers to the different
 heuristics implemented in  UKano to build idealisations:
 - "semantic" corresponds to the option `--ideal-semantic`
-- "default" corresponds to the default heuristic of UKano (quasi-syntaxic in [HBD18])
+- "default" corresponds to the default heuristic of UKano (quasi-syntaxic in [HBD19])
 - "syntaxic" corresponds to the option `--ideal-syntaxic`
 - "user-defined" when a user-defined idealisation was given to the tool.
 
@@ -77,14 +77,14 @@ heuristics implemented in  UKano to build idealisations:
 | BAC+AA+PA      | 0.46s  | 0.42s | 0.04s  | 0.22s   | 0.22s   | --    |
 | BAC+PA+AA      | 0.40s  | 0.36s | 0.04s  | 0.52s   | 0.50s   | --    |
 | PACE with tags | 78.40s | 72.40s| 6.00s  | 6.19s   | 16.44s  | --    |
-| DAA simplified [HBD18]| 0.02s | 0.01s | :x:| 0.01s | 0.01s   | --    |
+| DAA simplified [HBD19]| 0.02s | 0.01s | :x:| 0.01s | 0.01s   | --    |
 | DAA sign       | 3.77s  | 0.03s | :x:    | :x:     | :x:     | 3.74s |
 | DAA join       | 31.81s | 29.57s*  | :x: | 1.24s   | 2.29s   | 1.79s |
 | abcdh (irma)   | 9072.75s |  9060s* | :x:| :x:     | 38.20s  | 12.75s|
 
-(*) indicates that we had to slightly modify the produced file, refer to [HBD18](#references) for more details.
+(*) indicates that we had to slightly modify the produced file, refer to [HBD19](#references) for more details.
 
-We also report on the table below the time needed to find an attack (on well-authentication):
+We also report on the table below the time needed to find an attack (on well-au\thentication):
 
 | Protocol    | Time to find an attack in WA |
 |:------------|:----------------------------:|
@@ -94,11 +94,10 @@ We also report on the table below the time needed to find an attack (on well-aut
 
 
 ## References
-
-[HBD19]: L. Hirschi, D. Baelde, S. Delaune
+[HBD19]: L. Hirschi, D. Baelde, S. Delaune.
     A method for unbounded verication of privacy-type properties.
-	Under submission.
-	A copy can be found on [ARXIV](https://arxiv.org/pdf/1710.02049.pdf).
+    Will appear in the [Journal of Computer Security](https://www.iospress.nl/journal/journal-of-computer-security/).
+    A copy can be found on [ARXIV](https://arxiv.org/pdf/1710.02049.pdf).
 
 [H17]: L. Hirschi.
     PhD Thesis.
