@@ -84,7 +84,7 @@ heuristics implemented in  UKano to build idealisations:
 
 (*) indicates that we had to slightly modify the produced file, refer to [HBD19](#references) for more details.
 
-We also report on the table below the time needed to find an attack (on well-au\thentication):
+We also report on the table below the time needed to find an attack (on well-authentication):
 
 | Protocol    | Time to find an attack in WA |
 |:------------|:----------------------------:|

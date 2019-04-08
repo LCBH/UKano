@@ -912,7 +912,7 @@ let transFO proto p inNameFile nameOutFile =
 	 | _ -> let tmIdeal = guessIdeal listVarIn tm in (* he did not, we need to guess it *)
 		if checkIdeal inHonest listVarIn tmIdeal
 		then (tm, tmIdeal) 
-		else failwith ("Critial Error [458]."^email) in
+		else errorClass ("We failed to build an appropriate idealisation because the heuristic in use was not able to build idealised messages that were conform. Please try to build an idealisation manually."^email) ( Output (tc,tm,p,occ)) in
        (* if false then begin pp "\n";  *)  (* For debugging purpose: *)
        (* 			(match tm with | FunApp (f, li) -> debugFunSymb f); *)
        (* 			pp "\n"; Display.Text.display_term tm; *)
