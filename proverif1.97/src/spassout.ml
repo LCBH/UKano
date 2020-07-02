@@ -54,10 +54,10 @@ let output_ident filename s =
 	else
 	  char_of_int (n + (int_of_char '0'))
       in
-      let s = "0x00" in
-      s.[2] <- hex_of_int (code / 16);
-      s.[3] <- hex_of_int (code mod 16);
-      output_string filename s
+      output_char filename '0';
+      output_char filename 'x';
+      output_char filename (hex_of_int (code / 16));
+      output_char filename (hex_of_int (code mod 16))
     else
       output_char filename c
     ) s

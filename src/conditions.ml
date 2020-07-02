@@ -321,8 +321,9 @@ let displayProtocolProcess proto =
 let theoryStr inNameFile =
   let inFile = open_in inNameFile in
   let sizeInFile = in_channel_length inFile in
-  let inStr = String.create sizeInFile in
+  let inStr = Bytes.create sizeInFile in
   really_input inFile inStr 0 sizeInFile;
+  let inStr = Bytes.to_string inStr in
   let theoStr =
     try let listSplit = (Str.split (Str.regexp_string splitTheoryString) inStr) in
 	if List.length listSplit <= 1
