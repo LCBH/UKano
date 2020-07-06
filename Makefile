@@ -43,16 +43,18 @@ OBJS =$(TESTS:.pi=.ok)
 OBJS_ERROR =$(TESTS_ERROR:.pi=.error)
 
 test: $(OBJS_ERROR) $(OBJS)
+	@echo "=========================================="
+	@echo "All tests passed! "
 
 examples/tests/%.error: examples/tests/%.pi
-	@echo "============= UKANO RUN ============="
+	@echo "============= UKANO RUN TEST ============="
 	@echo "Should return an error !"
 	@echo "$$./ukano --less-verbose $<"
 # we check that ukano returns an error:
 	@$(UKANO) --less-verbose $< ; test $$? -eq 2
 
 examples/tests/%.ok: examples/tests/%.pi
-	@echo "============= UKANO RUN ============="
+	@echo "============= UKANO RUN TEST ============="
 	@echo "Should not return any error !"
 	@echo "$$./ukano --less-verbose $<"
 	@$(UKANO) --less-verbose $<

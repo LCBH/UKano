@@ -808,6 +808,7 @@ let transFO proto p inNameFile nameOutFile =
    the end of honest execution). *)
   let checkIdeal inHonest listVarIn t =
     let rec checkSyntax  = function
+      | FunApp (f, tl) when isEqu f -> false   (* function symbol involved in equations *)
       | FunApp (f, []) when isConstant f -> true (* public constants *)
       | FunApp (f, []) when isHole f -> true     (* hole *)
       | FunApp (f, []) when (isName f && (List.mem f proto.sessNames || List.mem f proto.comNames))
