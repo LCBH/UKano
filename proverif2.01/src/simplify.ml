@@ -656,8 +656,12 @@ let rec fst_snd_term next_f = function
       fst_snd_term (fun t11 t12 ->
         fst_snd_term (fun t21 t22 ->
           next_f t11 t22
-        ) t2
-      ) t1
+          ) t2
+        ) t1
+  | FunApp({f_cat = BiProj s},[t]) ->
+     fst_snd_term (fun t1 t2 ->
+         let t' = match s with Left -> t1 | Right -> t2 in
+         next_f t' t') t    
   | FunApp(f,args) ->
       fst_snd_term_list (fun q1 q2 ->
         next_f (FunApp(f,q1)) (FunApp(f,q2))

@@ -152,7 +152,10 @@ and funcats =
   | General_var
   | General_mayfail_var
   | Choice
+  | BiProj of side
   | Failure
+  
+and side = Left | Right
 
 (* The following constraints represents the constraints that can occur in a clause,
   namely disequalties between terms, inequalities between natural numbers and

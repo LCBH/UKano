@@ -488,7 +488,7 @@ type nounif_ignore_once_t = NIO_None | NIO_Auto | NIO_All
 let nounif_ignore_once = ref NIO_None
 
 let biproj_fun_memo side = memo (fun t ->
-  { f_name = "biproj_" ^ (if side = Left then "fst" else "snd") ;
+  { f_name = Fixed ("biproj_" ^ (if side = Left then "fst" else "snd")) ;
     f_type = [t],t;
     f_cat = BiProj side;
     f_initial_cat = BiProj side;

@@ -265,6 +265,8 @@ val nounif_ignore_once : nounif_ignore_once_t ref
 
 val biproj_fun : Types.side -> Types.typet -> Types.funsymb
 
+val biproj_fun : Types.side -> Types.typet -> Types.funsymb
+
 (* Values computed from the input file *)
 
 val types_initial : Types.typet list
