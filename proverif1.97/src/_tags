@@ -1,2 +1,0 @@
-"main.byte" or "main.native": package(str)
-"menu_interact.ml" or "menu_interact.mli": package(lablgtk2), linkpkg
