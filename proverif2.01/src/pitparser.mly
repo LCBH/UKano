@@ -33,6 +33,13 @@ open Parsing_helper
 open Ptree
 open Pitptree
 
+let fresh_biproj_var =
+  let c = ref 0 in
+    fun () ->
+      incr c ;
+      Printf.sprintf "_biproj_%d" !c,
+      Parsing_helper.dummy_ext
+
 let zero () = PIdent (("0",parse_extent())), parse_extent()
 
 let rec unfold_int t = function
@@ -66,6 +73,13 @@ let rec unfold_pat_int t = function
   | n -> PPatFunApp(("+", parse_extent()), [unfold_pat_int t (n-1)])
 
 exception Syntax
+
+let fresh_biproj_var =
+  let c = ref 0 in
+    fun () ->
+      incr c ;
+      Printf.sprintf "_biproj_%d" !c,
+      Parsing_helper.dummy_ext
 
 %}
 
@@ -880,6 +894,28 @@ tprocess:
 	{ PTest($2,$4,$5), parse_extent() }
 |	IN LPAREN pterm COMMA tpattern RPAREN options opttprocess
 	{ PInput($3,$5,$8,$7), parse_extent() }
+|	IN LPAREN pterm COMMA CHOICE LBRACKET IDENT COLON typeid COMMA IDENT COLON typeid RBRACKET  RPAREN options opttprocess
+	{ let z = fresh_biproj_var () in
+        PInput($3,PPatVar (z,Some $9),
+        (let z : Pitptree.pterm_e = PPIdent (fst z,snd z), parse_extent () in
+        let fst : ident = ("biproj_fst",parse_extent ()) in
+        let snd : ident = ("biproj_snd",parse_extent ()) in
+        PLet (PPatVar ($7,None),
+	       (PPFunApp(fst,[z]),parse_extent ()),
+               (PLet
+ 		  (PPatVar
+		     ($11,None),
+		     (PPFunApp(snd,[z]),parse_extent ()),
+		     $17,
+		     (PNil,parse_extent())
+		  ),
+		  parse_extent()
+	       ),
+	       (PNil,parse_extent())
+	      ), parse_extent()
+	),
+        $16),
+	parse_extent() }
 |	OUT LPAREN pterm COMMA pterm RPAREN progend opttprocess
 	{ POutput($3,$5,$8), parse_extent() }
 | 	LET tpattern EQUAL pterm
