@@ -18,7 +18,7 @@ free read : bitstring.
 free ok : bitstring.
 free tagPass : bitstring.
 free tagReader : bitstring.
-free secret : bitstring [private].
+free secretUK : bitstring [private].
 const g : bitstring [data].
 
 

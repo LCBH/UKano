@@ -13,7 +13,7 @@ free error_mac : bitstring.
 free init : bitstring.
 free read : bitstring.
 free ok : bitstring.
-free secret : bitstring [private].
+free secretUK : bitstring [private].
 const g : bitstring [data].
 
 

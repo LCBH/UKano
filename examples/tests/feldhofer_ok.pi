@@ -6,7 +6,7 @@
 free c : channel.
 free ci : channel.
 free cr : channel.
-free secret : bitstring [private].
+free secretUK : bitstring [private].
 (* constant values *)
 free ok : bitstring.
 free hole : bitstring.
