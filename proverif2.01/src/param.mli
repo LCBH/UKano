@@ -263,6 +263,8 @@ val dummy_solve_status : Pitypes.t_solve_corresp_status
 type nounif_ignore_once_t = NIO_None | NIO_Auto | NIO_All
 val nounif_ignore_once : nounif_ignore_once_t ref
 
+val biproj_fun : Types.side -> Types.typet -> Types.funsymb
+
 (* Values computed from the input file *)
 
 val types_initial : Types.typet list

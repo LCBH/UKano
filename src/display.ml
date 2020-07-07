@@ -1245,7 +1245,12 @@ and display_term_list2 l = display_list display_term2 "," l
 and isChoice funSymb = funSymb.f_name = "choice"
 
 and display_pattern_choice = function
-  | PatVar b -> display_idcl CVar (varname b)
+  | PatVar b -> display_idcl CVar (varname b);
+                if !Param.typed_frontend then
+	          begin
+	            print_string ": ";
+	            display_idcl CType "bitstring" (* TODO: check if this could be checked beforehand *)
+	          end;
   | PatTuple (f,l) -> 
       display_idcl CFun f.f_name;
       if (l != []) || (f.f_name = "") || not (!Param.typed_frontend) then
@@ -1281,11 +1286,6 @@ let rec display_pattern = function
 	  print_string "[";
 	  display_pattern_list_choice l;
 	  print_string "]";
-	  if !Param.typed_frontend then
-	    begin
-	      print_string ": ";
-	      display_idcl CType "bitstring" (* TODO: check if this could be checked beforehand *)
-	    end;
 	end
   | PatTuple (f,l) -> 
       display_idcl CFun f.f_name;

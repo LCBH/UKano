@@ -88,6 +88,10 @@ let get_apply_symb env (s,ext) tl =
         input_error ("function " ^ s ^ " expects two arguments of same type but is here given " ^
           (args_to_string tl)) ext;
       (EFun (Param.choice_fun t1), t1)
+  | "biproj_fst", [t] ->
+      (EFun (Param.biproj_fun Left t), t)
+  | "biproj_snd", [t] ->
+      (EFun (Param.biproj_fun Right t), t)
   | ("=" | "<>" | "choice"), _ ->
       input_error (s ^ "expects two arguments") ext
   | str,[t] when str.[0] = '-' ->
