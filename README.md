@@ -1,4 +1,4 @@
-# UKano: UnlinKability and ANOnymity verifier v0.5
+# UKano: UnlinKability and ANOnymity verifier v0.6
 > - Landing page: http://projects.lsv.ens-cachan.fr/ukano
 > - Manual: https://github.com/LCBH/UKano/wiki
 

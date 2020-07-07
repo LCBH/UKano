@@ -1,4 +1,4 @@
-# Manual of UKano v0.5
+# Manual of UKano v0.6
 > Lucca Hirschi
 > http://projects.lsv.ens-cachan.fr/ukano/
 
@@ -22,7 +22,7 @@ The executable program `ukano` and `proverif` have been built.
 You can also build UKano only by typing `make ukano`. UKano needs an exectuable of ProVerif though.
 We recommend using the version shipped with UKano but one can specify the path some ProVerif executable
 with the option `--proverif <path>`. *Warning*: if one wants to use its own ProVerif executable, then one
-needs a version '>1.97' patched with the 'biproj.patch' in 'proverif1.97' folder of the repository,
+needs a version '=>1.97' patched with the 'biproj.patch' in 'proverif2.01' folder of the repository,
 
 
 ## Quick Test
@@ -72,7 +72,7 @@ They can be used as a starting point to write your own protocols.
 Here are the options you may use:
 ```bash
 $ ./ukano --help
-UKano v0.5 : Cryptographic privacy verifier, by Lucca Hirschi. Based on Proverif v1.97, by Bruno 
+UKano v0.6 : Cryptographic privacy verifier, by Lucca Hirschi. Based on Proverif v2.01, by Bruno 
 Blanchet and Vincent Cheval.
   --proverif            path of the ProVerif executable to use (optional, default: './proverif')
   --ideal-no-check      assume the idealisation is conform (requires manual checks)
