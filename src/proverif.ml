@@ -22,9 +22,10 @@ let flush _ = flush_all ()
 (*               PARSING PROVERIF                          *)
 (***********************************************************)
 (* Possible outputs *)
+                (* TODO: much easier parsing by going to the last paragapg of the output and extract line per line the results *)
 let result = "RESULT"
-let okEquivalence = "RESULT Observational equivalence is true (bad not derivable)."
-let noEquivalence = "RESULT Observational equivalence cannot be proved (bad derivable)."
+let okEquivalence = "Observational equivalence is true."
+let noEquivalence = "Observational equivalence cannot be proved."
 let okQuery = "true"
 let falseQuery = "false"
 let noQuery = "proved"
@@ -181,7 +182,7 @@ let verifyBoth pathProverif sFO sWA namesIdAno =
 		      establishedWA := true;
 		      pp (Display.result "Well Authentication has been established.");
 		    end
-		  else if List.length subOk = 0 then begin
+		  else if noWA then begin
 		      pp (Display.result (sprintf "Well Authentication could be established for none of the test. It may be the case that all tests are safe though."));
 		    end else begin
 		      establishedWAPart := true;

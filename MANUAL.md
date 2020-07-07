@@ -22,7 +22,7 @@ The executable program `ukano` and `proverif` have been built.
 You can also build UKano only by typing `make ukano`. UKano needs an exectuable of ProVerif though.
 We recommend using the version shipped with UKano but one can specify the path some ProVerif executable
 with the option `--proverif <path>`. *Warning*: if one wants to use its own ProVerif executable, then one
-needs a version '=>1.97' patched with the 'biproj.patch' in 'proverif2.01' folder of the repository,
+needs a version '=>2.01' patched with the 'biproj.patch' in 'proverif2.01' folder of the repository,
 
 
 ## Quick Test
